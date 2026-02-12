@@ -1,85 +1,138 @@
-```gitignore
+```
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+
 # Dependencies
+.venv/
+venv/
 node_modules/
 
-# Build artifacts
-dist/
-build/
-target/
+# Logs and temp files
+*.log
+*.tmp
+*.swp
 
-# Python
-__pycache__/
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# Python specific
 *.pyc
+__pycache__/
 *.pyo
 *.pyd
 .Python
-env/
-venv/
-.venv/
-.venv.bak/
+*.so
+*.egg-info/
+.eggs/
+
+# Coverage reports
+.coverage
+coverage/
+htmlcov/
+
+# Distribution / packaging
+dist/
+build/
+*.egg
+*.egg-info/
 pip-log.txt
 pip-delete-this-directory.txt
+*.spec
+
+# Pytest cache
+.pytest_cache/
+
+# Mypy cache
+.mypy_cache/
+
+# Server related
+*.pid
+*.seed
+*.pem
+
+# Local SQLite file
+*.db
+
+# Unit test / coverage reports
+htmlcov/
 .tox/
-.coverage
-.coverage.*
+.nox/
+.coverage*
 .cache
 nosetests.xml
 coverage.xml
 *.cover
 *.log
-*.tmp
-*.swp
-.DS_Store
-Thumbs.db
 
-# Logs
+# Translations
+*.mo
+*.pot
+
+# Django
 *.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
 
-# Environment variables
+# Flask
+instance/
+.webassets-cache
+
+# Scrapy
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
 .env
-.env.local
-.env.*
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
-# IDE
-.vscode/
+# IDEs
 .idea/
+.vscode/
 *.swp
 *.swo
 
-# MyPy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# PyTest
-.pytest_cache/
-
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# Compressed files
-*.zip
-*.gz
-*.tar
-*.tgz
-*.bz2
-*.xz
-*.7z
-*.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 ```
