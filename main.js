@@ -166,11 +166,18 @@ class AfterDarkWebsite {
         particles.forEach(p => p.remove());
     }
 
-    setupNavigation() {
+setupNavigation() {
         // Smooth scrolling
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
+                
+                // Update active nav link
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                this.classList.add('active');
+                
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
                     target.scrollIntoView({ behavior: 'smooth' });
@@ -184,6 +191,13 @@ class AfterDarkWebsite {
         
         mobileBtn.addEventListener('click', () => {
             mobileNav.classList.toggle('active');
+        });
+        
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('.mobile-nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileNav.classList.remove('active');
+            });
         });
     }
 
