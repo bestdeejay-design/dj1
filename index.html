@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>After Dark — Where Electronic Music Legends Mix</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/audio-player.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -101,6 +102,24 @@
                 <button class="cta-btn">Explore DJs</button>
                 <button class="cta-btn secondary">Listen Now</button>
             </div>
+            
+            <!-- Audio Player -->
+            <div class="audio-player">
+                <audio id="radioPlayer" preload="none">
+                    <source src="https://stream.radioparadise.com/electronic-128" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+                <div class="player-controls">
+                    <button id="playPauseBtn" class="control-btn play-btn">▶</button>
+                    <div class="volume-control">
+                        <span class="volume-icon">🔊</span>
+                        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.7">
+                    </div>
+                </div>
+                <div class="now-playing">
+                    <span id="trackTitle">Loading Radio Paradise Electronic...</span>
+                </div>
+            </div>
         </section>
 
         <!-- DJ Profiles Section -->
@@ -142,6 +161,7 @@
         </div>
     </main>
 
+    <script src="js/radio-player.js"></script>
     <script src="main.js"></script>
 </body>
 </html>
