@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>After Dark — Where Electronic Music Legends Mix</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Theme Switcher -->
+    <button class="theme-toggle" aria-label="Switch theme">LOUNGE 🍸</button>
+
+    <!-- Disco Ball -->
+    <div class="disco-ball-container">
+        <svg class="disco-ball" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="100" r="80" fill="none" stroke="#FF00FF" stroke-width="2" stroke-dasharray="5,5"/>
+            <g class="facets">
+                <rect x="60" y="60" width="20" height="20" fill="#FF00FF" opacity="0.3"/>
+                <rect x="100" y="60" width="20" height="20" fill="#00FFFF" opacity="0.3"/>
+                <rect x="140" y="60" width="20" height="20" fill="#FFFF00" opacity="0.3"/>
+                <rect x="60" y="100" width="20" height="20" fill="#00FF00" opacity="0.3"/>
+                <rect x="100" y="100" width="20" height="20" fill="#FF00FF" opacity="0.3"/>
+                <rect x="140" y="100" width="20" height="20" fill="#00FFFF" opacity="0.3"/>
+                <rect x="60" y="140" width="20" height="20" fill="#FFFF00" opacity="0.3"/>
+                <rect x="100" y="140" width="20" height="20" fill="#00FF00" opacity="0.3"/>
+                <rect x="140" y="140" width="20" height="20" fill="#FF00FF" opacity="0.3"/>
+            </g>
+            <circle cx="100" cy="100" r="30" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+        </svg>
+        <div class="light-beams">
+            <div class="beam beam-1"></div>
+            <div class="beam beam-2"></div>
+            <div class="beam beam-3"></div>
+            <div class="beam beam-4"></div>
+            <div class="beam beam-5"></div>
+            <div class="beam beam-6"></div>
+        </div>
+    </div>
+
+    <!-- Spinning Vinyls -->
+    <div class="vinyl-container left">
+        <svg class="vinyl-record" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="100" r="95" fill="#1a1a1a" stroke="#333" stroke-width="2"/>
+            <circle cx="100" cy="100" r="85" fill="#0a0a0a"/>
+            <circle cx="100" cy="100" r="80" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="5,5"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="5,5"/>
+            <circle cx="100" cy="100" r="60" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="5,5"/>
+            <circle cx="100" cy="100" r="50" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="5,5"/>
+            <circle cx="100" cy="100" r="40" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="5,5"/>
+            <circle cx="100" cy="100" r="25" fill="#FF00FF"/>
+            <text x="100" y="105" text-anchor="middle" fill="white" font-size="10" font-weight="bold">DJ MIX</text>
+            <circle cx="100" cy="100" r="8" fill="#000"/>
+        </svg>
+    </div>
+
+    <div class="vinyl-container right">
+        <svg class="vinyl-record" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="100" r="95" fill="#1a1a1a" stroke="#333" stroke-width="2"/>
+            <circle cx="100" cy="100" r="85" fill="#0a0a0a"/>
+            <circle cx="100" cy="100" r="80" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="5,5"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="5,5"/>
+            <circle cx="100" cy="100" r="60" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="5,5"/>
+            <circle cx="100" cy="100" r="50" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="5,5"/>
+            <circle cx="100" cy="100" r="40" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="5,5"/>
+            <circle cx="100" cy="100" r="25" fill="#00FFFF"/>
+            <text x="100" y="105" text-anchor="middle" fill="white" font-size="10" font-weight="bold">BEATS</text>
+            <circle cx="100" cy="100" r="8" fill="#000"/>
+        </svg>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar">
+        <div class="nav-links">
+            <a href="#home" class="nav-link active">🏠 Home</a>
+            <a href="#djs" class="nav-link">🎧 DJs</a>
+            <a href="#music" class="nav-link">🎵 Music</a>
+            <a href="#events" class="nav-link">📅 Events</a>
+            <a href="#mixes" class="nav-link">💿 Mixes</a>
+            <a href="#about" class="nav-link">ℹ️ About</a>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation -->
+    <button class="mobile-menu-btn">☰</button>
+    <nav class="mobile-nav">
+        <a href="#home">🏠 Home</a>
+        <a href="#djs">🎧 DJs</a>
+        <a href="#music">🎵 Music</a>
+        <a href="#events">📅 Events</a>
+        <a href="#mixes">💿 Mixes</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section id="home" class="hero">
+            <h1 class="hero-title">AFTER <span>DARK</span></h1>
+            <p class="hero-subtitle">Where Electronic Music Legends Mix</p>
+            <div class="hero-buttons">
+                <button class="cta-btn">Explore DJs</button>
+                <button class="cta-btn secondary">Listen Now</button>
+            </div>
+        </section>
+
+        <!-- DJ Profiles Section -->
+        <section id="djs" class="section">
+            <h2>Legendary DJs</h2>
+            <div class="dj-grid">
+                <!-- DJ Cards will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Music Platforms -->
+        <section id="music" class="section">
+            <h2>Stream Everywhere</h2>
+            <div class="platform-grid">
+                <a href="https://spotify.com" target="_blank" class="platform-link">
+                    <span class="platform-icon">🔊</span> Spotify
+                </a>
+                <!-- Other platforms -->
+            </div>
+        </section>
+
+        <!-- Sound Wave -->
+        <div class="sound-wave-container">
+            <svg class="sound-wave" viewBox="0 0 1000 100" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0,50 L50,30 L100,60 L150,20 L200,70 L250,40 L300,80 L350,30 L400,60 L450,25 L500,75 L550,35 L600,85 L650,25 L700,70 L750,40 L800,90 L850,30 L900,65 L950,35 L1000,50" 
+                      fill="none" 
+                      stroke="url(#gradient)"
+                      stroke-width="4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"/>
+                <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#FF00FF" stop-opacity="0.8"/>
+                        <stop offset="50%" stop-color="#00FFFF" stop-opacity="1"/>
+                        <stop offset="100%" stop-color="#FF00FF" stop-opacity="0.8"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
