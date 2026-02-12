@@ -5,6 +5,7 @@ class RadioPlayer {
         this.playPauseBtn = document.getElementById('playPauseBtn');
         this.volumeSlider = document.getElementById('volumeSlider');
         this.trackTitle = document.getElementById('trackTitle');
+        this.stationSelector = document.getElementById('stationSelector');
         
         this.isPlaying = false;
         this.init();
@@ -18,6 +19,7 @@ class RadioPlayer {
     setupEventListeners() {
         this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
         this.volumeSlider.addEventListener('input', () => this.setVolume());
+        this.stationSelector.addEventListener('change', () => this.onStationChange());
         
         // Audio events
         this.audio.addEventListener('playing', () => this.onPlaying());
@@ -33,6 +35,15 @@ class RadioPlayer {
         }
     }
     
+    onStationChange() {
+        // When station changes, update the source but don't automatically play
+        const selectedOption = this.stationSelector.options[this.stationSelector.selectedIndex];
+        this.currentStationUrl = this.stationSelector.value;
+        this.currentStationName = selectedOption.text;
+        this.audio.src = this.currentStationUrl;
+        this.trackTitle.textContent = `Selected: ${this.currentStationName}`;
+    }
+    
     togglePlayPause() {
         if (this.isPlaying) {
             this.pause();
@@ -42,11 +53,19 @@ class RadioPlayer {
     }
     
     play() {
+        // Make sure we have a valid station URL
+        if (!this.currentStationUrl) {
+            this.currentStationUrl = this.stationSelector.value;
+            const selectedOption = this.stationSelector.options[this.stationSelector.selectedIndex];
+            this.currentStationName = selectedOption.text;
+            this.audio.src = this.currentStationUrl;
+        }
+        
         this.audio.play()
             .then(() => {
                 this.isPlaying = true;
                 this.playPauseBtn.textContent = '⏸';
-                this.trackTitle.textContent = 'Now Playing: Radio Paradise Electronic';
+                this.trackTitle.textContent = `Now Playing: ${this.currentStationName}`;
             })
             .catch((error) => {
                 console.error('Error playing audio:', error);
@@ -58,7 +77,7 @@ class RadioPlayer {
         this.audio.pause();
         this.isPlaying = false;
         this.playPauseBtn.textContent = '▶';
-        this.trackTitle.textContent = 'Paused';
+        this.trackTitle.textContent = `Paused: ${this.currentStationName}`;
     }
     
     setVolume() {
@@ -66,7 +85,10 @@ class RadioPlayer {
     }
     
     loadRadioStream() {
-        // Set initial volume
+        // Set initial station and volume
+        this.currentStationUrl = this.stationSelector.value;
+        const initialOption = this.stationSelector.options[this.stationSelector.selectedIndex];
+        this.currentStationName = initialOption.text;
         this.audio.volume = this.volumeSlider.value;
         
         // Update track info periodically
@@ -83,18 +105,18 @@ class RadioPlayer {
     onPlaying() {
         this.isPlaying = true;
         this.playPauseBtn.textContent = '⏸';
-        this.trackTitle.textContent = 'Now Playing: Radio Paradise Electronic';
+        this.trackTitle.textContent = `Now Playing: ${this.currentStationName}`;
     }
     
     onPaused() {
         this.isPlaying = false;
         this.playPauseBtn.textContent = '▶';
-        this.trackTitle.textContent = 'Paused';
+        this.trackTitle.textContent = `Paused: ${this.currentStationName}`;
     }
     
     onError(e) {
         console.error('Audio error:', e);
-        this.trackTitle.textContent = 'Error loading stream. Click Play to retry.';
+        this.trackTitle.textContent = 'Error loading stream. Select a station and click Play.';
         this.isPlaying = false;
         this.playPauseBtn.textContent = '▶';
     }
