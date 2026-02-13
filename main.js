@@ -185,20 +185,22 @@ setupNavigation() {
             });
         });
 
-        // Mobile menu
+        // Mobile menu - check if elements exist before adding event listeners
         const mobileBtn = document.querySelector('.mobile-menu-btn');
         const mobileNav = document.querySelector('.mobile-nav');
         
-        mobileBtn.addEventListener('click', () => {
-            mobileNav.classList.toggle('active');
-        });
-        
-        // Close mobile menu when clicking on a link
-        document.querySelectorAll('.mobile-nav a').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileNav.classList.remove('active');
+        if (mobileBtn && mobileNav) {
+            mobileBtn.addEventListener('click', () => {
+                mobileNav.classList.toggle('active');
             });
-        });
+            
+            // Close mobile menu when clicking on a link
+            document.querySelectorAll('.mobile-nav a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileNav.classList.remove('active');
+                });
+            });
+        }
     }
 
     loadDJs() {
