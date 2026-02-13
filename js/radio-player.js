@@ -40,8 +40,15 @@ class RadioPlayer {
         const selectedOption = this.stationSelector.options[this.stationSelector.selectedIndex];
         this.currentStationUrl = this.stationSelector.value;
         this.currentStationName = selectedOption.text;
+        
+        // Stop current playback and set new source
+        this.audio.pause();
         this.audio.src = this.currentStationUrl;
         this.trackTitle.textContent = `Selected: ${this.currentStationName}`;
+        
+        // Reset play button state
+        this.isPlaying = false;
+        this.playPauseBtn.textContent = '▶';
     }
     
     togglePlayPause() {
@@ -52,7 +59,7 @@ class RadioPlayer {
         }
     }
     
-    play() {
+    async play() {
         // Make sure we have a valid station URL
         if (!this.currentStationUrl) {
             this.currentStationUrl = this.stationSelector.value;
@@ -61,16 +68,65 @@ class RadioPlayer {
             this.audio.src = this.currentStationUrl;
         }
         
-        this.audio.play()
-            .then(() => {
-                this.isPlaying = true;
-                this.playPauseBtn.textContent = '⏸';
-                this.trackTitle.textContent = `Now Playing: ${this.currentStationName}`;
-            })
-            .catch((error) => {
-                console.error('Error playing audio:', error);
-                this.trackTitle.textContent = 'Playback failed: ' + error.message;
-            });
+        try {
+            // Pause any current playback first
+            this.audio.pause();
+            
+            // Wait a moment for the pause to register
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            // Set the source again to ensure it's fresh
+            this.audio.src = this.currentStationUrl;
+            
+            // Load the new source
+            this.audio.load();
+            
+            // Update UI
+            this.trackTitle.textContent = `Connecting to: ${this.currentStationName}`;
+            
+            // Wait a bit before attempting to play to allow for loading
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Attempt to play
+            await this.audio.play();
+            
+            // Update UI after successful play
+            this.isPlaying = true;
+            this.playPauseBtn.textContent = '⏸';
+            this.trackTitle.textContent = `Now Playing: ${this.currentStationName}`;
+        } catch (error) {
+            console.error('Error playing audio:', error);
+            this.trackTitle.textContent = `Playback failed: ${error.message}. Try another station.`;
+            
+            // Retry with a fallback station after a delay
+            setTimeout(() => {
+                this.tryFallbackStation();
+            }, 2000);
+        }
+    }
+
+    tryFallbackStation() {
+        // Get the currently selected option index
+        const currentIndex = this.stationSelector.selectedIndex;
+        const totalOptions = this.stationSelector.options.length;
+        
+        // Try the next station in the list
+        let nextIndex = (currentIndex + 1) % totalOptions;
+        
+        // Skip the first option if we're back to it (to avoid infinite loop)
+        if (nextIndex === 0 && currentIndex !== totalOptions - 1) {
+            nextIndex = 1;
+        }
+        
+        if (nextIndex !== currentIndex) {
+            this.stationSelector.selectedIndex = nextIndex;
+            this.onStationChange();
+            
+            // Attempt to play the new station
+            setTimeout(() => {
+                this.play();
+            }, 500);
+        }
     }
     
     pause() {
