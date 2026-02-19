@@ -57,9 +57,12 @@
             if (!usersResponse.ok) throw new Error('Не удалось загрузить пользователей');
             const usersData = await usersResponse.json();
 
+            // Фильтруем только опубликованные (public) плейлисты
+            const publicPlaylists = playlistsData.data.filter(playlist => playlist.privacy === 'public');
+
             // Загружаем детали каждого плейлиста для получения треков
             const playlistsWithTracks = await Promise.all(
-                playlistsData.data.map(async (playlist) => {
+                publicPlaylists.map(async (playlist) => {
                     try {
                         const detailResponse = await fetch(`https://api.dj1.ru/api/playlists/${playlist.id}`);
                         if (detailResponse.ok) {
