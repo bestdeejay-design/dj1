@@ -57,8 +57,25 @@
             if (!usersResponse.ok) throw new Error('Не удалось загрузить пользователей');
             const usersData = await usersResponse.json();
 
+            // Загружаем детали каждого плейлиста для получения треков
+            const playlistsWithTracks = await Promise.all(
+                playlistsData.data.map(async (playlist) => {
+                    try {
+                        const detailResponse = await fetch(`https://api.dj1.ru/api/playlists/${playlist.id}`);
+                        if (detailResponse.ok) {
+                            const detailData = await detailResponse.json();
+                            return { ...playlist, tracks: detailData.tracks || [] };
+                        }
+                        return { ...playlist, tracks: [] };
+                    } catch (err) {
+                        console.warn(`Failed to load tracks for playlist ${playlist.id}:`, err);
+                        return { ...playlist, tracks: [] };
+                    }
+                })
+            );
+
             // Преобразуем данные в формат, подходящий для отображения
-            albums = transformApiData(tracksData.data, playlistsData.data, usersData.data);
+            albums = transformApiData(tracksData.data, playlistsWithTracks, usersData.data);
             loadingEl.style.display = 'none';
             renderGallery();
             
@@ -78,20 +95,6 @@
 
     // Функция преобразования данных из API в формат, подходящий для отображения
     function transformApiData(tracks, playlists, users) {
-        // Создаем мапу пользователей для быстрого доступа
-        const usersMap = new Map();
-        if (users) {
-            users.forEach(user => {
-                usersMap.set(user.id, user);
-            });
-        }
-
-        // Создаем мапу треков для быстрого доступа
-        const tracksMap = new Map();
-        tracks.forEach(track => {
-            tracksMap.set(track.id, track);
-        });
-
         // Создаем альбомы на основе плейлистов из API
         const albumsList = [];
         
@@ -101,20 +104,17 @@
                 
                 // Если у плейлиста есть треки, собираем их
                 if (playlist.tracks && Array.isArray(playlist.tracks)) {
-                    playlist.tracks.forEach(trackId => {
-                        const track = tracksMap.get(trackId);
-                        if (track) {
-                            albumTracks.push({
-                                name: track.title,
-                                file: track.audio_url || track.full_url || null,
-                                cover: track.image_url || null,
-                                duration: track.duration_s || null
-                            });
-                        }
+                    playlist.tracks.forEach(track => {
+                        albumTracks.push({
+                            name: track.title,
+                            file: track.audio_url || track.full_url || null,
+                            cover: track.image_url || null,
+                            duration: track.duration_s || null
+                        });
                     });
                 }
                 
-                // Добавляем альбом только если есть треки или это валидный плейлист
+                // Добавляем альбом (даже если треков нет)
                 albumsList.push({
                     title: playlist.name || playlist.title || 'Untitled Playlist',
                     cover: playlist.image_url || playlist.cover_url || null,
