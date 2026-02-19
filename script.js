@@ -3,6 +3,7 @@
 (function() {
     // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
     let albums = [];
+    let allAlbums = []; // Все загруженные альбомы для сортировки
     let currentAlbum = null;
     let currentTrackIndex = -1;
     let playlistVisible = false;
@@ -15,6 +16,16 @@
     let shuffleOn = false;
     let shuffleIndices = [];
     let shuffleCurrentIndex = 0;
+
+    // Пагинация
+    let currentPage = 1;
+    const itemsPerPage = 12;
+    let isLoading = false;
+    let hasMore = true;
+
+    // Сортировка
+    let currentSort = 'name'; // 'name', 'tracks', 'plays'
+    let currentOrder = 'asc'; // 'asc', 'desc'
 
     // Элементы DOM
     const gallery = document.getElementById('gallery');
@@ -44,12 +55,13 @@
     // ==================== ЗАГРУЗКА ДАННЫХ ====================
     async function loadLibrary() {
         try {
-            // Загружаем данные через API
-            const tracksResponse = await fetch('https://api.dj1.ru/api/tracks?page=1&limit=100');
+            // Загружаем все данные (треки нужны для подсчета прослушиваний)
+            const tracksResponse = await fetch('https://api.dj1.ru/api/tracks?page=1&limit=1000');
             if (!tracksResponse.ok) throw new Error('Не удалось загрузить треки');
             const tracksData = await tracksResponse.json();
 
-            const playlistsResponse = await fetch('https://api.dj1.ru/api/playlists?page=1&limit=50');
+            // Загружаем все плейлисты сразу
+            const playlistsResponse = await fetch('https://api.dj1.ru/api/playlists?page=1&limit=1000');
             if (!playlistsResponse.ok) throw new Error('Не удалось загрузить плейлисты');
             const playlistsData = await playlistsResponse.json();
 
@@ -78,17 +90,18 @@
             );
 
             // Преобразуем данные в формат, подходящий для отображения
-            albums = transformApiData(tracksData.data, playlistsWithTracks, usersData.data);
-            loadingEl.style.display = 'none';
-            renderGallery();
+            allAlbums = transformApiData(tracksData.data, playlistsWithTracks, usersData.data);
             
-            // Анимация GSAP
-            if (typeof gsap !== 'undefined') {
-                gsap.fromTo('.album-card', 
-                    { y: 30, opacity: 0 },
-                    { y: 0, opacity: 1, duration: 0.6, stagger: 0.05, ease: 'power2.out' }
-                );
-            }
+            // Создаем элементы управления сортировкой
+            createSortControls();
+            
+            // Применяем сортировку и загружаем первую страницу
+            applySorting();
+            loadMoreAlbums();
+            
+            // Настраиваем бесконечный скролл
+            setupInfiniteScroll();
+            
         } catch (err) {
             loadingEl.style.display = 'none';
             errorEl.style.display = 'block';
@@ -96,51 +109,151 @@
         }
     }
 
-    // Функция преобразования данных из API в формат, подходящий для отображения
-    function transformApiData(tracks, playlists, users) {
-        // Создаем альбомы на основе плейлистов из API
-        const albumsList = [];
-        
-        if (playlists && playlists.length > 0) {
-            playlists.forEach(playlist => {
-                const albumTracks = [];
-                
-                // Если у плейлиста есть треки, собираем их
-                if (playlist.tracks && Array.isArray(playlist.tracks)) {
-                    playlist.tracks.forEach(track => {
-                        albumTracks.push({
-                            name: track.title,
-                            file: track.audio_url || track.full_url || null,
-                            cover: track.image_url || null,
-                            duration: track.duration_s || null
-                        });
-                    });
-                }
-                
-                // Определяем обложку: сначала плейлист, затем первый трек
-                let albumCover = playlist.image_url || playlist.cover_url || null;
-                if (!albumCover && albumTracks.length > 0) {
-                    albumCover = albumTracks[0].cover;
-                }
-                
-                // Добавляем альбом (даже если треков нет)
-                albumsList.push({
-                    title: playlist.name || playlist.title || 'Untitled Playlist',
-                    cover: albumCover,
-                    tracks: albumTracks,
-                    tracksCount: playlist.tracks_count || albumTracks.length
-                });
-            });
-        }
+    // ==================== СОРТИРОВКА ====================
+    function createSortControls() {
+        const header = document.querySelector('.header');
+        const sortContainer = document.createElement('div');
+        sortContainer.className = 'sort-controls';
+        sortContainer.innerHTML = `
+            <label>Sort by:</label>
+            <select id="sortSelect">
+                <option value="name" selected>Name</option>
+                <option value="tracks">Track Count</option>
+                <option value="plays">Total Plays</option>
+            </select>
+            <button id="sortOrderBtn" title="Toggle sort order">↑</button>
+        `;
+        header.appendChild(sortContainer);
 
-        // Возвращаем массив альбомов
-        return albumsList;
+        // Стили для сортировки
+        const style = document.createElement('style');
+        style.textContent = `
+            .sort-controls {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-top: 10px;
+                font-size: 14px;
+            }
+            .sort-controls label {
+                color: var(--text-secondary);
+            }
+            .sort-controls select {
+                background: var(--surface);
+                color: var(--text);
+                border: 1px solid var(--border);
+                padding: 4px 8px;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+            .sort-controls button {
+                background: var(--surface);
+                color: var(--text);
+                border: 1px solid var(--border);
+                padding: 4px 8px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+            }
+            .sort-controls button:hover {
+                background: var(--primary);
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Обработчики событий
+        document.getElementById('sortSelect').addEventListener('change', (e) => {
+            currentSort = e.target.value;
+            resetAndReload();
+        });
+
+        document.getElementById('sortOrderBtn').addEventListener('click', (e) => {
+            currentOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+            e.target.textContent = currentOrder === 'asc' ? '↑' : '↓';
+            resetAndReload();
+        });
     }
 
-    // ==================== ОТРИСОВКА ГАЛЕРЕИ ====================
-    function renderGallery() {
+    function applySorting() {
+        allAlbums.sort((a, b) => {
+            let valA, valB;
+            
+            switch (currentSort) {
+                case 'tracks':
+                    valA = a.tracksCount;
+                    valB = b.tracksCount;
+                    break;
+                case 'plays':
+                    valA = a.totalPlays || 0;
+                    valB = b.totalPlays || 0;
+                    break;
+                case 'name':
+                default:
+                    valA = a.title.toLowerCase();
+                    valB = b.title.toLowerCase();
+            }
+            
+            if (valA < valB) return currentOrder === 'asc' ? -1 : 1;
+            if (valA > valB) return currentOrder === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }
+
+    function resetAndReload() {
+        currentPage = 1;
+        hasMore = true;
+        albums = [];
         gallery.innerHTML = '';
-        albums.forEach(album => {
+        applySorting();
+        loadMoreAlbums();
+    }
+
+    // ==================== ПАГИНАЦИЯ (БЕСКОНЕЧНЫЙ СКРОЛЛ) ====================
+    function setupInfiniteScroll() {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !isLoading && hasMore) {
+                loadMoreAlbums();
+            }
+        }, { rootMargin: '100px' });
+
+        // Создаем элемент-якорь для отслеживания
+        const sentinel = document.createElement('div');
+        sentinel.id = 'scroll-sentinel';
+        sentinel.style.height = '20px';
+        document.body.appendChild(sentinel);
+
+        observer.observe(sentinel);
+    }
+
+    function loadMoreAlbums() {
+        if (isLoading || !hasMore) return;
+        
+        isLoading = true;
+        loadingEl.style.display = 'block';
+
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const newAlbums = allAlbums.slice(start, end);
+
+        if (newAlbums.length === 0) {
+            hasMore = false;
+            loadingEl.style.display = 'none';
+            isLoading = false;
+            return;
+        }
+
+        // Добавляем новые альбомы
+        albums = albums.concat(newAlbums);
+        renderAlbums(newAlbums);
+
+        currentPage++;
+        hasMore = end < allAlbums.length;
+        isLoading = false;
+        loadingEl.style.display = hasMore ? 'block' : 'none';
+    }
+
+    function renderAlbums(albumsToRender) {
+        albumsToRender.forEach(album => {
             const card = document.createElement('div');
             card.className = 'album-card';
             
@@ -157,7 +270,6 @@
             `;
             
             card.addEventListener('click', () => {
-                // Активируем плеер
                 if (!playerBar.classList.contains('active')) {
                     playerBar.classList.add('active');
                 }
@@ -180,6 +292,58 @@
             
             gallery.appendChild(card);
         });
+
+        // Анимация для новых элементов
+        if (typeof gsap !== 'undefined') {
+            gsap.fromTo('.album-card:last-child', 
+                { y: 30, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out' }
+            );
+        }
+    }
+
+    // Функция преобразования данных из API в формат, подходящий для отображения
+    function transformApiData(tracks, playlists, users) {
+        // Создаем альбомы на основе плейлистов из API
+        const albumsList = [];
+        
+        if (playlists && playlists.length > 0) {
+            playlists.forEach(playlist => {
+                const albumTracks = [];
+                let totalPlays = 0;
+                
+                // Если у плейлиста есть треки, собираем их
+                if (playlist.tracks && Array.isArray(playlist.tracks)) {
+                    playlist.tracks.forEach(track => {
+                        albumTracks.push({
+                            name: track.title,
+                            file: track.audio_url || track.full_url || null,
+                            cover: track.image_url || null,
+                            duration: track.duration_s || null
+                        });
+                        totalPlays += track.play_count || 0;
+                    });
+                }
+                
+                // Определяем обложку: сначала плейлист, затем первый трек
+                let albumCover = playlist.image_url || playlist.cover_url || null;
+                if (!albumCover && albumTracks.length > 0) {
+                    albumCover = albumTracks[0].cover;
+                }
+                
+                // Добавляем альбом (даже если треков нет)
+                albumsList.push({
+                    title: playlist.name || playlist.title || 'Untitled Playlist',
+                    cover: albumCover,
+                    tracks: albumTracks,
+                    tracksCount: playlist.tracks_count || albumTracks.length,
+                    totalPlays: totalPlays
+                });
+            });
+        }
+
+        // Возвращаем массив альбомов
+        return albumsList;
     }
 
     // ==================== ЛОГИКА ПЛЕЕРА ====================
