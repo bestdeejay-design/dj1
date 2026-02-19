@@ -1,29 +1,4 @@
 ```
-# Backup files
-*.backup
-
-# Log files
-*.log
-
-# Environment files
-.env
-.env.local
-*.env.*
-
-# Dependencies
-node_modules/
-
-# Build outputs
-dist/
-build/
-target/
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
 # Compressed files
 *.zip
 *.gz
@@ -43,34 +18,58 @@ __pycache__/
 *.Z
 *.lz
 *.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
 
-# IDE and editor files
+# Logs
+*.log
+
+# Environment files
+.env
+.env.local
+*.env.*
+
+# Dependencies
+node_modules/
+__pycache__/
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.julia/
+.julia-*/
+zig*/
+target/
+.gradle/
+
+# Build artifacts
+dist/
+build/
+coverage/
+htmlcov/
+*.coverage
+
+# Editor/IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 *.tmp
 
-# OS generated files
+# System files
 .DS_Store
 Thumbs.db
 
-# Coverage reports
-coverage/
-htmlcov/
-*.coverage
-
-# Virtual environments
-.venv/
-venv/
-.env/
-
-# Gradle
-.gradle/
-
-# MyPy
-.mypy_cache/
-
-# Pytest
-.pytest_cache/
+# Compiled files
+*.pyc
+*.class
+*.o
+*.exe
+*.dll
+*.so
+*.a
+*.obj
+*.out
 ```

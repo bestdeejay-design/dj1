@@ -1,0 +1,70 @@
+/* rays.css — стили для фоновых эффектов */
+
+.background-effects {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* Лучи */
+.ray-beam {
+    position: absolute;
+    pointer-events: none;
+    will-change: transform;
+    mix-blend-mode: screen;
+}
+
+/* Анимация качания (изменение угла) */
+@keyframes swing {
+    0% {
+        transform: translate(var(--fixed-x), var(--fixed-y)) rotate(var(--angle-start));
+    }
+    100% {
+        transform: translate(var(--fixed-x), var(--fixed-y)) rotate(var(--angle-end));
+    }
+}
+
+/* Частицы (пузырьки) */
+.particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255,255,255,0.3);
+    animation: float 15s infinite linear;
+    will-change: transform, opacity;
+    z-index: 2;
+}
+
+@keyframes float {
+    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
+}
+
+/* Красные шары для светлой темы */
+.sphere {
+    position: absolute;
+    pointer-events: none;
+    will-change: transform, opacity;
+    mix-blend-mode: screen;
+}
+
+/* Кастомная пульсация для шаров с переменными масштаба */
+@keyframes pulseCustom {
+    0% {
+        transform: translate(-50%, -50%) scale(var(--scale-min, 0.8));
+        opacity: 0.5;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(var(--scale-max, 1.2));
+        opacity: 1;
+    }
+}

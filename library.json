@@ -1,0 +1,910 @@
+[
+  {
+    "id": "Album Second",
+    "title": "Album Second",
+    "cover": "albums/Album Second/cover.jpg",
+    "tracks": [
+      {
+        "name": "Awakening",
+        "file": "albums/Album Second/Awakening.m4a",
+        "cover": "albums/Album Second/Awakening.jpg"
+      },
+      {
+        "name": "Bus Stop in the Rain",
+        "file": "albums/Album Second/Bus Stop in the Rain.m4a",
+        "cover": "albums/Album Second/Bus Stop in the Rain.jpg"
+      },
+      {
+        "name": "Circles On Rewind",
+        "file": "albums/Album Second/Circles On Rewind.m4a",
+        "cover": "albums/Album Second/Circles On Rewind.jpg"
+      },
+      {
+        "name": "Ke Kai Wā",
+        "file": "albums/Album Second/Ke Kai Wā.m4a",
+        "cover": "albums/Album Second/Ke Kai Wā.jpg"
+      },
+      {
+        "name": "Move With Me, Myself",
+        "file": "albums/Album Second/Move With Me, Myself.m4a",
+        "cover": "albums/Album Second/Move With Me, Myself.jpg"
+      },
+      {
+        "name": "Pictures of Places",
+        "file": "albums/Album Second/Pictures of Places.m4a",
+        "cover": "albums/Album Second/Pictures of Places.jpg"
+      },
+      {
+        "name": "Pratibimb (Reflections)",
+        "file": "albums/Album Second/Pratibimb (Reflections).m4a",
+        "cover": "albums/Album Second/Pratibimb (Reflections).jpg"
+      },
+      {
+        "name": "Rewind (Cover 2)",
+        "file": "albums/Album Second/Rewind (Cover 2).m4a",
+        "cover": "albums/Album Second/Rewind (Cover 2).jpg"
+      },
+      {
+        "name": "Rewind (Cover)",
+        "file": "albums/Album Second/Rewind (Cover).m4a",
+        "cover": "albums/Album Second/Rewind (Cover).jpg"
+      },
+      {
+        "name": "Rewind",
+        "file": "albums/Album Second/Rewind.m4a",
+        "cover": "albums/Album Second/Rewind.jpg"
+      },
+      {
+        "name": "Sablier (Hourglass)",
+        "file": "albums/Album Second/Sablier (Hourglass).m4a",
+        "cover": "albums/Album Second/Sablier (Hourglass).jpg"
+      },
+      {
+        "name": "Sandsong",
+        "file": "albums/Album Second/Sandsong.m4a",
+        "cover": "albums/Album Second/Sandsong.jpg"
+      },
+      {
+        "name": "Suraj Ke Saath",
+        "file": "albums/Album Second/Suraj Ke Saath.m4a",
+        "cover": "albums/Album Second/Suraj Ke Saath.jpg"
+      },
+      {
+        "name": "Timeless Sand",
+        "file": "albums/Album Second/Timeless Sand.m4a",
+        "cover": "albums/Album Second/Timeless Sand.jpg"
+      }
+    ]
+  },
+  {
+    "id": "First Album",
+    "title": "First Album",
+    "cover": "albums/First Album/cover.jpg",
+    "tracks": [
+      {
+        "name": "2AM Calling",
+        "file": "albums/First Album/2AM Calling.m4a",
+        "cover": "albums/First Album/2AM Calling.jpg"
+      },
+      {
+        "name": "Another Life",
+        "file": "albums/First Album/Another Life.m4a",
+        "cover": "albums/First Album/Another Life.jpg"
+      },
+      {
+        "name": "Bedroom Light",
+        "file": "albums/First Album/Bedroom Light.m4a",
+        "cover": "albums/First Album/Bedroom Light.jpg"
+      },
+      {
+        "name": "Beyond Me",
+        "file": "albums/First Album/Beyond Me.m4a",
+        "cover": "albums/First Album/Beyond Me.jpg"
+      },
+      {
+        "name": "Devil's Dice",
+        "file": "albums/First Album/Devil's Dice.m4a",
+        "cover": "albums/First Album/Devil's Dice.jpg"
+      },
+      {
+        "name": "Eternal Nights",
+        "file": "albums/First Album/Eternal Nights.m4a",
+        "cover": "albums/First Album/Eternal Nights.jpg"
+      },
+      {
+        "name": "Glass Eyes",
+        "file": "albums/First Album/Glass Eyes.m4a",
+        "cover": "albums/First Album/Glass Eyes.jpg"
+      },
+      {
+        "name": "La Forteresse",
+        "file": "albums/First Album/La Forteresse.m4a",
+        "cover": "albums/First Album/La Forteresse.jpg"
+      },
+      {
+        "name": "Le Silence Entre Nous",
+        "file": "albums/First Album/Le Silence Entre Nous.m4a",
+        "cover": "albums/First Album/Le Silence Entre Nous.jpg"
+      },
+      {
+        "name": "Post Parade",
+        "file": "albums/First Album/Post Parade.m4a",
+        "cover": "albums/First Album/Post Parade.jpg"
+      },
+      {
+        "name": "Reflexos da Vida",
+        "file": "albums/First Album/Reflexos da Vida.m4a",
+        "cover": "albums/First Album/Reflexos da Vida.jpg"
+      },
+      {
+        "name": "Static Playback",
+        "file": "albums/First Album/Static Playback.m4a",
+        "cover": "albums/First Album/Static Playback.jpg"
+      },
+      {
+        "name": "Sweet Poison (Si Douce)",
+        "file": "albums/First Album/Sweet Poison (Si Douce).m4a",
+        "cover": "albums/First Album/Sweet Poison (Si Douce).jpg"
+      },
+      {
+        "name": "Voice Note Loop",
+        "file": "albums/First Album/Voice Note Loop.m4a",
+        "cover": "albums/First Album/Voice Note Loop.jpg"
+      },
+      {
+        "name": "Ya Lalli",
+        "file": "albums/First Album/Ya Lalli.m4a",
+        "cover": "albums/First Album/Ya Lalli.jpg"
+      }
+    ]
+  },
+  {
+    "id": "Garage vibe",
+    "title": "Garage vibe",
+    "cover": "albums/Garage vibe/cover.jpg",
+    "tracks": [
+      {
+        "name": "After the Rain (Variation)",
+        "file": "albums/Garage vibe/After the Rain (Variation).m4a",
+        "cover": "albums/Garage vibe/After the Rain (Variation).jpg"
+      },
+      {
+        "name": "After the Rain",
+        "file": "albums/Garage vibe/After the Rain.m4a",
+        "cover": "albums/Garage vibe/After the Rain.jpg"
+      },
+      {
+        "name": "Ashes in the Receiver",
+        "file": "albums/Garage vibe/Ashes in the Receiver.m4a",
+        "cover": "albums/Garage vibe/Ashes in the Receiver.jpg"
+      },
+      {
+        "name": "Bleach Boy (Variation 2)",
+        "file": "albums/Garage vibe/Bleach Boy (Variation 2).m4a",
+        "cover": "albums/Garage vibe/Bleach Boy (Variation 2).jpg"
+      },
+      {
+        "name": "Bleach Boy (Variation)",
+        "file": "albums/Garage vibe/Bleach Boy (Variation).m4a",
+        "cover": "albums/Garage vibe/Bleach Boy (Variation).jpg"
+      },
+      {
+        "name": "Bleach Boy germ",
+        "file": "albums/Garage vibe/Bleach Boy germ.m4a",
+        "cover": "albums/Garage vibe/Bleach Boy germ.jpg"
+      },
+      {
+        "name": "can you hear",
+        "file": "albums/Garage vibe/can you hear.m4a",
+        "cover": "albums/Garage vibe/can you hear.jpg"
+      },
+      {
+        "name": "Echo Chamber",
+        "file": "albums/Garage vibe/Echo Chamber.m4a",
+        "cover": "albums/Garage vibe/Echo Chamber.jpg"
+      },
+      {
+        "name": "Echo Station (drier vox-10s)",
+        "file": "albums/Garage vibe/Echo Station (drier vox-10s).m4a",
+        "cover": "albums/Garage vibe/Echo Station (drier vox-10s).jpg"
+      },
+      {
+        "name": "Echo Station",
+        "file": "albums/Garage vibe/Echo Station.m4a",
+        "cover": "albums/Garage vibe/Echo Station.jpg"
+      },
+      {
+        "name": "Laundry Day Ghost",
+        "file": "albums/Garage vibe/Laundry Day Ghost.m4a",
+        "cover": "albums/Garage vibe/Laundry Day Ghost.jpg"
+      },
+      {
+        "name": "Milk Carton Saint (Variation)",
+        "file": "albums/Garage vibe/Milk Carton Saint (Variation).m4a",
+        "cover": "albums/Garage vibe/Milk Carton Saint (Variation).jpg"
+      },
+      {
+        "name": "Milk Carton Saint",
+        "file": "albums/Garage vibe/Milk Carton Saint.m4a",
+        "cover": "albums/Garage vibe/Milk Carton Saint.jpg"
+      },
+      {
+        "name": "Neon Pulse (Variation)",
+        "file": "albums/Garage vibe/Neon Pulse (Variation).m4a",
+        "cover": "albums/Garage vibe/Neon Pulse (Variation).jpg"
+      },
+      {
+        "name": "Neon Pulse",
+        "file": "albums/Garage vibe/Neon Pulse.m4a",
+        "cover": "albums/Garage vibe/Neon Pulse.jpg"
+      },
+      {
+        "name": "Night Radio (Variation 2)",
+        "file": "albums/Garage vibe/Night Radio (Variation 2).m4a",
+        "cover": "albums/Garage vibe/Night Radio (Variation 2).jpg"
+      },
+      {
+        "name": "Night Radio (Variation)",
+        "file": "albums/Garage vibe/Night Radio (Variation).m4a",
+        "cover": "albums/Garage vibe/Night Radio (Variation).jpg"
+      },
+      {
+        "name": "Northern Light",
+        "file": "albums/Garage vibe/Northern Light.m4a",
+        "cover": "albums/Garage vibe/Northern Light.jpg"
+      },
+      {
+        "name": "Obey The Machine",
+        "file": "albums/Garage vibe/Obey The Machine.m4a",
+        "cover": "albums/Garage vibe/Obey The Machine.jpg"
+      },
+      {
+        "name": "One Truth (Variation)",
+        "file": "albums/Garage vibe/One Truth (Variation).m4a",
+        "cover": "albums/Garage vibe/One Truth (Variation).jpg"
+      },
+      {
+        "name": "One Truth",
+        "file": "albums/Garage vibe/One Truth.m4a",
+        "cover": "albums/Garage vibe/One Truth.jpg"
+      },
+      {
+        "name": "Paper Boats",
+        "file": "albums/Garage vibe/Paper Boats.m4a",
+        "cover": "albums/Garage vibe/Paper Boats.jpg"
+      },
+      {
+        "name": "Plastic Ocean (Variation 2)",
+        "file": "albums/Garage vibe/Plastic Ocean (Variation 2).m4a",
+        "cover": "albums/Garage vibe/Plastic Ocean (Variation 2).jpg"
+      },
+      {
+        "name": "Plastic Ocean (Variation)",
+        "file": "albums/Garage vibe/Plastic Ocean (Variation).m4a",
+        "cover": "albums/Garage vibe/Plastic Ocean (Variation).jpg"
+      },
+      {
+        "name": "Rain don’t fall (Acoustic Variation)",
+        "file": "albums/Garage vibe/Rain don’t fall (Acoustic Variation).m4a",
+        "cover": "albums/Garage vibe/Rain don’t fall (Acoustic Variation).jpg"
+      },
+      {
+        "name": "Rain Will Wash (garage)",
+        "file": "albums/Garage vibe/Rain Will Wash (garage).m4a",
+        "cover": "albums/Garage vibe/Rain Will Wash (garage).jpg"
+      },
+      {
+        "name": "Rain Will Wash (pank)",
+        "file": "albums/Garage vibe/Rain Will Wash (pank).m4a",
+        "cover": "albums/Garage vibe/Rain Will Wash (pank).jpg"
+      },
+      {
+        "name": "Silicon Tears (Variation 2)",
+        "file": "albums/Garage vibe/Silicon Tears (Variation 2).m4a",
+        "cover": "albums/Garage vibe/Silicon Tears (Variation 2).jpg"
+      },
+      {
+        "name": "Silicon Tears (Variation)",
+        "file": "albums/Garage vibe/Silicon Tears (Variation).m4a",
+        "cover": "albums/Garage vibe/Silicon Tears (Variation).jpg"
+      },
+      {
+        "name": "Silicon Tears",
+        "file": "albums/Garage vibe/Silicon Tears.m4a",
+        "cover": "albums/Garage vibe/Silicon Tears.jpg"
+      },
+      {
+        "name": "Snow keeps falling (lullaby)",
+        "file": "albums/Garage vibe/Snow keeps falling (lullaby).m4a",
+        "cover": "albums/Garage vibe/Snow keeps falling (lullaby).jpg"
+      },
+      {
+        "name": "Soar",
+        "file": "albums/Garage vibe/Soar.m4a",
+        "cover": "albums/Garage vibe/Soar.jpg"
+      },
+      {
+        "name": "Static Halo (Variation)",
+        "file": "albums/Garage vibe/Static Halo (Variation).m4a",
+        "cover": "albums/Garage vibe/Static Halo (Variation).jpg"
+      },
+      {
+        "name": "Static Hymn (Variation)",
+        "file": "albums/Garage vibe/Static Hymn (Variation).m4a",
+        "cover": "albums/Garage vibe/Static Hymn (Variation).jpg"
+      },
+      {
+        "name": "Static Hymn",
+        "file": "albums/Garage vibe/Static Hymn.m4a",
+        "cover": "albums/Garage vibe/Static Hymn.jpg"
+      },
+      {
+        "name": "Static Skin (Variation)",
+        "file": "albums/Garage vibe/Static Skin (Variation).m4a",
+        "cover": "albums/Garage vibe/Static Skin (Variation).jpg"
+      },
+      {
+        "name": "Static Skin",
+        "file": "albums/Garage vibe/Static Skin.m4a",
+        "cover": "albums/Garage vibe/Static Skin.jpg"
+      },
+      {
+        "name": "Steel Pulse (Nevsky Code) (Variation)",
+        "file": "albums/Garage vibe/Steel Pulse (Nevsky Code) (Variation).m4a",
+        "cover": "albums/Garage vibe/Steel Pulse (Nevsky Code) (Variation).jpg"
+      },
+      {
+        "name": "Steel Pulse (Nevsky Code)",
+        "file": "albums/Garage vibe/Steel Pulse (Nevsky Code).m4a",
+        "cover": "albums/Garage vibe/Steel Pulse (Nevsky Code).jpg"
+      }
+    ]
+  },
+  {
+    "id": "Hold on (weekend vibe)",
+    "title": "Hold on (weekend vibe)",
+    "cover": "albums/Hold on (weekend vibe)/cover.webp",
+    "tracks": [
+      {
+        "name": "Resolve",
+        "file": "albums/Hold on (weekend vibe)/Resolve.m4a",
+        "cover": "albums/Hold on (weekend vibe)/Resolve.jpg"
+      },
+      {
+        "name": "Salt on my skin (Variation)",
+        "file": "albums/Hold on (weekend vibe)/Salt on my skin (Variation).m4a",
+        "cover": "albums/Hold on (weekend vibe)/Salt on my skin (Variation).jpg"
+      },
+      {
+        "name": "Sometimes I wonder",
+        "file": "albums/Hold on (weekend vibe)/Sometimes I wonder.m4a",
+        "cover": "albums/Hold on (weekend vibe)/Sometimes I wonder.jpg"
+      }
+    ]
+  },
+  {
+    "id": "Paradise Lost",
+    "title": "Paradise Lost",
+    "cover": "albums/Paradise Lost/cover.jpg",
+    "tracks": [
+      {
+        "name": "Morning came today (Cover)",
+        "file": "albums/Paradise Lost/Morning came today (Cover).m4a",
+        "cover": "albums/Paradise Lost/Morning came today (Cover).jpg"
+      },
+      {
+        "name": "Paradise Lost",
+        "file": "albums/Paradise Lost/Paradise Lost.m4a",
+        "cover": "albums/Paradise Lost/Paradise Lost.jpg"
+      },
+      {
+        "name": "Рай не Лечит",
+        "file": "albums/Paradise Lost/Рай не Лечит.m4a",
+        "cover": "albums/Paradise Lost/Рай не лечит.jpg"
+      }
+    ]
+  },
+  {
+    "id": "Psychedelic Vibe Lost Century",
+    "title": "Psychedelic Vibe Lost Century",
+    "cover": "albums/Psychedelic Vibe Lost Century/cover.jpg",
+    "tracks": [
+      {
+        "name": "3-17 AM Ritual",
+        "file": "albums/Psychedelic Vibe Lost Century/3-17 AM Ritual.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/3-17 AM Ritual.jpg"
+      },
+      {
+        "name": "and called it life v2",
+        "file": "albums/Psychedelic Vibe Lost Century/and called it life v2.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/and called it life v2.jpg"
+      },
+      {
+        "name": "and called it life v3",
+        "file": "albums/Psychedelic Vibe Lost Century/and called it life v3.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/and called it life v3.jpg"
+      },
+      {
+        "name": "BREATH IS VOW",
+        "file": "albums/Psychedelic Vibe Lost Century/BREATH IS VOW.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/BREATH IS VOW.jpg"
+      },
+      {
+        "name": "can you hear (Variation 2)",
+        "file": "albums/Psychedelic Vibe Lost Century/can you hear (Variation 2).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/can you hear (Variation 2).jpg"
+      },
+      {
+        "name": "can you hear v2",
+        "file": "albums/Psychedelic Vibe Lost Century/can you hear v2.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/can you hear v2.jpg"
+      },
+      {
+        "name": "can you hear",
+        "file": "albums/Psychedelic Vibe Lost Century/can you hear.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/can you hear.jpg"
+      },
+      {
+        "name": "Cosmic Vibes of 1973 v2",
+        "file": "albums/Psychedelic Vibe Lost Century/Cosmic Vibes of 1973 v2.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Cosmic Vibes of 1973 v2.jpg"
+      },
+      {
+        "name": "Cosmic Vibes of 1973",
+        "file": "albums/Psychedelic Vibe Lost Century/Cosmic Vibes of 1973.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Cosmic Vibes of 1973.jpg"
+      },
+      {
+        "name": "Dreams (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Dreams (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Dreams (Variation).jpg"
+      },
+      {
+        "name": "Dreams don’t end (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Dreams don’t end (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Dreams don’t end (Variation).jpg"
+      },
+      {
+        "name": "Ethereal Shadows",
+        "file": "albums/Psychedelic Vibe Lost Century/Ethereal Shadows.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Ethereal Shadows.jpg"
+      },
+      {
+        "name": "Every color (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Every color (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Every color (Variation).jpg"
+      },
+      {
+        "name": "Every color",
+        "file": "albums/Psychedelic Vibe Lost Century/Every color.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Every color.jpg"
+      },
+      {
+        "name": "FINAL TRANSMISSION (REPRISE)",
+        "file": "albums/Psychedelic Vibe Lost Century/FINAL TRANSMISSION (REPRISE).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/FINAL TRANSMISSION (REPRISE).jpg"
+      },
+      {
+        "name": "Folding the Absence (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Folding the Absence (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Folding the Absence (Variation).jpg"
+      },
+      {
+        "name": "Folding the Absence",
+        "file": "albums/Psychedelic Vibe Lost Century/Folding the Absence.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Folding the Absence.jpg"
+      },
+      {
+        "name": "Forget the rules (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Forget the rules (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Forget the rules (Variation).jpg"
+      },
+      {
+        "name": "Golden light (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Golden light (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Golden light (Variation).jpg"
+      },
+      {
+        "name": "Haze",
+        "file": "albums/Psychedelic Vibe Lost Century/Haze.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Haze.jpg"
+      },
+      {
+        "name": "Heaven’s Door (Rain Waltz)",
+        "file": "albums/Psychedelic Vibe Lost Century/Heaven’s Door (Rain Waltz).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Heaven’s Door (Rain Waltz).jpg"
+      },
+      {
+        "name": "Hmmm... yeah... (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Hmmm... yeah... (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Hmmm... yeah... (Variation).jpg"
+      },
+      {
+        "name": "HORIZON WHISPERS (Cover)",
+        "file": "albums/Psychedelic Vibe Lost Century/HORIZON WHISPERS (Cover).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/HORIZON WHISPERS (Cover).jpg"
+      },
+      {
+        "name": "HORIZON WHISPERS (Variation 2)",
+        "file": "albums/Psychedelic Vibe Lost Century/HORIZON WHISPERS (Variation 2).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/HORIZON WHISPERS (Variation 2).jpg"
+      },
+      {
+        "name": "HORIZON WHISPERS (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/HORIZON WHISPERS (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/HORIZON WHISPERS (Variation).jpg"
+      },
+      {
+        "name": "HORIZON WHISPERS",
+        "file": "albums/Psychedelic Vibe Lost Century/HORIZON WHISPERS.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/HORIZON WHISPERS.jpg"
+      },
+      {
+        "name": "Last message",
+        "file": "albums/Psychedelic Vibe Lost Century/Last message.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Last message.jpg"
+      },
+      {
+        "name": "Letter in the Rain (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Letter in the Rain (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Letter in the Rain (Variation).jpg"
+      },
+      {
+        "name": "Lucid Dreams Beneath the Floorboards (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Lucid Dreams Beneath the Floorboards (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Lucid Dreams Beneath the Floorboards (Variation).jpg"
+      },
+      {
+        "name": "Midnight Reverie (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Midnight Reverie (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Midnight Reverie (Variation).jpg"
+      },
+      {
+        "name": "Mirage  (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Mirage  (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Mirage (Variation).jpg"
+      },
+      {
+        "name": "Mirage",
+        "file": "albums/Psychedelic Vibe Lost Century/Mirage.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Mirage.jpg"
+      },
+      {
+        "name": "mirror (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/mirror (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/mirror (Variation).jpg"
+      },
+      {
+        "name": "MIRROR LADDER (REBORN)",
+        "file": "albums/Psychedelic Vibe Lost Century/MIRROR LADDER (REBORN).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/MIRROR LADDER (REBORN).jpg"
+      },
+      {
+        "name": "mirror",
+        "file": "albums/Psychedelic Vibe Lost Century/mirror.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/mirror.jpg"
+      },
+      {
+        "name": "Neon Dusk Communion (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Neon Dusk Communion (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Neon Dusk Communion (Variation).jpg"
+      },
+      {
+        "name": "Neon Reveries (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Neon Reveries (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Neon Reveries (Variation).jpg"
+      },
+      {
+        "name": "NEON SERMON (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/NEON SERMON (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/NEON SERMON (Variation).jpg"
+      },
+      {
+        "name": "NEON SERMON",
+        "file": "albums/Psychedelic Vibe Lost Century/NEON SERMON.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/NEON SERMON.jpg"
+      },
+      {
+        "name": "No name (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/No name (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/No name (Variation).jpg"
+      },
+      {
+        "name": "No name",
+        "file": "albums/Psychedelic Vibe Lost Century/No name.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/No name.jpg"
+      },
+      {
+        "name": "Obsidian Tide",
+        "file": "albums/Psychedelic Vibe Lost Century/Obsidian Tide.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Obsidian Tide.jpg"
+      },
+      {
+        "name": "OIL & WHISPER (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/OIL & WHISPER (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/OIL & WHISPER (Variation).jpg"
+      },
+      {
+        "name": "Phantom Mirage (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Phantom Mirage (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Phantom Mirage (Variation).jpg"
+      },
+      {
+        "name": "Pulse in the Static (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Pulse in the Static (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Pulse in the Static (Variation).jpg"
+      },
+      {
+        "name": "RADIO VOID (v2)",
+        "file": "albums/Psychedelic Vibe Lost Century/RADIO VOID (v2).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/RADIO VOID (v2).jpg"
+      },
+      {
+        "name": "RADIO VOID",
+        "file": "albums/Psychedelic Vibe Lost Century/RADIO VOID.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/RADIO VOID.jpg"
+      },
+      {
+        "name": "Rain Will Wash  (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Rain Will Wash  (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Rain Will Wash (Variation).jpg"
+      },
+      {
+        "name": "Rain Will Wash",
+        "file": "albums/Psychedelic Vibe Lost Century/Rain Will Wash.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Rain Will Wash.jpg"
+      },
+      {
+        "name": "Room 7 No Knock (Variation)",
+        "file": "albums/Psychedelic Vibe Lost Century/Room 7 No Knock (Variation).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Room 7 No Knock (Variation).jpg"
+      },
+      {
+        "name": "Short Circuit (Psychedelic Jazz)",
+        "file": "albums/Psychedelic Vibe Lost Century/Short Circuit (Psychedelic Jazz).m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/Short Circuit (Psychedelic Jazz).jpg"
+      },
+      {
+        "name": "SNOW FALLS",
+        "file": "albums/Psychedelic Vibe Lost Century/SNOW FALLS.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/SNOW FALLS.jpg"
+      },
+      {
+        "name": "We float on a melody",
+        "file": "albums/Psychedelic Vibe Lost Century/We float on a melody.m4a",
+        "cover": "albums/Psychedelic Vibe Lost Century/We float on a melody.jpg"
+      }
+    ]
+  },
+  {
+    "id": "Spanish Nights",
+    "title": "Spanish Nights",
+    "cover": "albums/Spanish Nights/cover.jpg",
+    "tracks": [
+      {
+        "name": "CONTIGO EN LA NOCHE",
+        "file": "albums/Spanish Nights/CONTIGO EN LA NOCHE.m4a",
+        "cover": "albums/Spanish Nights/CONTIGO EN LA NOCHE.jpg"
+      },
+      {
+        "name": "La Prima ( Первый Риск )",
+        "file": "albums/Spanish Nights/La Prima ( Первый Риск ).m4a",
+        "cover": "albums/Spanish Nights/La Prima ( Первый Риск ).jpg"
+      },
+      {
+        "name": "LA PRIMA (Conscious Hip-Hop Version) (Variation 2)",
+        "file": "albums/Spanish Nights/LA PRIMA (Conscious Hip-Hop Version) (Variation 2).m4a",
+        "cover": "albums/Spanish Nights/LA PRIMA (Conscious Hip-Hop Version) (Variation 2).jpg"
+      },
+      {
+        "name": "LA PRIMA (Conscious Hip-Hop Version) (Variation)",
+        "file": "albums/Spanish Nights/LA PRIMA (Conscious Hip-Hop Version) (Variation).m4a",
+        "cover": "albums/Spanish Nights/LA PRIMA (Conscious Hip-Hop Version) (Variation).jpg"
+      },
+      {
+        "name": "LA PRIMA (Conscious Hip-Hop Version)",
+        "file": "albums/Spanish Nights/LA PRIMA (Conscious Hip-Hop Version).m4a",
+        "cover": "albums/Spanish Nights/LA PRIMA (Conscious Hip-Hop Version).jpg"
+      },
+      {
+        "name": "LA PRIMA (Variation 2)",
+        "file": "albums/Spanish Nights/LA PRIMA (Variation 2).m4a",
+        "cover": "albums/Spanish Nights/LA PRIMA (Variation 2).jpg"
+      },
+      {
+        "name": "LA PRIMA (Variation)",
+        "file": "albums/Spanish Nights/LA PRIMA (Variation).m4a",
+        "cover": "albums/Spanish Nights/LA PRIMA (Variation).jpg"
+      },
+      {
+        "name": "La Prima v2",
+        "file": "albums/Spanish Nights/La Prima v2.m4a",
+        "cover": "albums/Spanish Nights/La Prima v2.jpg"
+      },
+      {
+        "name": "LA PRIMA",
+        "file": "albums/Spanish Nights/LA PRIMA.m4a",
+        "cover": "albums/Spanish Nights/LA PRIMA.jpg"
+      },
+      {
+        "name": "TÚ Y YO EN EL AFTER (Variation)",
+        "file": "albums/Spanish Nights/TÚ Y YO EN EL AFTER (Variation).m4a",
+        "cover": "albums/Spanish Nights/TÚ Y YO EN EL AFTER (Variation).jpg"
+      },
+      {
+        "name": "TÚ Y YO EN EL AFTER",
+        "file": "albums/Spanish Nights/TÚ Y YO EN EL AFTER.m4a",
+        "cover": "albums/Spanish Nights/TÚ Y YO EN EL AFTER.jpg"
+      }
+    ]
+  },
+  {
+    "id": "The third album",
+    "title": "The third album",
+    "cover": "albums/The third album/cover.jpg",
+    "tracks": [
+      {
+        "name": "Beat Between Us",
+        "file": "albums/The third album/Beat Between Us.m4a",
+        "cover": "albums/The third album/Beat Between Us.jpg"
+      },
+      {
+        "name": "Digital Distance",
+        "file": "albums/The third album/Digital Distance.m4a",
+        "cover": "albums/The third album/Digital Distance.jpg"
+      },
+      {
+        "name": "Echoes",
+        "file": "albums/The third album/Echoes.m4a",
+        "cover": "albums/The third album/Echoes.jpg"
+      },
+      {
+        "name": "Fighting Empty",
+        "file": "albums/The third album/Fighting Empty.m4a",
+        "cover": "albums/The third album/Fighting Empty.jpg"
+      },
+      {
+        "name": "Last Platform",
+        "file": "albums/The third album/Last Platform.m4a",
+        "cover": "albums/The third album/Last Platform.jpg"
+      },
+      {
+        "name": "Look At Me Now",
+        "file": "albums/The third album/Look At Me Now.m4a",
+        "cover": "albums/The third album/Look At Me Now.jpg"
+      },
+      {
+        "name": "Rain Into Grace",
+        "file": "albums/The third album/Rain Into Grace.m4a",
+        "cover": "albums/The third album/Rain Into Grace.jpg"
+      },
+      {
+        "name": "Static Memories",
+        "file": "albums/The third album/Static Memories.m4a",
+        "cover": "albums/The third album/Static Memories.jpg"
+      },
+      {
+        "name": "Static Silence",
+        "file": "albums/The third album/Static Silence.m4a",
+        "cover": "albums/The third album/Static Silence.jpg"
+      },
+      {
+        "name": "Stay Low",
+        "file": "albums/The third album/Stay Low.m4a",
+        "cover": "albums/The third album/Stay Low.jpg"
+      },
+      {
+        "name": "Storm Shape",
+        "file": "albums/The third album/Storm Shape.m4a",
+        "cover": "albums/The third album/Storm Shape.jpg"
+      },
+      {
+        "name": "The Same Gulls Circle",
+        "file": "albums/The third album/The Same Gulls Circle.m4a",
+        "cover": "albums/The third album/The Same Gulls Circle.jpg"
+      },
+      {
+        "name": "Tokyo Sunset",
+        "file": "albums/The third album/Tokyo Sunset.m4a",
+        "cover": "albums/The third album/Tokyo Sunset.jpg"
+      },
+      {
+        "name": "Walls That Listen",
+        "file": "albums/The third album/Walls That Listen.m4a",
+        "cover": "albums/The third album/Walls That Listen.jpg"
+      },
+      {
+        "name": "Waves Return",
+        "file": "albums/The third album/Waves Return.m4a",
+        "cover": "albums/The third album/Waves Return.jpg"
+      },
+      {
+        "name": "Город Теплей",
+        "file": "albums/The third album/Город Теплей.m4a",
+        "cover": "albums/The third album/Город Теплей.jpg"
+      },
+      {
+        "name": "Звёздная Серенада",
+        "file": "albums/The third album/Звёздная Серенада.m4a",
+        "cover": "albums/The third album/Звёздная Серенада.jpg"
+      },
+      {
+        "name": "Незнакомец в Метро (Stranger on the Metro) (Cover 2)",
+        "file": "albums/The third album/Незнакомец в Метро (Stranger on the Metro) (Cover 2).m4a",
+        "cover": "albums/The third album/Незнакомец в Метро (Stranger on the Metro) (Cover 2).jpg"
+      },
+      {
+        "name": "Незнакомец в Метро (Stranger on the Metro) (Cover)",
+        "file": "albums/The third album/Незнакомец в Метро (Stranger on the Metro) (Cover).m4a",
+        "cover": "albums/The third album/Незнакомец в Метро (Stranger on the Metro) (Cover).jpg"
+      },
+      {
+        "name": "Незнакомец в Метро (Stranger on the Metro)",
+        "file": "albums/The third album/Незнакомец в Метро (Stranger on the Metro).m4a",
+        "cover": "albums/The third album/Незнакомец в Метро (Stranger on the Metro).jpg"
+      },
+      {
+        "name": "Окна Во Тьме (Windows in the Dark)",
+        "file": "albums/The third album/Окна Во Тьме (Windows in the Dark).m4a",
+        "cover": "albums/The third album/Окна Во Тьме (Windows in the Dark).jpg"
+      },
+      {
+        "name": "Первый Луч",
+        "file": "albums/The third album/Первый Луч.m4a",
+        "cover": "albums/The third album/Первый Луч.jpg"
+      },
+      {
+        "name": "Тысячи Окон",
+        "file": "albums/The third album/Тысячи Окон.m4a",
+        "cover": "albums/The third album/Тысячи Окон.jpg"
+      }
+    ]
+  },
+  {
+    "id": "Whisper",
+    "title": "Whisper",
+    "cover": "albums/Whisper/cover.jpg",
+    "tracks": [
+      {
+        "name": "FINAL TRANSMISSION (REPRISE) (Variation)",
+        "file": "albums/Whisper/FINAL TRANSMISSION (REPRISE) (Variation).m4a",
+        "cover": "albums/Whisper/FINAL TRANSMISSION (REPRISE) (Variation).jpg"
+      },
+      {
+        "name": "FINAL TRANSMISSION (REPRISE)",
+        "file": "albums/Whisper/FINAL TRANSMISSION (REPRISE).m4a",
+        "cover": "albums/Whisper/FINAL TRANSMISSION (REPRISE).jpg"
+      },
+      {
+        "name": "Mirage ",
+        "file": "albums/Whisper/Mirage .m4a",
+        "cover": "albums/Whisper/Mirage.jpg"
+      },
+      {
+        "name": "No name (Variation)",
+        "file": "albums/Whisper/No name (Variation).m4a",
+        "cover": "albums/Whisper/No name (Variation).jpg"
+      },
+      {
+        "name": "OIL & WHISPER (Variation)",
+        "file": "albums/Whisper/OIL & WHISPER (Variation).m4a",
+        "cover": "albums/Whisper/OIL & WHISPER (Variation).jpg"
+      },
+      {
+        "name": "Short Circuit (Psychedelic Jazz)",
+        "file": "albums/Whisper/Short Circuit (Psychedelic Jazz).m4a",
+        "cover": "albums/Whisper/Short Circuit (Psychedelic Jazz).jpg"
+      },
+      {
+        "name": "THE TAPE NEVER ENDS (Variation)",
+        "file": "albums/Whisper/THE TAPE NEVER ENDS (Variation).m4a",
+        "cover": "albums/Whisper/THE TAPE NEVER ENDS (Variation).jpg"
+      },
+      {
+        "name": "THE TAPE NEVER ENDS",
+        "file": "albums/Whisper/THE TAPE NEVER ENDS.m4a",
+        "cover": "albums/Whisper/THE TAPE NEVER ENDS.jpg"
+      }
+    ]
+  }
+]
