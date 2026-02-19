@@ -95,6 +95,7 @@
             <label>Sort by:</label>
             <select id="sortSelect">
                 <option value="name" selected>Name</option>
+                <option value="created">Date Created</option>
                 <option value="tracks">Track Count</option>
                 <option value="plays">Total Plays</option>
                 <option value="favorites">Total Favorites</option>
@@ -167,6 +168,7 @@
     function getApiSortParam() {
         const sortMap = {
             'name': 'name',
+            'created': 'created_at',
             'plays': 'play_count',
             'favorites': 'favorite_count',
             'tracks': 'tracks_favorite_count'
