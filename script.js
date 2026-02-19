@@ -118,7 +118,8 @@
                 albumsList.push({
                     title: playlist.name || playlist.title || 'Untitled Playlist',
                     cover: playlist.image_url || playlist.cover_url || null,
-                    tracks: albumTracks
+                    tracks: albumTracks,
+                    tracksCount: playlist.tracks_count || albumTracks.length
                 });
             });
         }
@@ -142,7 +143,7 @@
                 ${coverHtml}
                 <div class="album-info">
                     <div class="album-title">${album.title}</div>
-                    <div class="album-meta">${album.tracks.length} files</div>
+                    <div class="album-meta">${album.tracksCount} tracks</div>
                 </div>
             `;
             
