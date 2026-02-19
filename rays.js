@@ -41,7 +41,7 @@ const RAYS_CONFIG = {
 
 // Создание лучей (тёмная тема)
 function createBeams(config) {
-    console.log('💡 Создание лучей (тонкие)');
+    // Debug: console.log('💡 Создание лучей (тонкие)');
     const container = document.querySelector('.background-effects');
     if (!container) return;
 
@@ -112,12 +112,12 @@ function createBeams(config) {
 
         container.appendChild(ray);
     }
-    console.log(`✨ Создано лучей: ${container.querySelectorAll('.ray-beam').length}`);
+    // Debug: console.log(`✨ Создано лучей: ${container.querySelectorAll('.ray-beam').length}`);
 }
 
 // Создание красных шаров (светлая тема)
 function createSphere(config) {
-    console.log('🔴 Создание красных шаров');
+    // Debug: console.log('🔴 Создание красных шаров');
     const container = document.querySelector('.background-effects');
     if (!container) return;
 
@@ -170,7 +170,7 @@ function createSphere(config) {
 
         container.appendChild(sphere);
     }
-    console.log(`✨ Создано шаров: ${container.querySelectorAll('.sphere').length}`);
+    // Debug: console.log(`✨ Создано шаров: ${container.querySelectorAll('.sphere').length}`);
 }
 
 // Создание пузырьков (частиц) с настройками
@@ -226,7 +226,7 @@ function createParticles(config) {
         `;
         container.appendChild(particle);
     }
-    console.log(`✨ Создано частиц: ${container.querySelectorAll('.particle').length}`);
+    // Debug: console.log(`✨ Создано частиц: ${container.querySelectorAll('.particle').length}`);
 }
 
 // Функция применения эффектов в зависимости от темы
@@ -242,7 +242,7 @@ function applyEffects(theme) {
 
 // Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Запуск эффектов');
+    // Debug: console.log('🚀 Запуск эффектов');
     // Создаём частицы с настройками из конфига
     createParticles(RAYS_CONFIG.particles);
 
@@ -253,6 +253,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Слушаем изменения темы (событие из script.js)
 window.addEventListener('themeChanged', (e) => {
-    console.log('🎨 Тема изменена, обновляем эффекты');
+    // Debug: console.log('🎨 Тема изменена, обновляем эффекты');
     applyEffects(e.detail.theme);
 });
