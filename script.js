@@ -78,32 +78,53 @@
 
     // Функция преобразования данных из API в формат, подходящий для отображения
     function transformApiData(tracks, playlists, users) {
-        // Создаем коллекцию альбомов на основе треков
-        const albumsMap = new Map();
-        
-        tracks.forEach(track => {
-            // Используем имя автора как название альбома
-            const albumKey = track.author_name || 'Unknown Artist';
-            
-            if (!albumsMap.has(albumKey)) {
-                albumsMap.set(albumKey, {
-                    title: albumKey,
-                    cover: track.image_url || null,
-                    tracks: []
-                });
-            }
-            
-            // Добавляем трек в соответствующий альбом
-            albumsMap.get(albumKey).tracks.push({
-                name: track.title,
-                file: track.audio_url || track.full_url || null,
-                cover: track.image_url || null,
-                duration: track.duration_s || null
+        // Создаем мапу пользователей для быстрого доступа
+        const usersMap = new Map();
+        if (users) {
+            users.forEach(user => {
+                usersMap.set(user.id, user);
             });
+        }
+
+        // Создаем мапу треков для быстрого доступа
+        const tracksMap = new Map();
+        tracks.forEach(track => {
+            tracksMap.set(track.id, track);
         });
 
+        // Создаем альбомы на основе плейлистов из API
+        const albumsList = [];
+        
+        if (playlists && playlists.length > 0) {
+            playlists.forEach(playlist => {
+                const albumTracks = [];
+                
+                // Если у плейлиста есть треки, собираем их
+                if (playlist.tracks && Array.isArray(playlist.tracks)) {
+                    playlist.tracks.forEach(trackId => {
+                        const track = tracksMap.get(trackId);
+                        if (track) {
+                            albumTracks.push({
+                                name: track.title,
+                                file: track.audio_url || track.full_url || null,
+                                cover: track.image_url || null,
+                                duration: track.duration_s || null
+                            });
+                        }
+                    });
+                }
+                
+                // Добавляем альбом только если есть треки или это валидный плейлист
+                albumsList.push({
+                    title: playlist.name || playlist.title || 'Untitled Playlist',
+                    cover: playlist.image_url || playlist.cover_url || null,
+                    tracks: albumTracks
+                });
+            });
+        }
+
         // Возвращаем массив альбомов
-        return Array.from(albumsMap.values());
+        return albumsList;
     }
 
     // ==================== ОТРИСОВКА ГАЛЕРЕИ ====================
