@@ -114,10 +114,16 @@
                     });
                 }
                 
+                // Определяем обложку: сначала плейлист, затем первый трек
+                let albumCover = playlist.image_url || playlist.cover_url || null;
+                if (!albumCover && albumTracks.length > 0) {
+                    albumCover = albumTracks[0].cover;
+                }
+                
                 // Добавляем альбом (даже если треков нет)
                 albumsList.push({
                     title: playlist.name || playlist.title || 'Untitled Playlist',
-                    cover: playlist.image_url || playlist.cover_url || null,
+                    cover: albumCover,
                     tracks: albumTracks,
                     tracksCount: playlist.tracks_count || albumTracks.length
                 });
