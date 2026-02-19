@@ -363,6 +363,40 @@
                 { y: 0, opacity: 1, duration: 0.4, stagger: 0.05, ease: 'power2.out' }
             );
         }
+        
+        // Фоновая загрузка обложек для альбомов без обложек
+        albumsToRender.forEach(album => {
+            if (!album.cover) {
+                loadCoverForAlbum(album);
+            }
+        });
+    }
+    
+    // Фоновая загрузка обложки альбома из первого трека
+    async function loadCoverForAlbum(album) {
+        try {
+            // Загружаем треки альбома
+            const tracks = await loadAlbumTracks(album.id);
+            
+            // Если есть треки с обложками, берем первую
+            if (tracks.length > 0) {
+                const firstTrackWithCover = tracks.find(t => t.cover);
+                if (firstTrackWithCover) {
+                    album.cover = firstTrackWithCover.cover;
+                    
+                    // Обновляем отображение в карточке
+                    const card = document.querySelector(`.album-card[data-album-id="${album.id}"]`);
+                    if (card) {
+                        const coverImg = card.querySelector('.album-cover');
+                        if (coverImg) {
+                            coverImg.outerHTML = `<img class="album-cover" src="${album.cover}" alt="${album.title}" loading="lazy">`;
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn(`Failed to load cover for album ${album.id}:`, err);
+        }
     }
 
     // ==================== ЛОГИКА ПЛЕЕРА ====================
