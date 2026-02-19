@@ -24,8 +24,8 @@
     let totalPages = 1;
 
     // Сортировка
-    let currentSort = ''; // '', 'name', 'created', 'tracks', 'plays', 'favorites'
-    let currentOrder = 'asc'; // 'asc', 'desc'
+    let currentSort = 'created'; // 'created', 'name', 'tracks', 'plays', 'favorites'
+    let currentOrder = 'desc'; // 'desc', 'asc' - по умолчанию новые сначала
 
     // ID автора BEST (будет загружен при инициализации)
     let bestUserId = null;
@@ -94,14 +94,13 @@
         sortContainer.innerHTML = `
             <label>Sort by:</label>
             <select id="sortSelect">
-                <option value="" selected>Default</option>
+                <option value="created" selected>Date Created</option>
                 <option value="name">Name</option>
-                <option value="created">Date Created</option>
                 <option value="tracks">Track Count</option>
                 <option value="plays">Total Plays</option>
                 <option value="favorites">Total Favorites</option>
             </select>
-            <button id="sortOrderBtn" title="Toggle sort order">↑</button>
+            <button id="sortOrderBtn" title="Toggle sort order">↓</button>
         `;
         header.appendChild(sortContainer);
 
@@ -202,14 +201,9 @@
 
         try {
             // Формируем URL с параметрами серверной сортировки и фильтрации
-            let url = `https://api.dj1.ru/api/playlists?page=${currentPage}&limit=${itemsPerPage}&privacy=public`;
-            
-            // Добавляем параметры сортировки только если выбрана конкретная сортировка
-            if (currentSort) {
-                const sortParam = getApiSortParam();
-                const orderParam = currentOrder.toUpperCase();
-                url += `&sort=${sortParam}&order=${orderParam}`;
-            }
+            const sortParam = getApiSortParam();
+            const orderParam = currentOrder.toUpperCase();
+            let url = `https://api.dj1.ru/api/playlists?page=${currentPage}&limit=${itemsPerPage}&privacy=public&sort=${sortParam}&order=${orderParam}`;
             
             // Добавляем фильтр по автору BEST, если ID найден
             if (bestUserId) {
