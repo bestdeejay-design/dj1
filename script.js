@@ -85,6 +85,7 @@
                 <option value="name" selected>Name</option>
                 <option value="tracks">Track Count</option>
                 <option value="plays">Total Plays</option>
+                <option value="favorites">Total Favorites</option>
             </select>
             <button id="sortOrderBtn" title="Toggle sort order">↑</button>
         `;
@@ -140,13 +141,41 @@
     }
 
     function resetAndReload() {
-        currentPage = 1;
-        hasMore = true;
-        totalPages = 1;
-        albums = [];
+        // Применяем сортировку к уже загруженным альбомам
+        sortAlbums();
+        
+        // Перерисовываем галерею
         gallery.innerHTML = '';
-        albumTracksCache.clear();
-        loadMoreAlbums();
+        renderAlbums(albums);
+    }
+
+    function sortAlbums() {
+        albums.sort((a, b) => {
+            let valA, valB;
+            
+            switch (currentSort) {
+                case 'tracks':
+                    valA = a.tracksCount;
+                    valB = b.tracksCount;
+                    break;
+                case 'plays':
+                    valA = a.totalPlays;
+                    valB = b.totalPlays;
+                    break;
+                case 'favorites':
+                    valA = a.totalFavorites;
+                    valB = b.totalFavorites;
+                    break;
+                case 'name':
+                default:
+                    valA = a.title.toLowerCase();
+                    valB = b.title.toLowerCase();
+            }
+            
+            if (valA < valB) return currentOrder === 'asc' ? -1 : 1;
+            if (valA > valB) return currentOrder === 'asc' ? 1 : -1;
+            return 0;
+        });
     }
 
     // ==================== ПАГИНАЦИЯ (БЕСКОНЕЧНЫЙ СКРОЛЛ) ====================
@@ -200,8 +229,9 @@
                 title: playlist.name || 'Untitled Playlist',
                 cover: playlist.image_url || null,
                 tracksCount: playlist.tracks_count || 0,
-                tracks: [], // Треки загрузим позже при необходимости
-                totalPlays: 0 // Будет рассчитано при загрузке треков
+                totalPlays: playlist.total_play_count || 0,
+                totalFavorites: playlist.total_favorite_count || 0,
+                tracks: [] // Треки загрузим позже при необходимости
             }));
 
             // Добавляем новые альбомы
