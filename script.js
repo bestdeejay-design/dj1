@@ -24,7 +24,7 @@
     let totalPages = 1;
 
     // Сортировка
-    let currentSort = 'name'; // 'name', 'tracks', 'plays'
+    let currentSort = ''; // '', 'name', 'created', 'tracks', 'plays', 'favorites'
     let currentOrder = 'asc'; // 'asc', 'desc'
 
     // ID автора BEST (будет загружен при инициализации)
@@ -94,7 +94,8 @@
         sortContainer.innerHTML = `
             <label>Sort by:</label>
             <select id="sortSelect">
-                <option value="name" selected>Name</option>
+                <option value="" selected>Default</option>
+                <option value="name">Name</option>
                 <option value="created">Date Created</option>
                 <option value="tracks">Track Count</option>
                 <option value="plays">Total Plays</option>
@@ -173,7 +174,7 @@
             'favorites': 'favorite_count',
             'tracks': 'tracks_favorite_count'
         };
-        return sortMap[currentSort] || 'name';
+        return sortMap[currentSort] || 'created_at'; // По умолчанию сортируем по дате создания
     }
 
     // ==================== ПАГИНАЦИЯ (БЕСКОНЕЧНЫЙ СКРОЛЛ) ====================
@@ -201,9 +202,14 @@
 
         try {
             // Формируем URL с параметрами серверной сортировки и фильтрации
-            const sortParam = getApiSortParam();
-            const orderParam = currentOrder.toUpperCase();
-            let url = `https://api.dj1.ru/api/playlists?page=${currentPage}&limit=${itemsPerPage}&privacy=public&sort=${sortParam}&order=${orderParam}`;
+            let url = `https://api.dj1.ru/api/playlists?page=${currentPage}&limit=${itemsPerPage}&privacy=public`;
+            
+            // Добавляем параметры сортировки только если выбрана конкретная сортировка
+            if (currentSort) {
+                const sortParam = getApiSortParam();
+                const orderParam = currentOrder.toUpperCase();
+                url += `&sort=${sortParam}&order=${orderParam}`;
+            }
             
             // Добавляем фильтр по автору BEST, если ID найден
             if (bestUserId) {
@@ -320,11 +326,12 @@
                     album.tracks = await loadAlbumTracks(album.id);
                     loadingEl.style.display = 'none';
                     
-                    // Обновляем обложку, если её не было
-                    if (!album.cover && album.tracks.length > 0) {
+                    // Обновляем обложку альбома из первого трека, если её не было
+                    if (!album.cover && album.tracks.length > 0 && album.tracks[0].cover) {
                         album.cover = album.tracks[0].cover;
+                        // Обновляем отображение обложки в карточке
                         const coverImg = card.querySelector('.album-cover');
-                        if (coverImg && coverImg.tagName === 'DIV') {
+                        if (coverImg) {
                             coverImg.outerHTML = `<img class="album-cover" src="${album.cover}" alt="${album.title}" loading="lazy">`;
                         }
                     }
