@@ -3,7 +3,6 @@
 (function() {
     // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
     let albums = [];
-    let allAlbums = []; // Все загруженные альбомы для сортировки
     let currentAlbum = null;
     let currentTrackIndex = -1;
     let playlistVisible = false;
@@ -17,15 +16,19 @@
     let shuffleIndices = [];
     let shuffleCurrentIndex = 0;
 
-    // Пагинация
+    // Пагинация API
     let currentPage = 1;
     const itemsPerPage = 12;
     let isLoading = false;
     let hasMore = true;
+    let totalPages = 1;
 
     // Сортировка
     let currentSort = 'name'; // 'name', 'tracks', 'plays'
     let currentOrder = 'asc'; // 'asc', 'desc'
+
+    // Кэш загруженных треков альбомов
+    const albumTracksCache = new Map();
 
     // Элементы DOM
     const gallery = document.getElementById('gallery');
@@ -55,49 +58,11 @@
     // ==================== ЗАГРУЗКА ДАННЫХ ====================
     async function loadLibrary() {
         try {
-            // Загружаем все данные (треки нужны для подсчета прослушиваний)
-            const tracksResponse = await fetch('https://api.dj1.ru/api/tracks?page=1&limit=1000');
-            if (!tracksResponse.ok) throw new Error('Не удалось загрузить треки');
-            const tracksData = await tracksResponse.json();
-
-            // Загружаем все плейлисты сразу
-            const playlistsResponse = await fetch('https://api.dj1.ru/api/playlists?page=1&limit=1000');
-            if (!playlistsResponse.ok) throw new Error('Не удалось загрузить плейлисты');
-            const playlistsData = await playlistsResponse.json();
-
-            const usersResponse = await fetch('https://api.dj1.ru/api/users?page=1&limit=50');
-            if (!usersResponse.ok) throw new Error('Не удалось загрузить пользователей');
-            const usersData = await usersResponse.json();
-
-            // Фильтруем только опубликованные (public) плейлисты
-            const publicPlaylists = playlistsData.data.filter(playlist => playlist.privacy === 'public');
-
-            // Загружаем детали каждого плейлиста для получения треков
-            const playlistsWithTracks = await Promise.all(
-                publicPlaylists.map(async (playlist) => {
-                    try {
-                        const detailResponse = await fetch(`https://api.dj1.ru/api/playlists/${playlist.id}`);
-                        if (detailResponse.ok) {
-                            const detailData = await detailResponse.json();
-                            return { ...playlist, tracks: detailData.tracks || [] };
-                        }
-                        return { ...playlist, tracks: [] };
-                    } catch (err) {
-                        console.warn(`Failed to load tracks for playlist ${playlist.id}:`, err);
-                        return { ...playlist, tracks: [] };
-                    }
-                })
-            );
-
-            // Преобразуем данные в формат, подходящий для отображения
-            allAlbums = transformApiData(tracksData.data, playlistsWithTracks, usersData.data);
-            
             // Создаем элементы управления сортировкой
             createSortControls();
             
-            // Применяем сортировку и загружаем первую страницу
-            applySorting();
-            loadMoreAlbums();
+            // Загружаем первую страницу
+            await loadMoreAlbums();
             
             // Настраиваем бесконечный скролл
             setupInfiniteScroll();
@@ -174,37 +139,13 @@
         });
     }
 
-    function applySorting() {
-        allAlbums.sort((a, b) => {
-            let valA, valB;
-            
-            switch (currentSort) {
-                case 'tracks':
-                    valA = a.tracksCount;
-                    valB = b.tracksCount;
-                    break;
-                case 'plays':
-                    valA = a.totalPlays || 0;
-                    valB = b.totalPlays || 0;
-                    break;
-                case 'name':
-                default:
-                    valA = a.title.toLowerCase();
-                    valB = b.title.toLowerCase();
-            }
-            
-            if (valA < valB) return currentOrder === 'asc' ? -1 : 1;
-            if (valA > valB) return currentOrder === 'asc' ? 1 : -1;
-            return 0;
-        });
-    }
-
     function resetAndReload() {
         currentPage = 1;
         hasMore = true;
+        totalPages = 1;
         albums = [];
         gallery.innerHTML = '';
-        applySorting();
+        albumTracksCache.clear();
         loadMoreAlbums();
     }
 
@@ -225,37 +166,97 @@
         observer.observe(sentinel);
     }
 
-    function loadMoreAlbums() {
+    async function loadMoreAlbums() {
         if (isLoading || !hasMore) return;
         
         isLoading = true;
         loadingEl.style.display = 'block';
 
-        const start = (currentPage - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        const newAlbums = allAlbums.slice(start, end);
+        try {
+            // Загружаем страницу плейлистов из API
+            const response = await fetch(`https://api.dj1.ru/api/playlists?page=${currentPage}&limit=${itemsPerPage}`);
+            if (!response.ok) throw new Error('Failed to load playlists');
+            
+            const data = await response.json();
+            const playlists = data.data || [];
+            const meta = data.meta || {};
+            
+            // Обновляем информацию о пагинации
+            totalPages = meta.pages || 1;
+            hasMore = currentPage < totalPages;
+            
+            // Фильтруем только public плейлисты
+            const publicPlaylists = playlists.filter(p => p.privacy === 'public');
+            
+            if (publicPlaylists.length === 0 && !hasMore) {
+                loadingEl.style.display = 'none';
+                isLoading = false;
+                return;
+            }
 
-        if (newAlbums.length === 0) {
-            hasMore = false;
-            loadingEl.style.display = 'none';
+            // Преобразуем плейлисты в альбомы (без загрузки треков)
+            const newAlbums = publicPlaylists.map(playlist => ({
+                id: playlist.id,
+                title: playlist.name || 'Untitled Playlist',
+                cover: playlist.image_url || null,
+                tracksCount: playlist.tracks_count || 0,
+                tracks: [], // Треки загрузим позже при необходимости
+                totalPlays: 0 // Будет рассчитано при загрузке треков
+            }));
+
+            // Добавляем новые альбомы
+            albums = albums.concat(newAlbums);
+            renderAlbums(newAlbums);
+
+            currentPage++;
+            
+        } catch (err) {
+            console.error('Error loading albums:', err);
+            errorEl.style.display = 'block';
+            errorEl.textContent = 'Ошибка загрузки: ' + err.message;
+        } finally {
             isLoading = false;
-            return;
+            loadingEl.style.display = hasMore ? 'block' : 'none';
+        }
+    }
+
+    // Ленивая загрузка треков альбома
+    async function loadAlbumTracks(albumId) {
+        // Проверяем кэш
+        if (albumTracksCache.has(albumId)) {
+            return albumTracksCache.get(albumId);
         }
 
-        // Добавляем новые альбомы
-        albums = albums.concat(newAlbums);
-        renderAlbums(newAlbums);
+        try {
+            const response = await fetch(`https://api.dj1.ru/api/playlists/${albumId}`);
+            if (!response.ok) throw new Error('Failed to load playlist details');
+            
+            const data = await response.json();
+            const tracks = data.tracks || [];
+            
+            // Преобразуем треки
+            const albumTracks = tracks.map(track => ({
+                name: track.title,
+                file: track.audio_url || track.full_url || null,
+                cover: track.image_url || null,
+                duration: track.duration_s || null
+            }));
 
-        currentPage++;
-        hasMore = end < allAlbums.length;
-        isLoading = false;
-        loadingEl.style.display = hasMore ? 'block' : 'none';
+            // Сохраняем в кэш
+            albumTracksCache.set(albumId, albumTracks);
+            
+            return albumTracks;
+        } catch (err) {
+            console.warn(`Failed to load tracks for album ${albumId}:`, err);
+            return [];
+        }
     }
 
     function renderAlbums(albumsToRender) {
         albumsToRender.forEach(album => {
             const card = document.createElement('div');
             card.className = 'album-card';
+            card.dataset.albumId = album.id;
             
             const coverHtml = album.cover 
                 ? `<img class="album-cover" src="${album.cover}" alt="${album.title}" loading="lazy">`
@@ -269,9 +270,25 @@
                 </div>
             `;
             
-            card.addEventListener('click', () => {
+            card.addEventListener('click', async () => {
                 if (!playerBar.classList.contains('active')) {
                     playerBar.classList.add('active');
+                }
+
+                // Ленивая загрузка треков при первом открытии
+                if (album.tracks.length === 0) {
+                    loadingEl.style.display = 'block';
+                    album.tracks = await loadAlbumTracks(album.id);
+                    loadingEl.style.display = 'none';
+                    
+                    // Обновляем обложку, если её не было
+                    if (!album.cover && album.tracks.length > 0) {
+                        album.cover = album.tracks[0].cover;
+                        const coverImg = card.querySelector('.album-cover');
+                        if (coverImg && coverImg.tagName === 'DIV') {
+                            coverImg.outerHTML = `<img class="album-cover" src="${album.cover}" alt="${album.title}" loading="lazy">`;
+                        }
+                    }
                 }
 
                 if (currentAlbum !== album) {
@@ -295,55 +312,11 @@
 
         // Анимация для новых элементов
         if (typeof gsap !== 'undefined') {
-            gsap.fromTo('.album-card:last-child', 
+            gsap.fromTo('.album-card', 
                 { y: 30, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out' }
+                { y: 0, opacity: 1, duration: 0.4, stagger: 0.05, ease: 'power2.out' }
             );
         }
-    }
-
-    // Функция преобразования данных из API в формат, подходящий для отображения
-    function transformApiData(tracks, playlists, users) {
-        // Создаем альбомы на основе плейлистов из API
-        const albumsList = [];
-        
-        if (playlists && playlists.length > 0) {
-            playlists.forEach(playlist => {
-                const albumTracks = [];
-                let totalPlays = 0;
-                
-                // Если у плейлиста есть треки, собираем их
-                if (playlist.tracks && Array.isArray(playlist.tracks)) {
-                    playlist.tracks.forEach(track => {
-                        albumTracks.push({
-                            name: track.title,
-                            file: track.audio_url || track.full_url || null,
-                            cover: track.image_url || null,
-                            duration: track.duration_s || null
-                        });
-                        totalPlays += track.play_count || 0;
-                    });
-                }
-                
-                // Определяем обложку: сначала плейлист, затем первый трек
-                let albumCover = playlist.image_url || playlist.cover_url || null;
-                if (!albumCover && albumTracks.length > 0) {
-                    albumCover = albumTracks[0].cover;
-                }
-                
-                // Добавляем альбом (даже если треков нет)
-                albumsList.push({
-                    title: playlist.name || playlist.title || 'Untitled Playlist',
-                    cover: albumCover,
-                    tracks: albumTracks,
-                    tracksCount: playlist.tracks_count || albumTracks.length,
-                    totalPlays: totalPlays
-                });
-            });
-        }
-
-        // Возвращаем массив альбомов
-        return albumsList;
     }
 
     // ==================== ЛОГИКА ПЛЕЕРА ====================
