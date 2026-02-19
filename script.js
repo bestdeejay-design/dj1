@@ -141,41 +141,25 @@
     }
 
     function resetAndReload() {
-        // Применяем сортировку к уже загруженным альбомам
-        sortAlbums();
-        
-        // Перерисовываем галерею
+        // Сбрасываем состояние и перезагружаем с серверной сортировкой
+        currentPage = 1;
+        hasMore = true;
+        totalPages = 1;
+        albums = [];
         gallery.innerHTML = '';
-        renderAlbums(albums);
+        albumTracksCache.clear();
+        loadMoreAlbums();
     }
 
-    function sortAlbums() {
-        albums.sort((a, b) => {
-            let valA, valB;
-            
-            switch (currentSort) {
-                case 'tracks':
-                    valA = a.tracksCount;
-                    valB = b.tracksCount;
-                    break;
-                case 'plays':
-                    valA = a.totalPlays;
-                    valB = b.totalPlays;
-                    break;
-                case 'favorites':
-                    valA = a.totalFavorites;
-                    valB = b.totalFavorites;
-                    break;
-                case 'name':
-                default:
-                    valA = a.title.toLowerCase();
-                    valB = b.title.toLowerCase();
-            }
-            
-            if (valA < valB) return currentOrder === 'asc' ? -1 : 1;
-            if (valA > valB) return currentOrder === 'asc' ? 1 : -1;
-            return 0;
-        });
+    // Преобразуем клиентское значение сортировки в параметр API
+    function getApiSortParam() {
+        const sortMap = {
+            'name': 'name',
+            'plays': 'play_count',
+            'favorites': 'favorite_count',
+            'tracks': 'tracks_favorite_count'
+        };
+        return sortMap[currentSort] || 'name';
     }
 
     // ==================== ПАГИНАЦИЯ (БЕСКОНЕЧНЫЙ СКРОЛЛ) ====================
@@ -202,8 +186,12 @@
         loadingEl.style.display = 'block';
 
         try {
-            // Загружаем страницу плейлистов из API
-            const response = await fetch(`https://api.dj1.ru/api/playlists?page=${currentPage}&limit=${itemsPerPage}`);
+            // Формируем URL с параметрами серверной сортировки и фильтрации
+            const sortParam = getApiSortParam();
+            const orderParam = currentOrder.toUpperCase();
+            const url = `https://api.dj1.ru/api/playlists?page=${currentPage}&limit=${itemsPerPage}&privacy=public&sort=${sortParam}&order=${orderParam}`;
+            
+            const response = await fetch(url);
             if (!response.ok) throw new Error('Failed to load playlists');
             
             const data = await response.json();
@@ -214,17 +202,15 @@
             totalPages = meta.pages || 1;
             hasMore = currentPage < totalPages;
             
-            // Фильтруем только public плейлисты
-            const publicPlaylists = playlists.filter(p => p.privacy === 'public');
-            
-            if (publicPlaylists.length === 0 && !hasMore) {
+            if (playlists.length === 0 && !hasMore) {
                 loadingEl.style.display = 'none';
                 isLoading = false;
                 return;
             }
 
             // Преобразуем плейлисты в альбомы (без загрузки треков)
-            const newAlbums = publicPlaylists.map(playlist => ({
+            // API уже отфильтровал по public и отсортировал
+            const newAlbums = playlists.map(playlist => ({
                 id: playlist.id,
                 title: playlist.name || 'Untitled Playlist',
                 cover: playlist.image_url || null,
