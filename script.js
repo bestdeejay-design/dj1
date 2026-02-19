@@ -27,6 +27,9 @@
     let currentSort = 'name'; // 'name', 'tracks', 'plays'
     let currentOrder = 'asc'; // 'asc', 'desc'
 
+    // ID автора BEST (будет загружен при инициализации)
+    let bestUserId = null;
+
     // Кэш загруженных треков альбомов
     const albumTracksCache = new Map();
 
@@ -58,6 +61,15 @@
     // ==================== ЗАГРУЗКА ДАННЫХ ====================
     async function loadLibrary() {
         try {
+            // Находим пользователя BEST
+            const userResponse = await fetch('https://api.dj1.ru/api/users?username=BEST&limit=1');
+            if (userResponse.ok) {
+                const userData = await userResponse.json();
+                if (userData.data && userData.data.length > 0) {
+                    bestUserId = userData.data[0].user_id;
+                }
+            }
+            
             // Создаем элементы управления сортировкой
             createSortControls();
             
@@ -189,7 +201,12 @@
             // Формируем URL с параметрами серверной сортировки и фильтрации
             const sortParam = getApiSortParam();
             const orderParam = currentOrder.toUpperCase();
-            const url = `https://api.dj1.ru/api/playlists?page=${currentPage}&limit=${itemsPerPage}&privacy=public&sort=${sortParam}&order=${orderParam}`;
+            let url = `https://api.dj1.ru/api/playlists?page=${currentPage}&limit=${itemsPerPage}&privacy=public&sort=${sortParam}&order=${orderParam}`;
+            
+            // Добавляем фильтр по автору BEST, если ID найден
+            if (bestUserId) {
+                url += `&user_id=${bestUserId}`;
+            }
             
             const response = await fetch(url);
             if (!response.ok) throw new Error('Failed to load playlists');
@@ -209,20 +226,24 @@
             }
 
             // Преобразуем плейлисты в альбомы (без загрузки треков)
-            // API уже отфильтровал по public и отсортировал
-            const newAlbums = playlists.map(playlist => ({
-                id: playlist.id,
-                title: playlist.name || 'Untitled Playlist',
-                cover: playlist.image_url || null,
-                tracksCount: playlist.tracks_count || 0,
-                totalPlays: playlist.total_play_count || 0,
-                totalFavorites: playlist.total_favorite_count || 0,
-                tracks: [] // Треки загрузим позже при необходимости
-            }));
+            // Фильтруем только те, где больше 1 трека
+            const newAlbums = playlists
+                .filter(playlist => (playlist.tracks_count || 0) > 1)
+                .map(playlist => ({
+                    id: playlist.id,
+                    title: playlist.name || 'Untitled Playlist',
+                    cover: playlist.image_url || null,
+                    tracksCount: playlist.tracks_count || 0,
+                    totalPlays: playlist.total_play_count || 0,
+                    totalFavorites: playlist.total_favorite_count || 0,
+                    tracks: [] // Треки загрузим позже при необходимости
+                }));
 
             // Добавляем новые альбомы
-            albums = albums.concat(newAlbums);
-            renderAlbums(newAlbums);
+            if (newAlbums.length > 0) {
+                albums = albums.concat(newAlbums);
+                renderAlbums(newAlbums);
+            }
 
             currentPage++;
             
