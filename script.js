@@ -44,9 +44,21 @@
     // ==================== ЗАГРУЗКА ДАННЫХ ====================
     async function loadLibrary() {
         try {
-            const response = await fetch('library.json');
-            if (!response.ok) throw new Error('Не удалось загрузить library.json');
-            albums = await response.json();
+            // Загружаем данные через API
+            const tracksResponse = await fetch('https://api.dj1.ru/api/tracks?page=1&limit=100');
+            if (!tracksResponse.ok) throw new Error('Не удалось загрузить треки');
+            const tracksData = await tracksResponse.json();
+
+            const playlistsResponse = await fetch('https://api.dj1.ru/api/playlists?page=1&limit=50');
+            if (!playlistsResponse.ok) throw new Error('Не удалось загрузить плейлисты');
+            const playlistsData = await playlistsResponse.json();
+
+            const usersResponse = await fetch('https://api.dj1.ru/api/users?page=1&limit=50');
+            if (!usersResponse.ok) throw new Error('Не удалось загрузить пользователей');
+            const usersData = await usersResponse.json();
+
+            // Преобразуем данные в формат, подходящий для отображения
+            albums = transformApiData(tracksData.data, playlistsData.data, usersData.data);
             loadingEl.style.display = 'none';
             renderGallery();
             
@@ -62,6 +74,36 @@
             errorEl.style.display = 'block';
             errorEl.textContent = 'Ошибка: ' + err.message;
         }
+    }
+
+    // Функция преобразования данных из API в формат, подходящий для отображения
+    function transformApiData(tracks, playlists, users) {
+        // Создаем коллекцию альбомов на основе треков
+        const albumsMap = new Map();
+        
+        tracks.forEach(track => {
+            // Используем имя автора как название альбома
+            const albumKey = track.author_name || 'Unknown Artist';
+            
+            if (!albumsMap.has(albumKey)) {
+                albumsMap.set(albumKey, {
+                    title: albumKey,
+                    cover: track.image_url || null,
+                    tracks: []
+                });
+            }
+            
+            // Добавляем трек в соответствующий альбом
+            albumsMap.get(albumKey).tracks.push({
+                name: track.title,
+                file: track.audio_url || track.full_url || null,
+                cover: track.image_url || null,
+                duration: track.duration_s || null
+            });
+        });
+
+        // Возвращаем массив альбомов
+        return Array.from(albumsMap.values());
     }
 
     // ==================== ОТРИСОВКА ГАЛЕРЕИ ====================
