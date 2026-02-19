@@ -1,6 +1,14 @@
 // script.js — логика плеера, галереи, темы
 
 (function() {
+    // ==================== УТИЛИТЫ ====================
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
     // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
     let albums = [];
     let currentAlbum = null;
@@ -320,7 +328,7 @@
             'created': 'created_at',
             'plays': 'play_count',
             'favorites': 'favorite_count',
-            'tracks': 'tracks_favorite_count'
+            'tracks': 'tracks_count'
         };
         return sortMap[currentSort] || 'created_at'; // По умолчанию сортируем по дате создания
     }
@@ -446,14 +454,15 @@
             card.className = 'album-card';
             card.dataset.albumId = album.id;
             
+            const safeTitle = escapeHtml(album.title);
             const coverHtml = album.cover 
-                ? `<img class="album-cover" src="${album.cover}" alt="${album.title}" loading="lazy">`
+                ? `<img class="album-cover" src="${album.cover}" alt="${safeTitle}" loading="lazy">`
                 : `<div class="album-cover" style="background:#2a2a2a; display:flex; align-items:center; justify-content:center; color:#666;">📀</div>`;
             
             card.innerHTML = `
                 ${coverHtml}
                 <div class="album-info">
-                    <div class="album-title">${album.title}</div>
+                    <div class="album-title">${safeTitle}</div>
                     <div class="album-meta">${album.tracksCount} tracks</div>
                 </div>
             `;
@@ -465,6 +474,18 @@
 
                 // Ленивая загрузка треков при первом открытии
                 if (album.tracks.length === 0) {
+                    // Показываем индикатор загрузки в плейлисте
+                    playlistAlbumTitle.textContent = album.title;
+                    playlistContainer.innerHTML = `
+                        <div class="playlist-loading">
+                            <div class="loading-spinner"></div>
+                            <span>Загрузка треков...</span>
+                        </div>
+                    `;
+                    if (!playlistVisible) {
+                        togglePlaylistPanel();
+                    }
+                    
                     loadingEl.style.display = 'block';
                     album.tracks = await loadAlbumTracks(album.id);
                     loadingEl.style.display = 'none';
@@ -564,6 +585,7 @@
         
         currentTrackName.textContent = track.name;
         currentAlbumName.textContent = album.title;
+        // textContent автоматически экранирует HTML
         
         let coverSrc = track.cover || album.cover;
         currentTrackCover.src = coverSrc || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3C/svg%3E';
@@ -716,13 +738,11 @@
     }
 
     function updateRepeatButton() {
-        repeatBtn.classList.remove('active');
-        if (repeatMode === REPEAT_ONE) {
-            repeatBtn.classList.add('active');
-        } else if (repeatMode === REPEAT_ALL) {
-            repeatBtn.classList.add('active');
-        } else {
+        // REPEAT_NONE = 0 (не активен), REPEAT_ONE = 1, REPEAT_ALL = 2 (активны)
+        if (repeatMode === REPEAT_NONE) {
             repeatBtn.classList.remove('active');
+        } else {
+            repeatBtn.classList.add('active');
         }
     }
 
@@ -744,8 +764,8 @@
             item.innerHTML = `
                 <img class="playlist-item-cover" src="${coverImg}" alt="">
                 <div class="playlist-item-info">
-                    <div class="playlist-item-title">${track.name}</div>
-                    <div class="playlist-item-album">${currentAlbum.title}</div>
+                    <div class="playlist-item-title">${escapeHtml(track.name)}</div>
+                    <div class="playlist-item-album">${escapeHtml(currentAlbum.title)}</div>
                 </div>
             `;
             
@@ -819,6 +839,26 @@
     updateRepeatButton();
 
     // ==================== СОБЫТИЯ ПЛЕЕРА ====================
+    audioPlayer.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+        const errorMsg = audioPlayer.error 
+            ? `Ошибка загрузки аудио (код: ${audioPlayer.error.code})`
+            : 'Ошибка загрузки аудио';
+        currentTrackName.textContent = errorMsg;
+        currentTrackName.style.color = '#f87171';
+        setTimeout(() => {
+            currentTrackName.style.color = '';
+        }, 3000);
+    });
+
+    audioPlayer.addEventListener('loadstart', () => {
+        currentTrackName.style.opacity = '0.7';
+    });
+
+    audioPlayer.addEventListener('canplay', () => {
+        currentTrackName.style.opacity = '1';
+    });
+
     audioPlayer.addEventListener('ended', () => {
         if (repeatMode === REPEAT_ONE) {
             audioPlayer.currentTime = 0;
