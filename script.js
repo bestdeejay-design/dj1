@@ -88,7 +88,6 @@
 
     // ==================== СОРТИРОВКА ====================
     function createSortControls() {
-        const header = document.querySelector('.header');
         const sortContainer = document.createElement('div');
         sortContainer.className = 'sort-controls';
         sortContainer.innerHTML = `
@@ -102,40 +101,114 @@
             </select>
             <button id="sortOrderBtn" title="Toggle sort order">↓</button>
         `;
-        header.appendChild(sortContainer);
+        document.body.appendChild(sortContainer);
 
-        // Стили для сортировки
+        // Стили для сортировки (глассморфизм, правый верхний угол)
         const style = document.createElement('style');
         style.textContent = `
             .sort-controls {
+                position: fixed;
+                top: 20px;
+                right: 20px;
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                margin-top: 10px;
-                font-size: 14px;
+                gap: 10px;
+                padding: 12px 16px;
+                font-size: 13px;
+                z-index: 100;
+                
+                /* Глассморфизм */
+                background: rgba(255, 255, 255, 0.08);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 16px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             }
+            
             .sort-controls label {
-                color: var(--text-secondary);
+                color: rgba(255, 255, 255, 0.7);
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-size: 11px;
             }
+            
             .sort-controls select {
-                background: var(--surface);
-                color: var(--text);
-                border: 1px solid var(--border);
-                padding: 4px 8px;
-                border-radius: 4px;
+                background: rgba(255, 255, 255, 0.1);
+                color: #fff;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                padding: 6px 10px;
+                border-radius: 10px;
                 cursor: pointer;
+                font-size: 13px;
+                outline: none;
+                transition: all 0.2s ease;
             }
+            
+            .sort-controls select:hover {
+                background: rgba(255, 255, 255, 0.15);
+                border-color: rgba(255, 255, 255, 0.3);
+            }
+            
+            .sort-controls select:focus {
+                background: rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.4);
+            }
+            
             .sort-controls button {
-                background: var(--surface);
-                color: var(--text);
-                border: 1px solid var(--border);
-                padding: 4px 8px;
-                border-radius: 4px;
+                background: rgba(255, 255, 255, 0.1);
+                color: #fff;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                padding: 6px 12px;
+                border-radius: 10px;
                 cursor: pointer;
                 font-size: 14px;
+                transition: all 0.2s ease;
+                min-width: 36px;
             }
+            
             .sort-controls button:hover {
-                background: var(--primary);
+                background: rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.4);
+                transform: translateY(-1px);
+            }
+            
+            /* Адаптация для светлой темы */
+            [data-theme="light"] .sort-controls {
+                background: rgba(255, 255, 255, 0.7);
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            }
+            
+            [data-theme="light"] .sort-controls label {
+                color: rgba(0, 0, 0, 0.6);
+            }
+            
+            [data-theme="light"] .sort-controls select,
+            [data-theme="light"] .sort-controls button {
+                background: rgba(0, 0, 0, 0.05);
+                color: #333;
+                border: 1px solid rgba(0, 0, 0, 0.15);
+            }
+            
+            [data-theme="light"] .sort-controls select:hover,
+            [data-theme="light"] .sort-controls button:hover {
+                background: rgba(0, 0, 0, 0.1);
+                border-color: rgba(0, 0, 0, 0.25);
+            }
+            
+            /* Мобильная адаптация */
+            @media (max-width: 600px) {
+                .sort-controls {
+                    top: 10px;
+                    right: 10px;
+                    padding: 8px 12px;
+                    gap: 6px;
+                }
+                .sort-controls label {
+                    display: none;
+                }
             }
         `;
         document.head.appendChild(style);
