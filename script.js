@@ -198,32 +198,101 @@
                 border-color: rgba(0, 0, 0, 0.25);
             }
             
-            /* Мобильная адаптация */
+            /* Мобильная адаптация - свайп/тап по правому краю */
             @media (max-width: 600px) {
                 .sort-controls {
-                    top: 10px;
-                    right: 10px;
-                    padding: 8px 12px;
-                    gap: 6px;
+                    position: fixed;
+                    top: 50%;
+                    right: -140px; /* Скрыт за краем */
+                    transform: translateY(-50%);
+                    padding: 16px;
+                    gap: 10px;
+                    flex-direction: column;
+                    border-radius: 16px 0 0 16px;
+                    transition: right 0.3s ease;
+                    min-width: 120px;
                 }
+                
+                .sort-controls::before {
+                    content: '☰';
+                    position: absolute;
+                    left: -40px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 40px;
+                    height: 60px;
+                    background: rgba(255, 255, 255, 0.1);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border-right: none;
+                    border-radius: 12px 0 0 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                    color: rgba(255, 255, 255, 0.8);
+                    cursor: pointer;
+                }
+                
+                .sort-controls:hover,
+                .sort-controls.active {
+                    right: 0;
+                }
+                
                 .sort-controls label {
-                    display: none;
+                    font-size: 10px;
+                    text-align: center;
                 }
+                
+                .sort-controls select,
+                .sort-controls button {
+                    width: 100%;
+                }
+            }
+            
+            /* Светлая тема для мобильной кнопки */
+            [data-theme="light"] .sort-controls::before {
+                background: rgba(0, 0, 0, 0.05);
+                border-color: rgba(0, 0, 0, 0.15);
+                color: rgba(0, 0, 0, 0.6);
             }
         `;
         document.head.appendChild(style);
 
         // Обработчики событий
-        document.getElementById('sortSelect').addEventListener('change', (e) => {
+        const sortSelect = document.getElementById('sortSelect');
+        const sortOrderBtn = document.getElementById('sortOrderBtn');
+        
+        sortSelect.addEventListener('change', (e) => {
             currentSort = e.target.value;
             resetAndReload();
         });
 
-        document.getElementById('sortOrderBtn').addEventListener('click', (e) => {
+        sortOrderBtn.addEventListener('click', (e) => {
             currentOrder = currentOrder === 'asc' ? 'desc' : 'asc';
             e.target.textContent = currentOrder === 'asc' ? '↑' : '↓';
             resetAndReload();
         });
+        
+        // Мобильное поведение - тап по кнопке открывает/закрывает панель
+        if (window.innerWidth <= 600) {
+            // Клик по самой панели (или кнопке сбоку) открывает/закрывает
+            sortContainer.addEventListener('click', (e) => {
+                // Если клик был по селекту или кнопке сортировки - не закрываем
+                if (e.target === sortSelect || e.target === sortOrderBtn) {
+                    return;
+                }
+                sortContainer.classList.toggle('active');
+            });
+            
+            // Закрыть при клике вне панели
+            document.addEventListener('click', (e) => {
+                if (!sortContainer.contains(e.target)) {
+                    sortContainer.classList.remove('active');
+                }
+            });
+        }
     }
 
     function resetAndReload() {
