@@ -1294,7 +1294,7 @@
             trackItems[topTrackIndex].classList.add('playing');
         }
         
-        // Создаем виртуальный альбом для трека
+        // Создаем виртуальный альбом для трека (сохраняем все поля)
         currentAlbum = {
             id: 'top-tracks',
             title: '🔥 Top Tracks',
@@ -1303,7 +1303,10 @@
                 name: t.name,
                 file: t.file,
                 cover: t.cover,
-                duration: t.duration
+                duration: t.duration,
+                sound: t.sound,
+                lyrics: t.lyrics,
+                model: t.model
             }))
         };
         
@@ -1341,7 +1344,7 @@
         // Прокручиваем к текущему треку
         setTimeout(() => scrollToCurrentTopTrack(), 100);
         
-        // Создаем виртуальный альбом для трека
+        // Создаем виртуальный альбом для трека (сохраняем все поля включая sound и lyrics)
         currentAlbum = {
             id: 'top-tracks',
             title: '🔥 Top Tracks',
@@ -1350,7 +1353,10 @@
                 name: t.name,
                 file: t.file,
                 cover: t.cover,
-                duration: t.duration
+                duration: t.duration,
+                sound: t.sound,
+                lyrics: t.lyrics,
+                model: t.model
             }))
         };
         
