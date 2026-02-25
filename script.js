@@ -22,6 +22,9 @@
     let topTracksPage = 1;
     let topTracksHasMore = true;
     let isLoadingTopTracks = false;
+    
+    // Фильтр публичности (общий для альбомов и треков)
+    let privacyFilter = localStorage.getItem('privacyFilter') || 'public'; // 'public' | 'all'
 
     const REPEAT_NONE = 0;
     const REPEAT_ONE = 1;
@@ -117,6 +120,11 @@
         const sortContainer = document.createElement('div');
         sortContainer.className = 'sort-controls';
         sortContainer.innerHTML = `
+            <label>Privacy:</label>
+            <select id="privacySelect">
+                <option value="public" ${privacyFilter === 'public' ? 'selected' : ''}>Published</option>
+                <option value="all" ${privacyFilter === 'all' ? 'selected' : ''}>All</option>
+            </select>
             <label>Sort by:</label>
             <select id="sortSelect">
                 <option value="created" selected>Date Created</option>
@@ -289,6 +297,17 @@
         // Обработчики событий
         const sortSelect = document.getElementById('sortSelect');
         const sortOrderBtn = document.getElementById('sortOrderBtn');
+        const privacySelect = document.getElementById('privacySelect');
+        
+        privacySelect.addEventListener('change', (e) => {
+            privacyFilter = e.target.value;
+            localStorage.setItem('privacyFilter', privacyFilter);
+            if (currentView === 'albums') {
+                resetAndReload();
+            } else {
+                resetAndReloadTopTracks();
+            }
+        });
         
         sortSelect.addEventListener('change', (e) => {
             if (currentView === 'albums') {
@@ -356,7 +375,11 @@
 
     function updateSortControlsForView(view) {
         const sortSelect = document.getElementById('sortSelect');
-        if (!sortSelect) return;
+        const privacySelect = document.getElementById('privacySelect');
+        if (!sortSelect || !privacySelect) return;
+        
+        // Обновляем privacy select
+        privacySelect.value = privacyFilter;
         
         if (view === 'albums') {
             // Опции для альбомов
@@ -370,8 +393,8 @@
         } else {
             // Опции для топа треков
             sortSelect.innerHTML = `
-                <option value="plays" ${topTracksSort === 'plays' ? 'selected' : ''}>▶ Прослушивания</option>
-                <option value="favorites" ${topTracksSort === 'favorites' ? 'selected' : ''}>♥ Лайки</option>
+                <option value="plays" ${topTracksSort === 'plays' ? 'selected' : ''}>▶ Plays</option>
+                <option value="favorites" ${topTracksSort === 'favorites' ? 'selected' : ''}>♥ Likes</option>
             `;
         }
     }
@@ -415,7 +438,12 @@
             // Формируем URL с параметрами серверной сортировки и фильтрации
             const sortParam = getApiSortParam();
             const orderParam = currentOrder.toUpperCase();
-            let url = `https://api.dj1.ru/api/playlists?page=${currentPage}&limit=${itemsPerPage}&privacy=public&sort=${sortParam}&order=${orderParam}`;
+            let url = `https://api.dj1.ru/api/playlists?page=${currentPage}&limit=${itemsPerPage}&sort=${sortParam}&order=${orderParam}`;
+            
+            // Фильтр публичности
+            if (privacyFilter === 'public') {
+                url += `&privacy=public`;
+            }
             
             // Добавляем фильтр по автору BEST, если ID найден
             if (bestUserId) {
@@ -1058,7 +1086,12 @@
         
         try {
             const sortParam = topTracksSort === 'plays' ? 'play_count' : 'favorite_count';
-            let url = `https://api.dj1.ru/api/tracks?page=${topTracksPage}&limit=20&privacy=public&sort=${sortParam}&order=DESC`;
+            let url = `https://api.dj1.ru/api/tracks?page=${topTracksPage}&limit=20&sort=${sortParam}&order=DESC`;
+            
+            // Фильтр публичности
+            if (privacyFilter === 'public') {
+                url += `&privacy=public`;
+            }
             
             // Фильтр по автору BEST (используем author_id для треков)
             url += `&author_id=${bestUserId}`;
