@@ -297,12 +297,33 @@ body {
 
 .tags-cloud {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
     padding: 20px 0 30px;
     border-bottom: 1px solid var(--border-light);
     margin-bottom: 20px;
+}
+
+.tag-category {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tag-category-title {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.tag-category-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .tag-cloud-item {
