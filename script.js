@@ -291,14 +291,23 @@
         const sortOrderBtn = document.getElementById('sortOrderBtn');
         
         sortSelect.addEventListener('change', (e) => {
-            currentSort = e.target.value;
-            resetAndReload();
+            if (currentView === 'albums') {
+                currentSort = e.target.value;
+                resetAndReload();
+            } else {
+                // Для топа треков используем plays/favorites
+                topTracksSort = e.target.value === 'plays' ? 'plays' : 'favorites';
+                resetAndReloadTopTracks();
+            }
         });
 
         sortOrderBtn.addEventListener('click', (e) => {
-            currentOrder = currentOrder === 'asc' ? 'desc' : 'asc';
-            e.target.textContent = currentOrder === 'asc' ? '↑' : '↓';
-            resetAndReload();
+            if (currentView === 'albums') {
+                currentOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+                e.target.textContent = currentOrder === 'asc' ? '↑' : '↓';
+                resetAndReload();
+            }
+            // Для топа треков порядок всегда DESC (по убыванию)
         });
         
         // Мобильное поведение - тап по язычку открывает/закрывает панель
@@ -337,6 +346,36 @@
         gallery.innerHTML = '';
         albumTracksCache.clear();
         loadMoreAlbums();
+    }
+
+    function resetAndReloadTopTracks() {
+        topTracksPage = 1;
+        topTracksHasMore = true;
+        topTracks = [];
+        topTracksView.innerHTML = '';
+        loadTopTracks();
+    }
+
+    function updateSortControlsForView(view) {
+        const sortSelect = document.getElementById('sortSelect');
+        if (!sortSelect) return;
+        
+        if (view === 'albums') {
+            // Опции для альбомов
+            sortSelect.innerHTML = `
+                <option value="created" ${currentSort === 'created' ? 'selected' : ''}>Date Created</option>
+                <option value="name" ${currentSort === 'name' ? 'selected' : ''}>Name</option>
+                <option value="tracks" ${currentSort === 'tracks' ? 'selected' : ''}>Track Count</option>
+                <option value="plays" ${currentSort === 'plays' ? 'selected' : ''}>Total Plays</option>
+                <option value="favorites" ${currentSort === 'favorites' ? 'selected' : ''}>Total Favorites</option>
+            `;
+        } else {
+            // Опции для топа треков
+            sortSelect.innerHTML = `
+                <option value="plays" ${topTracksSort === 'plays' ? 'selected' : ''}>▶ Прослушивания</option>
+                <option value="favorites" ${topTracksSort === 'favorites' ? 'selected' : ''}>♥ Лайки</option>
+            `;
+        }
     }
 
     // Преобразуем клиентское значение сортировки в параметр API
@@ -967,6 +1006,8 @@
             
             // Переключаем вид
             currentView = view;
+            updateSortControlsForView(view);
+            
             if (view === 'albums') {
                 gallery.style.display = 'grid';
                 topTracksView.style.display = 'none';
@@ -990,7 +1031,12 @@
         
         try {
             const sortParam = topTracksSort === 'plays' ? 'play_count' : 'favorite_count';
-            const url = `https://api.dj1.ru/api/tracks?page=${topTracksPage}&limit=20&privacy=public&sort=${sortParam}&order=DESC`;
+            let url = `https://api.dj1.ru/api/tracks?page=${topTracksPage}&limit=20&privacy=public&sort=${sortParam}&order=DESC`;
+            
+            // Фильтр по автору BEST
+            if (bestUserId) {
+                url += `&user_id=${bestUserId}`;
+            }
             
             const response = await fetch(url);
             if (!response.ok) throw new Error('Failed to load tracks');
@@ -1030,32 +1076,10 @@
         if (topTracksPage === 1) {
             topTracksView.innerHTML = `
                 <div class="top-tracks-header">
-                    <h2 class="top-tracks-title">🔥 Топ треков</h2>
-                    <div class="top-tracks-sort">
-                        <button class="sort-btn ${topTracksSort === 'plays' ? 'active' : ''}" data-sort="plays">
-                            ▶ Прослушивания
-                        </button>
-                        <button class="sort-btn ${topTracksSort === 'favorites' ? 'active' : ''}" data-sort="favorites">
-                            ♥ Лайки
-                        </button>
-                    </div>
+                    <h2 class="top-tracks-title">🔥 Топ треков BEST</h2>
                 </div>
                 <div class="top-tracks-list" id="topTracksList"></div>
             `;
-            
-            // Обработчики сортировки
-            topTracksView.querySelectorAll('.sort-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const newSort = btn.dataset.sort;
-                    if (newSort === topTracksSort) return;
-                    
-                    topTracksSort = newSort;
-                    topTracksPage = 1;
-                    topTracks = [];
-                    topTracksHasMore = true;
-                    loadTopTracks();
-                });
-            });
         }
         
         const list = document.getElementById('topTracksList');
