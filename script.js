@@ -1350,8 +1350,20 @@
             
             // Если это топ треков — восстанавливаем из сохранённых данных
             if (state.albumId === 'top-tracks') {
-                // Для топа треков нужно дождаться загрузки
-                return; // Восстановим после загрузки топа
+                // Переключаемся на топ треков
+                switchView('top-tracks');
+                
+                // Ждём загрузки топа треков и восстанавливаем
+                setTimeout(() => {
+                    if (topTracks.length > 0 && state.trackIndex < topTracks.length) {
+                        const track = topTracks[state.trackIndex];
+                        if (track) {
+                            playTopTrack(track);
+                            audioPlayer.currentTime = state.currentTime || 0;
+                        }
+                    }
+                }, 2000);
+                return;
             }
             
             // Ищем альбом в уже загруженных
