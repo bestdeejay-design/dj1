@@ -76,6 +76,18 @@ PROFESSIONAL_CATEGORIES = {
     }
 }
 
+# BPM диапазоны для категоризации
+BPM_RANGES = [
+    (60, 75, '60-75 BPM'),
+    (76, 90, '76-90 BPM'),
+    (91, 105, '91-105 BPM'),
+    (106, 120, '106-120 BPM'),
+    (121, 135, '121-135 BPM'),
+    (136, 150, '136-150 BPM'),
+    (151, 175, '151-175 BPM'),
+    (176, 200, '176-200 BPM')
+]
+
 # Создаём плоский маппинг: тег -> (категория, отображаемое имя)
 TAG_TO_CATEGORY = {}
 for category, tags in PROFESSIONAL_CATEGORIES.items():
@@ -133,6 +145,39 @@ for (category, display_name), merged in merged_tags.items():
         'merged_from': merged['original_tags']
     }
 
+# === ИЗВЛЕКАЕМ BPM И СОЗДАЁМ КАТЕГОРИЮ TEMPO ===
+print("\nExtracting BPM from track descriptions...")
+
+bpm_tracks = {}  # bpm_range -> set(track_ids)
+
+for track_id, track in data['tracks'].items():
+    if not track.get('sound'):
+        continue
+    
+    # Ищем BPM в описании
+    matches = re.findall(r'(\d+)\s*bpm', track['sound'].lower())
+    for bpm_str in matches:
+        bpm = int(bpm_str)
+        # Находим диапазон
+        for min_bpm, max_bpm, range_name in BPM_RANGES:
+            if min_bpm <= bpm <= max_bpm:
+                if range_name not in bpm_tracks:
+                    bpm_tracks[range_name] = set()
+                bpm_tracks[range_name].add(track_id)
+                break
+
+# Добавляем BPM как категорию
+if bpm_tracks:
+    professional_tags['tempo'] = {}
+    for range_name, tracks in sorted(bpm_tracks.items()):
+        tag_key = range_name.lower().replace(' ', '-')
+        professional_tags['tempo'][tag_key] = {
+            'count': len(tracks),
+            'tracks': list(tracks),
+            'displayName': range_name
+        }
+    print(f"Created {len(bpm_tracks)} BPM ranges")
+
 # Собираем итоговую структуру
 result = {
     'generatedAt': datetime.now().isoformat(),
@@ -150,7 +195,8 @@ CATEGORY_LABELS = {
     'instruments': '🎹 Instruments',
     'character': '🎨 Style',
     'era': '📅 Era',
-    'context': '🎧 Context'
+    'context': '🎧 Context',
+    'tempo': '⏱️ Tempo'
 }
 
 for category, tags in professional_tags.items():
