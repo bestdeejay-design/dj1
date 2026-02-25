@@ -332,10 +332,14 @@
             if (currentView === 'albums') {
                 currentSort = sortValue;
                 resetAndReload();
-            } else {
+            } else if (currentView === 'top-tracks') {
                 // Для топа треков используем тот же набор сортировок
                 topTracksSort = sortValue;
                 resetAndReloadTopTracks();
+            } else if (currentView === 'tags') {
+                // Для треков по тегу — клиентская сортировка
+                tagTracksSort = sortValue;
+                sortTagTracks();
             }
         });
 
@@ -344,11 +348,16 @@
                 currentOrder = currentOrder === 'asc' ? 'desc' : 'asc';
                 e.target.textContent = currentOrder === 'asc' ? '↑' : '↓';
                 resetAndReload();
-            } else {
+            } else if (currentView === 'top-tracks') {
                 // Для топа треков
                 topTracksOrder = topTracksOrder === 'asc' ? 'desc' : 'asc';
                 e.target.textContent = topTracksOrder === 'asc' ? '↑' : '↓';
                 resetAndReloadTopTracks();
+            } else if (currentView === 'tags') {
+                // Для треков по тегу — клиентская сортировка
+                tagTracksOrder = tagTracksOrder === 'asc' ? 'desc' : 'asc';
+                e.target.textContent = tagTracksOrder === 'asc' ? '↑' : '↓';
+                sortTagTracks();
             }
         });
         
@@ -408,7 +417,54 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
         loadTopTracks();
     }
+    
+    // Сортировка треков по тегу (клиентская)
+    function sortTagTracks() {
+        if (!tagTracks || tagTracks.length === 0) return;
+        
+        // Сортируем по выбранному полю
+        tagTracks.sort((a, b) => {
+            let valA, valB;
+            
+            switch (tagTracksSort) {
+                case 'plays':
+                    valA = a.plays || 0;
+                    valB = b.plays || 0;
+                    break;
+                case 'favorites':
+                    valA = a.favorites || 0;
+                    valB = b.favorites || 0;
+                    break;
+                case 'name':
+                    valA = a.name || '';
+                    valB = b.name || '';
+                    break;
+                default:
+                    valA = a.plays || 0;
+                    valB = b.plays || 0;
+            }
+            
+            // Сравнение с учётом направления
+            if (tagTracksOrder === 'asc') {
+                return valA > valB ? 1 : valA < valB ? -1 : 0;
+            } else {
+                return valA < valB ? 1 : valA > valB ? -1 : 0;
+            }
+        });
+        
+        // Перерендериваем
+        renderTagTracks();
+        
+        // Обновляем подсветку если трек играет
+        if (currentAlbum && currentAlbum.id === 'tag-tracks') {
+            updateTagTrackHighlight();
+        }
+    }
 
+    // Переменные для сортировки треков по тегу
+    let tagTracksSort = 'plays';
+    let tagTracksOrder = 'desc';
+    
     function updateSortControlsForView(view) {
         const sortSelect = document.getElementById('sortSelect');
         const privacySelect = document.getElementById('privacySelect');
@@ -416,12 +472,33 @@
         const sortControls = document.querySelector('.sort-controls');
         if (!sortSelect || !privacySelect || !sortOrderBtn) return;
         
-        // Скрываем сортировку для tags view
+        // Для tags view показываем только сортировку (без privacy)
         if (view === 'tags') {
-            if (sortControls) sortControls.style.display = 'none';
+            if (sortControls) {
+                sortControls.style.display = 'flex';
+                // Скрываем privacy select для тегов
+                if (privacySelect.parentElement) {
+                    privacySelect.parentElement.style.display = 'none';
+                }
+            }
+            
+            // Набор сортировок для треков по тегу
+            sortSelect.innerHTML = `
+                <option value="plays" ${tagTracksSort === 'plays' ? 'selected' : ''}>Total Plays</option>
+                <option value="favorites" ${tagTracksSort === 'favorites' ? 'selected' : ''}>Total Favorites</option>
+                <option value="name" ${tagTracksSort === 'name' ? 'selected' : ''}>Name</option>
+            `;
+            
+            sortOrderBtn.textContent = tagTracksOrder === 'asc' ? '↑' : '↓';
             return;
-        } else {
-            if (sortControls) sortControls.style.display = 'flex';
+        }
+        
+        // Для других views показываем полный контрол
+        if (sortControls) {
+            sortControls.style.display = 'flex';
+            if (privacySelect.parentElement) {
+                privacySelect.parentElement.style.display = 'flex';
+            }
         }
         
         // Обновляем privacy select
@@ -1844,10 +1921,10 @@
         // Собираем полные данные треков
         tagTracks = tagInfo.tracks
             .map(trackId => allTracks[trackId])
-            .filter(track => track) // Убираем undefined
-            .sort((a, b) => (b.plays || 0) - (a.plays || 0)); // Сортируем по популярности
+            .filter(track => track); // Убираем undefined
         
-        renderTagTracks();
+        // Применяем текущую сортировку
+        sortTagTracks();
         
         // Подсвечиваем текущий трек если он из этого тега
         updateTagTrackHighlight();
