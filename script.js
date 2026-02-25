@@ -420,7 +420,7 @@
     }
     
     // Сортировка треков по тегу (клиентская)
-    function sortTagTracks() {
+    function sortTagTracks(shouldRender = true) {
         if (!tagTracks || tagTracks.length === 0) return;
         
         // Сортируем по выбранному полю
@@ -453,8 +453,10 @@
             }
         });
         
-        // Перерендериваем
-        renderTagTracks();
+        if (shouldRender) {
+            // Перерендериваем все треки
+            renderTagTracksFull();
+        }
         
         // Обновляем подсветку если трек играет
         if (currentAlbum && currentAlbum.id === 'tag-tracks') {
@@ -462,9 +464,13 @@
         }
     }
 
-    // Переменные для сортировки треков по тегу
+    // Переменные для сортировки и пагинации треков по тегу
     let tagTracksSort = 'plays';
     let tagTracksOrder = 'desc';
+    let tagTracksPage = 1;
+    let tagTracksHasMore = true;
+    let isLoadingTagTracks = false;
+    const TAG_TRACKS_PER_PAGE = 20;
     
     function updateSortControlsForView(view) {
         const sortSelect = document.getElementById('sortSelect');
@@ -1266,7 +1272,7 @@
             }
         } else if (view === 'tags') {
             tagsView.style.display = 'block';
-            loadingEl.style.display = 'none';
+            loadingEl.style.display = tagTracksHasMore && currentTag ? 'block' : 'none';
             if (!allTagsLoaded) {
                 loadAllTags();
             }
@@ -1276,6 +1282,8 @@
                     updateTagTrackHighlight();
                 }
             }, 100);
+            // Настраиваем бесконечный скролл для тегов
+            setupTagTracksInfiniteScroll();
         }
     }
 
@@ -1899,8 +1907,8 @@
         });
     }
     
-    // Выбираем тег и показываем треки (как в Top Tracks)
-    function selectTag(tag) {
+    // Выбираем тег и показываем треки (с пагинацией как в Top Tracks)
+    async function selectTag(tag) {
         currentTag = tag;
         
         // Обновляем активный тег в облаке
@@ -1911,47 +1919,106 @@
         // Сохраняем выбранный тег
         localStorage.setItem('selectedTag', tag);
         
-        // Ищем тег в категориях или популярных
-        let tagInfo = null;
+        // Сбрасываем пагинацию
+        tagTracksPage = 1;
+        tagTracksHasMore = true;
+        tagTracks = [];
         
-        if (window.tagsData) {
-            // Ищем в категориях
-            if (window.tagsData.categories) {
-                for (const catData of Object.values(window.tagsData.categories)) {
-                    if (catData.tags && catData.tags[tag]) {
-                        tagInfo = catData.tags[tag];
-                        break;
-                    }
-                }
-            }
-            // Ищем в популярных
-            if (!tagInfo && window.tagsData.popularTags && window.tagsData.popularTags[tag]) {
-                tagInfo = window.tagsData.popularTags[tag];
-            }
+        // Очищаем список и показываем загрузку
+        if (tagTracksList) {
+            tagTracksList.innerHTML = `
+                <div class="tag-tracks-header">
+                    <h3>🏷️ ${escapeHtml(currentTag)}</h3>
+                    <span class="tag-tracks-count">Loading...</span>
+                </div>
+            `;
+            tagTracksList.style.display = 'block';
         }
         
-        if (!tagInfo) {
-            tagTracks = [];
-            renderTagTracks();
-            return;
-        }
-        
-        const allTracks = window.tagsData.tracks;
-        
-        // Собираем полные данные треков
-        tagTracks = tagInfo.tracks
-            .map(trackId => allTracks[trackId])
-            .filter(track => track); // Убираем undefined
-        
-        // Применяем текущую сортировку
-        sortTagTracks();
-        
-        // Подсвечиваем текущий трек если он из этого тега
-        updateTagTrackHighlight();
+        // Загружаем первую страницу
+        await loadMoreTagTracks();
         
         // Прокручиваем к трекам
         if (tagTracksList) {
             tagTracksList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+    
+    // Подгрузка треков по тегу (постранично как в Top Tracks)
+    async function loadMoreTagTracks() {
+        if (isLoadingTagTracks || !tagTracksHasMore || !currentTag) return;
+        
+        isLoadingTagTracks = true;
+        loadingEl.style.display = 'block';
+        
+        try {
+            // Находим информацию о теге
+            let tagInfo = null;
+            if (window.tagsData) {
+                if (window.tagsData.categories) {
+                    for (const catData of Object.values(window.tagsData.categories)) {
+                        if (catData.tags && catData.tags[currentTag]) {
+                            tagInfo = catData.tags[currentTag];
+                            break;
+                        }
+                    }
+                }
+                if (!tagInfo && window.tagsData.popularTags && window.tagsData.popularTags[currentTag]) {
+                    tagInfo = window.tagsData.popularTags[currentTag];
+                }
+            }
+            
+            if (!tagInfo) {
+                tagTracksHasMore = false;
+                return;
+            }
+            
+            const allTracks = window.tagsData.tracks;
+            const allTagTrackIds = tagInfo.tracks;
+            
+            // Вычисляем срез для текущей страницы
+            const startIndex = (tagTracksPage - 1) * TAG_TRACKS_PER_PAGE;
+            const endIndex = startIndex + TAG_TRACKS_PER_PAGE;
+            const pageTrackIds = allTagTrackIds.slice(startIndex, endIndex);
+            
+            // Собираем полные данные треков для страницы
+            const pageTracks = pageTrackIds
+                .map(trackId => allTracks[trackId])
+                .filter(track => track)
+                .map((track, index) => ({
+                    ...track,
+                    rank: startIndex + index + 1
+                }));
+            
+            // Проверяем есть ли ещё треки
+            tagTracksHasMore = endIndex < allTagTrackIds.length;
+            
+            if (pageTracks.length > 0) {
+                tagTracks = tagTracks.concat(pageTracks);
+                // Сортируем все загруженные треки
+                sortTagTracks(false); // false = не перерендеривать полностью
+                // Рендерим только новые
+                renderTagTracksPage(pageTracks);
+            }
+            
+            tagTracksPage++;
+            
+            // Обновляем счётчик треков в заголовке
+            updateTagTracksCount(allTagTrackIds.length);
+            
+        } catch (err) {
+            console.error('Error loading tag tracks:', err);
+        } finally {
+            isLoadingTagTracks = false;
+            loadingEl.style.display = tagTracksHasMore ? 'block' : 'none';
+        }
+    }
+    
+    // Обновляем счётчик треков в заголовке
+    function updateTagTracksCount(total) {
+        const countEl = tagTracksList.querySelector('.tag-tracks-count');
+        if (countEl) {
+            countEl.textContent = `${tagTracks.length} of ${total} tracks`;
         }
     }
     
@@ -1987,20 +2054,90 @@
         }
     }
     
-    // Рендерим треки выбранного тега
-    function renderTagTracks() {
+    // Бесконечный скролл для треков по тегу
+    let tagTracksObserver = null;
+    function setupTagTracksInfiniteScroll() {
+        // Удаляем старый observer если есть
+        if (tagTracksObserver) {
+            tagTracksObserver.disconnect();
+        }
+        
+        // Создаем sentinel для отслеживания
+        let sentinel = document.getElementById('tag-tracks-sentinel');
+        if (!sentinel) {
+            sentinel = document.createElement('div');
+            sentinel.id = 'tag-tracks-sentinel';
+            sentinel.style.height = '20px';
+            sentinel.style.marginTop = '20px';
+            tagsView.appendChild(sentinel);
+        }
+        
+        tagTracksObserver = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !isLoadingTagTracks && tagTracksHasMore && currentTag) {
+                loadMoreTagTracks();
+            }
+        }, { rootMargin: '200px' });
+        
+        tagTracksObserver.observe(sentinel);
+    }
+    
+    // Рендерим все треки выбранного тега (при сортировке)
+    function renderTagTracksFull() {
         if (!tagTracksList) return;
         
-        const headerHtml = currentTag ? `
+        // Сохраняем заголовок если есть
+        const headerEl = tagTracksList.querySelector('.tag-tracks-header');
+        const headerHtml = headerEl ? headerEl.outerHTML : (currentTag ? `
             <div class="tag-tracks-header">
                 <h3>🏷️ ${escapeHtml(currentTag)}</h3>
                 <span class="tag-tracks-count">${tagTracks.length} tracks</span>
             </div>
-        ` : '';
+        ` : '');
         
-        const tracksHtml = tagTracks.map((track, index) => `
-            <div class="top-track-item" data-track-id="${track.id}">
-                <div class="top-track-rank">#${index + 1}</div>
+        const tracksHtml = tagTracks.map((track, index) => createTagTrackHtml(track, index)).join('');
+        
+        tagTracksList.innerHTML = headerHtml + tracksHtml;
+        
+        attachTagTrackListeners();
+    }
+    
+    // Рендерим страницу треков (добавляем к существующим)
+    function renderTagTracksPage(pageTracks) {
+        if (!tagTracksList) return;
+        
+        // Если это первая страница — создаём заголовок
+        if (tagTracksPage === 2) {
+            const headerHtml = currentTag ? `
+                <div class="tag-tracks-header">
+                    <h3>🏷️ ${escapeHtml(currentTag)}</h3>
+                    <span class="tag-tracks-count">${pageTracks.length} tracks</span>
+                </div>
+            ` : '';
+            // Вставляем заголовок перед треками
+            const firstTrack = tagTracksList.querySelector('.top-track-item');
+            if (firstTrack) {
+                firstTrack.insertAdjacentHTML('beforebegin', headerHtml);
+            } else {
+                tagTracksList.innerHTML = headerHtml;
+            }
+        }
+        
+        // Добавляем треки страницы
+        const startIndex = tagTracks.length - pageTracks.length;
+        pageTracks.forEach((track, index) => {
+            const trackHtml = createTagTrackHtml(track, startIndex + index);
+            tagTracksList.insertAdjacentHTML('beforeend', trackHtml);
+        });
+        
+        attachTagTrackListeners();
+    }
+    
+    // Создаём HTML для трека тега
+    function createTagTrackHtml(track, index) {
+        const isPlaying = currentAlbum && currentAlbum.id === 'tag-tracks' && currentTrackIndex === index;
+        return `
+            <div class="top-track-item ${isPlaying ? 'playing' : ''}" data-track-id="${track.id}">
+                <div class="top-track-rank">#${track.rank || (index + 1)}</div>
                 <img class="top-track-cover" src="${track.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'48\' height=\'48\' viewBox=\'0 0 48 48\'%3E%3Crect width=\'48\' height=\'48\' fill=\'%23333\'/%3E%3C/svg%3E'}" alt="">
                 <div class="top-track-info">
                     <div class="top-track-name">${escapeHtml(track.name)}</div>
@@ -2013,22 +2150,31 @@
                     <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                 </button>
             </div>
-        `).join('');
-        
-        tagTracksList.innerHTML = headerHtml + tracksHtml;
-        
-        // Добавляем обработчики клика на треки (клик на всю карточку)
-        tagTracksList.querySelectorAll('.top-track-item').forEach((item, index) => {
-            item.addEventListener('click', (e) => {
+        `;
+    }
+    
+    // Добавляем обработчики клика на треки
+    function attachTagTrackListeners() {
+        tagTracksList.querySelectorAll('.top-track-item').forEach((item) => {
+            // Удаляем старые обработчики (если есть)
+            const newItem = item.cloneNode(true);
+            item.parentNode.replaceChild(newItem, item);
+            
+            newItem.addEventListener('click', (e) => {
+                const trackId = newItem.dataset.trackId;
+                const trackIndex = tagTracks.findIndex(t => t.id === trackId);
+                
+                if (trackIndex === -1) return;
+                
                 const isCurrentTrack = currentAlbum && currentAlbum.id === 'tag-tracks' && 
-                                      currentTrackIndex === index;
+                                      currentTrackIndex === trackIndex;
                 
                 if (isCurrentTrack && !audioPlayer.paused) {
                     // Если это текущий трек и он играет — ставим на паузу
                     audioPlayer.pause();
                 } else {
                     // Иначе запускаем трек
-                    playTagTrack(tagTracks[index]);
+                    playTagTrack(tagTracks[trackIndex]);
                 }
             });
         });
