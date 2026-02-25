@@ -1300,8 +1300,16 @@
                 </button>
             `;
             
+            // Клик на всю карточку для play/pause
             item.addEventListener('click', (e) => {
-                if (e.target.closest('.top-track-play')) {
+                const isCurrentTrack = currentAlbum && currentAlbum.id === 'top-tracks' && 
+                                      currentTrackIndex === (topTracksPage - 1) * 20 + index;
+                
+                if (isCurrentTrack && !audioPlayer.paused) {
+                    // Если это текущий трек и он играет — ставим на паузу
+                    audioPlayer.pause();
+                } else {
+                    // Иначе запускаем трек
                     playTopTrack(track);
                 }
             });
@@ -1708,10 +1716,17 @@
         
         tagTracksList.innerHTML = headerHtml + tracksHtml;
         
-        // Добавляем обработчики клика на треки
+        // Добавляем обработчики клика на треки (клик на всю карточку)
         tagTracksList.querySelectorAll('.top-track-item').forEach((item, index) => {
             item.addEventListener('click', (e) => {
-                if (e.target.closest('.top-track-play')) {
+                const isCurrentTrack = currentAlbum && currentAlbum.id === 'tag-tracks' && 
+                                      currentTrackIndex === index;
+                
+                if (isCurrentTrack && !audioPlayer.paused) {
+                    // Если это текущий трек и он играет — ставим на паузу
+                    audioPlayer.pause();
+                } else {
+                    // Иначе запускаем трек
                     playTagTrack(tagTracks[index]);
                 }
             });
