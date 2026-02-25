@@ -1394,6 +1394,11 @@
                     if (topTracks.length > 0 && state.trackIndex < topTracks.length) {
                         const track = topTracks[state.trackIndex];
                         if (track) {
+                            // Восстанавливаем плеер сразу
+                            playTopTrack(track);
+                            audioPlayer.currentTime = state.currentTime || 0;
+                            audioPlayer.pause(); // Ставим на паузу, пользователь сам нажмёт play
+                            
                             // Показываем индикатор где остановились
                             showResumeIndicator();
                             // Прокручиваем к треку
