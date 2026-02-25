@@ -865,9 +865,14 @@
             selectTrack(currentAlbum, nextIndex);
         }
         
-        // Прокручиваем к текущему треку в топе
-        scrollToCurrentTopTrack();
-        updateTopTrackHighlight();
+        // Прокручиваем к текущему треку в топе или тегах
+        if (currentView === 'top-tracks') {
+            scrollToCurrentTopTrack();
+            updateTopTrackHighlight();
+        } else if (currentView === 'tags') {
+            scrollToCurrentTagTrack();
+            updateTagTrackHighlight();
+        }
     }
 
     function prevTrack() {
@@ -1184,6 +1189,12 @@
             if (!allTagsLoaded) {
                 loadAllTags();
             }
+            // Обновляем подсветку если играет трек из тегов
+            setTimeout(() => {
+                if (currentAlbum && currentAlbum.id === 'tag-tracks') {
+                    updateTagTrackHighlight();
+                }
+            }, 100);
         }
     }
 
@@ -1384,6 +1395,50 @@
         renderPlaylist();
         highlightPlaylistItem(topTrackIndex);
     }
+    
+    // Восстановление плеера для тегов без автовоспроизведения
+    function restoreTagTrackPlayer(track, currentTime) {
+        if (!playerBar.classList.contains('active')) {
+            playerBar.classList.add('active');
+        }
+        
+        // Убираем класс playing со всех карточек
+        document.querySelectorAll('.album-card.playing, .top-track-item.playing').forEach(el => {
+            el.classList.remove('playing');
+        });
+        
+        // Находим индекс трека
+        const trackIndex = tagTracks.findIndex(t => t.id === track.id);
+        
+        // Создаем виртуальный альбом для трека
+        currentAlbum = {
+            id: 'tag-tracks',
+            title: `🏷️ ${currentTag}`,
+            cover: track.cover,
+            tracks: tagTracks.map(t => ({
+                name: t.name,
+                file: t.file,
+                cover: t.cover,
+                duration: t.duration,
+                sound: t.sound,
+                lyrics: t.lyrics,
+                model: t.model
+            }))
+        };
+        
+        currentTrackIndex = trackIndex;
+        audioPlayer.src = track.file;
+        audioPlayer.currentTime = currentTime;
+        
+        // Обновляем UI без воспроизведения
+        currentTrackName.textContent = track.name;
+        currentAlbumName.textContent = `🏷️ ${currentTag}`;
+        currentTrackCover.src = track.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3C/svg%3E';
+        
+        playlistAlbumTitle.textContent = `🏷️ ${currentTag}`;
+        renderPlaylist();
+        highlightPlaylistItem(trackIndex);
+    }
 
     function playTopTrack(track) {
         if (!playerBar.classList.contains('active')) {
@@ -1519,6 +1574,51 @@
                 // Запускаем восстановление
                 setTimeout(() => restoreTopTrack(), 1000);
                 return;
+            }
+            
+            // Если это треки по тегу — восстанавливаем
+            if (state.albumId === 'tag-tracks' && state.albumTitle) {
+                // Извлекаем тег из названия (🏷️ Tag Name)
+                const tagMatch = state.albumTitle.match(/🏷️\s*(.+)/);
+                if (tagMatch) {
+                    const savedTag = tagMatch[1];
+                    
+                    // Переключаемся на теги
+                    switchView('tags');
+                    
+                    // Функция для восстановления
+                    const restoreTagTrack = (attempt = 0) => {
+                        if (attempt > 10) {
+                            console.warn('Failed to restore tag track after retries');
+                            return;
+                        }
+                        
+                        // Проверяем что теги загружены
+                        if (allTagsLoaded && window.tagsData) {
+                            // Выбираем сохранённый тег
+                            selectTag(savedTag);
+                            
+                            // Восстанавливаем плеер после выбора тега
+                            setTimeout(() => {
+                                if (tagTracks.length > 0 && state.trackIndex < tagTracks.length) {
+                                    const track = tagTracks[state.trackIndex];
+                                    if (track) {
+                                        // Восстанавливаем без автовоспроизведения
+                                        restoreTagTrackPlayer(track, state.currentTime || 0);
+                                        // Подсвечиваем и прокручиваем
+                                        setTimeout(() => updateTagTrackHighlight(), 500);
+                                    }
+                                }
+                            }, 500);
+                        } else {
+                            console.log('Waiting for tags to load... attempt', attempt + 1);
+                            setTimeout(() => restoreTagTrack(attempt + 1), 1000);
+                        }
+                    };
+                    
+                    setTimeout(() => restoreTagTrack(), 1000);
+                    return;
+                }
             }
             
             // Ищем альбом в уже загруженных
@@ -1702,7 +1802,7 @@
         });
     }
     
-    // Выбираем тег и показываем треки (из статичного JSON с категориями)
+    // Выбираем тег и показываем треки (как в Top Tracks)
     function selectTag(tag) {
         currentTag = tag;
         
@@ -1710,6 +1810,9 @@
         tagsCloud.querySelectorAll('.tag-cloud-item').forEach(item => {
             item.classList.toggle('active', item.dataset.tag === tag);
         });
+        
+        // Сохраняем выбранный тег
+        localStorage.setItem('selectedTag', tag);
         
         // Ищем тег в категориях или популярных
         let tagInfo = null;
@@ -1745,6 +1848,46 @@
             .sort((a, b) => (b.plays || 0) - (a.plays || 0)); // Сортируем по популярности
         
         renderTagTracks();
+        
+        // Подсвечиваем текущий трек если он из этого тега
+        updateTagTrackHighlight();
+        
+        // Прокручиваем к трекам
+        if (tagTracksList) {
+            tagTracksList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+    
+    // Подсвечиваем текущий трек в списке тегов
+    function updateTagTrackHighlight() {
+        if (currentView !== 'tags' || !currentAlbum || currentAlbum.id !== 'tag-tracks') return;
+        
+        // Убираем выделение со всех
+        document.querySelectorAll('.top-track-item.playing').forEach(el => {
+            el.classList.remove('playing');
+        });
+        
+        // Добавляем на текущий
+        const trackItems = tagTracksList.querySelectorAll('.top-track-item');
+        if (trackItems[currentTrackIndex]) {
+            trackItems[currentTrackIndex].classList.add('playing');
+            // Прокручиваем к центру
+            setTimeout(() => {
+                trackItems[currentTrackIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+    }
+    
+    // Прокручиваем к текущему треку в тегах
+    function scrollToCurrentTagTrack() {
+        if (currentView !== 'tags' || !currentAlbum || currentAlbum.id !== 'tag-tracks') return;
+        
+        const trackItems = tagTracksList.querySelectorAll('.top-track-item');
+        const currentItem = trackItems[currentTrackIndex];
+        
+        if (currentItem) {
+            currentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
     
     // Рендерим треки выбранного тега
@@ -1794,7 +1937,7 @@
         });
     }
     
-    // Воспроизведение трека из раздела By Tags
+    // Воспроизведение трека из раздела By Tags (как в Top Tracks)
     function playTagTrack(track) {
         if (!playerBar.classList.contains('active')) {
             playerBar.classList.add('active');
@@ -1805,12 +1948,8 @@
             el.classList.remove('playing');
         });
         
-        // Добавляем класс playing на текущий трек
-        const trackItems = tagTracksList.querySelectorAll('.top-track-item');
+        // Находим индекс трека
         const trackIndex = tagTracks.findIndex(t => t.id === track.id);
-        if (trackItems[trackIndex]) {
-            trackItems[trackIndex].classList.add('playing');
-        }
         
         // Создаем виртуальный альбом для трека
         currentAlbum = {
@@ -1827,6 +1966,17 @@
                 model: t.model
             }))
         };
+        
+        currentTrackIndex = trackIndex;
+        
+        // Добавляем класс playing на текущий трек
+        const trackItems = tagTracksList.querySelectorAll('.top-track-item');
+        if (trackItems[trackIndex]) {
+            trackItems[trackIndex].classList.add('playing');
+        }
+        
+        // Прокручиваем к текущему треку
+        setTimeout(() => scrollToCurrentTagTrack(), 100);
         
         selectTrack(currentAlbum, trackIndex);
         
