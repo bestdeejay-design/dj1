@@ -1090,6 +1090,38 @@
     pauseIcon.style.display = 'none';
 
     // ==================== ТОП ТРЕКОВ ====================
+    // Функция переключения вида (albums / top-tracks)
+    function switchView(view) {
+        if (view === currentView) return;
+        
+        // Обновляем активный таб
+        if (viewTabs) {
+            viewTabs.querySelectorAll('.view-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.view === view);
+            });
+        }
+        
+        // Сохраняем выбор
+        currentView = view;
+        localStorage.setItem('currentView', view);
+        
+        // Переключаем вид
+        updateSortControlsForView(view);
+        
+        if (view === 'albums') {
+            gallery.style.display = 'grid';
+            topTracksView.style.display = 'none';
+            loadingEl.style.display = hasMore ? 'block' : 'none';
+        } else {
+            gallery.style.display = 'none';
+            topTracksView.style.display = 'block';
+            loadingEl.style.display = topTracksHasMore ? 'block' : 'none';
+            if (topTracks.length === 0) {
+                loadTopTracks();
+            }
+        }
+    }
+
     function initViewTabs() {
         if (!viewTabs) return;
         
@@ -1117,31 +1149,7 @@
             if (!tab) return;
             
             const view = tab.dataset.view;
-            if (view === currentView) return;
-            
-            // Обновляем активный таб
-            viewTabs.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            
-            // Сохраняем выбор
-            currentView = view;
-            localStorage.setItem('currentView', view);
-            
-            // Переключаем вид
-            updateSortControlsForView(view);
-            
-            if (view === 'albums') {
-                gallery.style.display = 'grid';
-                topTracksView.style.display = 'none';
-                loadingEl.style.display = hasMore ? 'block' : 'none';
-            } else {
-                gallery.style.display = 'none';
-                topTracksView.style.display = 'block';
-                loadingEl.style.display = topTracksHasMore ? 'block' : 'none';
-                if (topTracks.length === 0) {
-                    loadTopTracks();
-                }
-            }
+            switchView(view);
         });
     }
 
