@@ -1336,7 +1336,7 @@
     }
     
     // Восстанавливаем состояние плеера
-    async function restorePlayerState() {
+    async function restorePlayerState(retryCount = 0) {
         const saved = localStorage.getItem('playerState');
         if (!saved) return;
         
@@ -1363,8 +1363,14 @@
                 // Альбом найден но треки не загружены — загружаем
                 album.tracks = await loadAlbumTracks(album.id);
                 restoreTrackState(album, state);
+            } else if (retryCount < 5) {
+                // Альбом не найден — пробуем ещё раз через 2 секунды
+                // (возможно, ещё не загрузился через пагинацию)
+                console.log(`Album ${state.albumId} not found, retrying... (${retryCount + 1}/5)`);
+                setTimeout(() => restorePlayerState(retryCount + 1), 2000);
+            } else {
+                console.warn('Album not found after retries:', state.albumId);
             }
-            // Если альбом не найден — он загрузится позже через пагинацию
         } catch (err) {
             console.warn('Failed to restore player state:', err);
         }
