@@ -701,10 +701,21 @@
             playerBar.classList.add('active');
         }
 
+        // Убираем класс playing со всех карточек
+        document.querySelectorAll('.album-card.playing, .top-track-item.playing').forEach(el => {
+            el.classList.remove('playing');
+        });
+
         if (currentAlbum !== album) {
             currentAlbum = album;
             renderPlaylist();
             playlistAlbumTitle.textContent = album.title;
+        }
+        
+        // Добавляем класс playing на текущий альбом
+        const albumCard = document.querySelector(`.album-card[data-album-id="${album.id}"]`);
+        if (albumCard) {
+            albumCard.classList.add('playing');
         }
         
         const track = album.tracks[trackIndex];
@@ -1224,6 +1235,18 @@
             playerBar.classList.add('active');
         }
         
+        // Убираем класс playing со всех карточек
+        document.querySelectorAll('.album-card.playing, .top-track-item.playing').forEach(el => {
+            el.classList.remove('playing');
+        });
+        
+        // Добавляем класс playing на текущий трек в топе
+        const trackItems = document.querySelectorAll('.top-track-item');
+        const topTrackIndex = topTracks.findIndex(t => t.id === track.id);
+        if (trackItems[topTrackIndex]) {
+            trackItems[topTrackIndex].classList.add('playing');
+        }
+        
         // Создаем виртуальный альбом для трека
         currentAlbum = {
             id: 'top-tracks',
@@ -1237,8 +1260,7 @@
             }))
         };
         
-        const trackIndex = topTracks.findIndex(t => t.id === track.id);
-        selectTrack(currentAlbum, trackIndex);
+        selectTrack(currentAlbum, topTrackIndex);
         
         playlistAlbumTitle.textContent = '🔥 Top Tracks';
         renderPlaylist();
