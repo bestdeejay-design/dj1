@@ -310,12 +310,13 @@
         });
         
         sortSelect.addEventListener('change', (e) => {
+            const sortValue = e.target.value;
             if (currentView === 'albums') {
-                currentSort = e.target.value;
+                currentSort = sortValue;
                 resetAndReload();
             } else {
-                // Для топа треков используем plays/favorites
-                topTracksSort = e.target.value === 'plays' ? 'plays' : 'favorites';
+                // Для топа треков используем тот же набор сортировок
+                topTracksSort = sortValue;
                 resetAndReloadTopTracks();
             }
         });
@@ -381,26 +382,17 @@
         // Обновляем privacy select
         privacySelect.value = privacyFilter;
         
-        if (view === 'albums') {
-            // Опции для альбомов
-            sortSelect.innerHTML = `
-                <option value="created" ${currentSort === 'created' ? 'selected' : ''}>Date Created</option>
-                <option value="name" ${currentSort === 'name' ? 'selected' : ''}>Name</option>
-                <option value="tracks" ${currentSort === 'tracks' ? 'selected' : ''}>Track Count</option>
-                <option value="plays" ${currentSort === 'plays' ? 'selected' : ''}>Total Plays</option>
-                <option value="favorites" ${currentSort === 'favorites' ? 'selected' : ''}>Total Favorites</option>
-            `;
-        } else {
-            // Опции для топа треков
-            sortSelect.innerHTML = `
-                <option value="plays" ${topTracksSort === 'plays' ? 'selected' : ''}>▶ Plays</option>
-                <option value="favorites" ${topTracksSort === 'favorites' ? 'selected' : ''}>♥ Likes</option>
-            `;
-        }
+        // Единый набор сортировок для обоих разделов
+        sortSelect.innerHTML = `
+            <option value="created" ${(view === 'albums' ? currentSort : topTracksSort) === 'created' ? 'selected' : ''}>Date Created</option>
+            <option value="name" ${(view === 'albums' ? currentSort : topTracksSort) === 'name' ? 'selected' : ''}>Name</option>
+            <option value="plays" ${(view === 'albums' ? currentSort : topTracksSort) === 'plays' ? 'selected' : ''}>Total Plays</option>
+            <option value="favorites" ${(view === 'albums' ? currentSort : topTracksSort) === 'favorites' ? 'selected' : ''}>Total Favorites</option>
+        `;
     }
 
     // Преобразуем клиентское значение сортировки в параметр API
-    function getApiSortParam() {
+    function getApiSortParam(sortValue) {
         const sortMap = {
             'name': 'name',
             'created': 'created_at',
@@ -408,7 +400,7 @@
             'favorites': 'favorite_count',
             'tracks': 'tracks_count'
         };
-        return sortMap[currentSort] || 'created_at'; // По умолчанию сортируем по дате создания
+        return sortMap[sortValue] || 'created_at'; // По умолчанию сортируем по дате создания
     }
 
     // ==================== ПАГИНАЦИЯ (БЕСКОНЕЧНЫЙ СКРОЛЛ) ====================
@@ -436,7 +428,7 @@
 
         try {
             // Формируем URL с параметрами серверной сортировки и фильтрации
-            const sortParam = getApiSortParam();
+            const sortParam = getApiSortParam(currentSort);
             const orderParam = currentOrder.toUpperCase();
             let url = `https://api.dj1.ru/api/playlists?page=${currentPage}&limit=${itemsPerPage}&sort=${sortParam}&order=${orderParam}`;
             
@@ -1085,7 +1077,7 @@
         loadingEl.style.display = 'block';
         
         try {
-            const sortParam = topTracksSort === 'plays' ? 'play_count' : 'favorite_count';
+            const sortParam = getApiSortParam(topTracksSort);
             let url = `https://api.dj1.ru/api/tracks?page=${topTracksPage}&limit=20&sort=${sortParam}&order=DESC`;
             
             // Фильтр публичности
