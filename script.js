@@ -718,6 +718,9 @@
             albumCard.classList.add('playing');
         }
         
+        // Сохраняем состояние плеера
+        savePlayerState(album, trackIndex);
+        
         const track = album.tracks[trackIndex];
         if (!track) return;
         
@@ -1271,6 +1274,102 @@
         if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
         return num.toString();
     }
+    
+    // Сохраняем состояние плеера в localStorage
+    function savePlayerState(album, trackIndex) {
+        const state = {
+            albumId: album.id,
+            albumTitle: album.title,
+            albumCover: album.cover,
+            trackIndex: trackIndex,
+            currentTime: audioPlayer.currentTime || 0,
+            isPlaying: !audioPlayer.paused,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('playerState', JSON.stringify(state));
+    }
+    
+    // Восстанавливаем состояние плеера
+    async function restorePlayerState() {
+        const saved = localStorage.getItem('playerState');
+        if (!saved) return;
+        
+        try {
+            const state = JSON.parse(saved);
+            // Проверяем что состояние не старше 24 часов
+            if (Date.now() - state.timestamp > 24 * 60 * 60 * 1000) {
+                localStorage.removeItem('playerState');
+                return;
+            }
+            
+            // Если это топ треков — восстанавливаем из сохранённых данных
+            if (state.albumId === 'top-tracks') {
+                // Для топа треков нужно дождаться загрузки
+                return; // Восстановим после загрузки топа
+            }
+            
+            // Ищем альбом в уже загруженных
+            const album = albums.find(a => a.id === state.albumId);
+            if (album && album.tracks.length > 0) {
+                // Альбом найден и треки загружены
+                restoreTrackState(album, state);
+            } else if (album) {
+                // Альбом найден но треки не загружены — загружаем
+                album.tracks = await loadAlbumTracks(album.id);
+                restoreTrackState(album, state);
+            }
+            // Если альбом не найден — он загрузится позже через пагинацию
+        } catch (err) {
+            console.warn('Failed to restore player state:', err);
+        }
+    }
+    
+    function restoreTrackState(album, state) {
+        if (state.trackIndex >= 0 && state.trackIndex < album.tracks.length) {
+            currentAlbum = album;
+            currentTrackIndex = state.trackIndex;
+            
+            const track = album.tracks[state.trackIndex];
+            audioPlayer.src = track.file;
+            audioPlayer.currentTime = state.currentTime || 0;
+            
+            // Обновляем UI
+            currentTrackName.textContent = track.name;
+            currentAlbumName.textContent = album.title;
+            currentTrackCover.src = track.cover || album.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3C/svg%3E';
+            
+            playerBar.classList.add('active');
+            playlistAlbumTitle.textContent = album.title;
+            renderPlaylist();
+            highlightPlaylistItem(state.trackIndex);
+            
+            // Добавляем индикатор playing
+            const albumCard = document.querySelector(`.album-card[data-album-id="${album.id}"]`);
+            if (albumCard) {
+                albumCard.classList.add('playing');
+            }
+        }
+    }
+    
+    // Сохраняем позицию при паузе/воспроизведении
+    audioPlayer.addEventListener('pause', () => {
+        if (currentAlbum && currentTrackIndex >= 0) {
+            savePlayerState(currentAlbum, currentTrackIndex);
+        }
+    });
+    
+    audioPlayer.addEventListener('play', () => {
+        if (currentAlbum && currentTrackIndex >= 0) {
+            savePlayerState(currentAlbum, currentTrackIndex);
+        }
+    });
+    
+    // Периодически сохраняем позицию во время воспроизведения
+    setInterval(() => {
+        if (currentAlbum && currentTrackIndex >= 0 && !audioPlayer.paused) {
+            savePlayerState(currentAlbum, currentTrackIndex);
+        }
+    }, 5000); // Каждые 5 секунд
 
     // Бесконечный скролл для топа треков
     function setupTopTracksInfiniteScroll() {
@@ -1287,4 +1386,7 @@
     initViewTabs();
     setupTopTracksInfiniteScroll();
     loadLibrary();
+    
+    // Восстанавливаем состояние плеера после загрузки
+    setTimeout(() => restorePlayerState(), 1000);
 })();
