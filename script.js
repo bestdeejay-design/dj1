@@ -1293,6 +1293,41 @@
         return num.toString();
     }
     
+    // Показываем кнопку "Продолжить прослушивание"
+    function showResumeButton() {
+        const saved = localStorage.getItem('playerState');
+        if (!saved) return;
+        
+        try {
+            const state = JSON.parse(saved);
+            if (Date.now() - state.timestamp > 24 * 60 * 60 * 1000) return;
+            
+            // Создаём кнопку
+            const resumeBtn = document.createElement('div');
+            resumeBtn.className = 'resume-playing-btn';
+            resumeBtn.innerHTML = `
+                <span class="resume-icon">▶</span>
+                <span class="resume-text">Continue: ${escapeHtml(state.albumTitle)}</span>
+            `;
+            resumeBtn.addEventListener('click', () => {
+                restorePlayerState();
+                resumeBtn.remove();
+            });
+            
+            document.body.appendChild(resumeBtn);
+            
+            // Автоматически скрываем через 10 секунд
+            setTimeout(() => {
+                if (resumeBtn.parentNode) {
+                    resumeBtn.style.opacity = '0';
+                    setTimeout(() => resumeBtn.remove(), 300);
+                }
+            }, 10000);
+        } catch (err) {
+            console.warn('Failed to show resume button:', err);
+        }
+    }
+
     // Прокручиваем к текущему треку в топе
     function scrollToCurrentTopTrack() {
         if (currentView !== 'top-tracks' || !currentAlbum || currentAlbum.id !== 'top-tracks') return;
@@ -1435,4 +1470,7 @@
     
     // Восстанавливаем состояние плеера после загрузки
     setTimeout(() => restorePlayerState(), 1000);
+    
+    // Показываем кнопку "Продолжить прослушивание" если есть сохранённое состояние
+    setTimeout(() => showResumeButton(), 1500);
 })();
