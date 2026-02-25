@@ -17,7 +17,7 @@
     
     // Топ треков
     let topTracks = [];
-    let currentView = 'albums'; // 'albums' | 'top-tracks'
+    let currentView = localStorage.getItem('currentView') || 'albums'; // 'albums' | 'top-tracks'
     let topTracksSort = 'plays'; // 'plays' | 'favorites'
     let topTracksPage = 1;
     let topTracksHasMore = true;
@@ -312,19 +312,13 @@
         
         // Мобильное поведение - тап по язычку открывает/закрывает панель
         if (window.innerWidth <= 600) {
-            // Отслеживаем клики по язычку (псевдоэлемент ::before)
-            // Клик внутри контейнера, но не по селекту/кнопке = клик по язычку
             sortContainer.addEventListener('click', (e) => {
-                const rect = sortContainer.getBoundingClientRect();
-                // Если клик был в левой части контейнера (где язычок) или по краю
-                const clickX = e.clientX - rect.left;
-                
-                // Если клик по селекту или кнопке - не обрабатываем
+                // Если клик по селекту или кнопке - не тогглим панель
                 if (e.target === sortSelect || e.target === sortOrderBtn) {
                     return;
                 }
                 
-                // Тоггл панели
+                // Тоггл панели по клику внутри контейнера (включая язычок)
                 sortContainer.classList.toggle('active');
             });
             
@@ -997,6 +991,25 @@
     function initViewTabs() {
         if (!viewTabs) return;
         
+        // Восстанавливаем сохраненный вид при загрузке
+        const savedView = localStorage.getItem('currentView') || 'albums';
+        currentView = savedView;
+        
+        // Устанавливаем активный таб
+        viewTabs.querySelectorAll('.view-tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.view === savedView);
+        });
+        
+        // Применяем начальное состояние без прокрутки
+        if (savedView === 'top-tracks') {
+            gallery.style.display = 'none';
+            topTracksView.style.display = 'block';
+            updateSortControlsForView('top-tracks');
+            loadTopTracks();
+        } else {
+            updateSortControlsForView('albums');
+        }
+        
         viewTabs.addEventListener('click', (e) => {
             const tab = e.target.closest('.view-tab');
             if (!tab) return;
@@ -1008,8 +1021,11 @@
             viewTabs.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             
-            // Переключаем вид
+            // Сохраняем выбор
             currentView = view;
+            localStorage.setItem('currentView', view);
+            
+            // Переключаем вид
             updateSortControlsForView(view);
             
             if (view === 'albums') {
@@ -1079,9 +1095,6 @@
     function renderTopTracks(tracksToRender) {
         if (topTracksPage === 1) {
             topTracksView.innerHTML = `
-                <div class="top-tracks-header">
-                    <h2 class="top-tracks-title">🔥 Топ треков BEST</h2>
-                </div>
                 <div class="top-tracks-list" id="topTracksList"></div>
             `;
         }
@@ -1124,7 +1137,7 @@
         // Создаем виртуальный альбом для трека
         currentAlbum = {
             id: 'top-tracks',
-            title: '🔥 Топ треков',
+            title: '🔥 Top Tracks',
             cover: track.cover,
             tracks: topTracks.map(t => ({
                 name: t.name,
@@ -1137,7 +1150,7 @@
         const trackIndex = topTracks.findIndex(t => t.id === track.id);
         selectTrack(currentAlbum, trackIndex);
         
-        playlistAlbumTitle.textContent = '🔥 Топ треков';
+        playlistAlbumTitle.textContent = '🔥 Top Tracks';
         renderPlaylist();
     }
 
