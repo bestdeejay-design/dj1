@@ -871,6 +871,9 @@
         currentAlbumName.textContent = album.title;
         // textContent автоматически экранирует HTML
         
+        // Обновляем title страницы для отображения на экране блокировки
+        document.title = `${track.name} — ${album.title}`;
+        
         let coverSrc = track.cover || album.cover;
         currentTrackCover.src = coverSrc || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3C/svg%3E';
         
@@ -1468,6 +1471,9 @@
         currentAlbumName.textContent = '🔥 Top Tracks';
         currentTrackCover.src = track.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3C/svg%3E';
         
+        // Обновляем title (без воспроизведения — показываем что на паузе)
+        document.title = `⏸ ${track.name} — 🔥 Top Tracks`;
+        
         playlistAlbumTitle.textContent = '🔥 Top Tracks';
         renderPlaylist();
         highlightPlaylistItem(topTrackIndex);
@@ -1511,6 +1517,9 @@
         currentTrackName.textContent = track.name;
         currentAlbumName.textContent = `🏷️ ${currentTag}`;
         currentTrackCover.src = track.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3C/svg%3E';
+        
+        // Обновляем title (без воспроизведения — показываем что на паузе)
+        document.title = `⏸ ${track.name} — 🏷️ ${currentTag}`;
         
         playlistAlbumTitle.textContent = `🏷️ ${currentTag}`;
         renderPlaylist();
@@ -1734,6 +1743,9 @@
             currentAlbumName.textContent = album.title;
             currentTrackCover.src = track.cover || album.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3C/svg%3E';
             
+            // Обновляем title (без воспроизведения — показываем что на паузе)
+            document.title = `⏸ ${track.name} — ${album.title}`;
+            
             playerBar.classList.add('active');
             playlistAlbumTitle.textContent = album.title;
             renderPlaylist();
@@ -1752,11 +1764,18 @@
         if (currentAlbum && currentTrackIndex >= 0) {
             savePlayerState(currentAlbum, currentTrackIndex);
         }
+        // Возвращаем оригинальный title
+        document.title = 'DJ1.RU — Music Library';
     });
     
     audioPlayer.addEventListener('play', () => {
         if (currentAlbum && currentTrackIndex >= 0) {
             savePlayerState(currentAlbum, currentTrackIndex);
+            // Восстанавливаем title с текущим треком
+            const track = currentAlbum.tracks[currentTrackIndex];
+            if (track) {
+                document.title = `${track.name} — ${currentAlbum.title}`;
+            }
         }
     });
     
