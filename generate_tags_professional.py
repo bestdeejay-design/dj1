@@ -69,10 +69,10 @@ PROFESSIONAL_CATEGORIES = {
     
     # Контекст (Context)
     'context': {
-        'club': 'Club', 'festival': 'Festival', 'radio': 'Radio',
+        'club': 'Night Club', 'festival': 'Festival', 'radio': 'Radio',
         'bedroom': 'Bedroom', 'studio': 'Studio', 'live': 'Live',
         'chill': 'Chill', 'party': 'Party', 'dance': 'Dance',
-        'night': 'Night', 'deep': 'Deep'
+        'night': 'Night Club', 'deep': 'Deep'
     }
 }
 
@@ -88,9 +88,12 @@ with open('/Users/admin/Documents/dj1/dj1/data/tags-data.json', 'r') as f:
 
 print(f"Original tags: {len(data['tags'])}")
 
-# Фильтруем и категоризуем теги
+# Фильтруем и категоризуем теги с объединением по display_name
 professional_tags = {}
 other_tags = {}
+
+# Временное хранилище для объединения
+merged_tags = {}  # (category, display_name) -> {count, tracks, original_tags}
 
 for tag, info in data['tags'].items():
     tag_lower = tag.lower()
@@ -100,15 +103,35 @@ for tag, info in data['tags'].items():
     
     if mapping:
         category, display_name = mapping
-        # Добавляем в профессиональные с отображаемым именем
-        if category not in professional_tags:
-            professional_tags[category] = {}
-        professional_tags[category][tag] = {
-            **info,
-            'displayName': display_name
-        }
+        key = (category, display_name)
+        
+        if key not in merged_tags:
+            merged_tags[key] = {
+                'count': 0,
+                'tracks': set(),
+                'original_tags': []
+            }
+        
+        merged_tags[key]['count'] += info['count']
+        merged_tags[key]['tracks'].update(info['tracks'])
+        merged_tags[key]['original_tags'].append(tag)
+        
     elif info['count'] >= 100:  # Теги с 100+ треками тоже сохраняем
         other_tags[tag] = info
+
+# Преобразуем merged_tags в professional_tags
+for (category, display_name), merged in merged_tags.items():
+    if category not in professional_tags:
+        professional_tags[category] = {}
+    
+    # Используем display_name как ключ (нижний регистр для поиска)
+    tag_key = display_name.lower().replace(' ', '-')
+    professional_tags[category][tag_key] = {
+        'count': merged['count'],
+        'tracks': list(merged['tracks']),
+        'displayName': display_name,
+        'merged_from': merged['original_tags']
+    }
 
 # Собираем итоговую структуру
 result = {
