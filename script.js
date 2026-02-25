@@ -1433,6 +1433,8 @@
     setupTopTracksInfiniteScroll();
     loadLibrary();
     
-    // Восстанавливаем состояние плеера после загрузки
-    setTimeout(() => restorePlayerState(), 1000);
+    // Восстанавливаем состояние плеера после загрузки страницы
+    window.addEventListener('load', () => {
+        setTimeout(() => restorePlayerState(), 1500);
+    });
 })();
