@@ -1060,8 +1060,8 @@
             const sortParam = topTracksSort === 'plays' ? 'play_count' : 'favorite_count';
             let url = `https://api.dj1.ru/api/tracks?page=${topTracksPage}&limit=20&privacy=public&sort=${sortParam}&order=DESC`;
             
-            // Фильтр по автору BEST
-            url += `&user_id=${bestUserId}`;
+            // Фильтр по автору BEST (используем author_id для треков)
+            url += `&author_id=${bestUserId}`;
             
             const response = await fetch(url);
             if (!response.ok) throw new Error('Failed to load tracks');
