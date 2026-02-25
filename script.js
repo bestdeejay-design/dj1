@@ -14,6 +14,14 @@
     let currentAlbum = null;
     let currentTrackIndex = -1;
     let playlistVisible = false;
+    
+    // Топ треков
+    let topTracks = [];
+    let currentView = 'albums'; // 'albums' | 'top-tracks'
+    let topTracksSort = 'plays'; // 'plays' | 'favorites'
+    let topTracksPage = 1;
+    let topTracksHasMore = true;
+    let isLoadingTopTracks = false;
 
     const REPEAT_NONE = 0;
     const REPEAT_ONE = 1;
@@ -65,6 +73,16 @@
 
     const playIcon = document.querySelector('.play-icon');
     const pauseIcon = document.querySelector('.pause-icon');
+
+    // Прогресс бар элементы
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+
+    // Топ треков элементы
+    const viewTabs = document.getElementById('viewTabs');
+    const topTracksView = document.getElementById('topTracksView');
 
     // ==================== ЗАГРУЗКА ДАННЫХ ====================
     async function loadLibrary() {
@@ -878,6 +896,42 @@
         pauseIcon.style.display = 'none';
     });
 
+    // Обновление прогресс бара
+    audioPlayer.addEventListener('timeupdate', () => {
+        if (audioPlayer.duration && progressFill) {
+            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            progressFill.style.width = progress + '%';
+        }
+        if (currentTimeEl) {
+            currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+        }
+    });
+
+    audioPlayer.addEventListener('loadedmetadata', () => {
+        if (durationEl) {
+            durationEl.textContent = formatTime(audioPlayer.duration);
+        }
+    });
+
+    // Клик по прогресс бару для перемотки
+    if (progressBar) {
+        progressBar.addEventListener('click', (e) => {
+            if (audioPlayer.duration) {
+                const rect = progressBar.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const progress = clickX / rect.width;
+                audioPlayer.currentTime = progress * audioPlayer.duration;
+            }
+        });
+    }
+
+    function formatTime(seconds) {
+        if (!seconds || isNaN(seconds)) return '0:00';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
     prevBtn.addEventListener('click', prevTrack);
     nextBtn.addEventListener('click', nextTrack);
     playPauseBtn.addEventListener('click', togglePlayPause);
@@ -896,6 +950,188 @@
 
     pauseIcon.style.display = 'none';
 
+    // ==================== ТОП ТРЕКОВ ====================
+    function initViewTabs() {
+        if (!viewTabs) return;
+        
+        viewTabs.addEventListener('click', (e) => {
+            const tab = e.target.closest('.view-tab');
+            if (!tab) return;
+            
+            const view = tab.dataset.view;
+            if (view === currentView) return;
+            
+            // Обновляем активный таб
+            viewTabs.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Переключаем вид
+            currentView = view;
+            if (view === 'albums') {
+                gallery.style.display = 'grid';
+                topTracksView.style.display = 'none';
+                loadingEl.style.display = hasMore ? 'block' : 'none';
+            } else {
+                gallery.style.display = 'none';
+                topTracksView.style.display = 'block';
+                loadingEl.style.display = topTracksHasMore ? 'block' : 'none';
+                if (topTracks.length === 0) {
+                    loadTopTracks();
+                }
+            }
+        });
+    }
+
+    async function loadTopTracks() {
+        if (isLoadingTopTracks || !topTracksHasMore) return;
+        
+        isLoadingTopTracks = true;
+        loadingEl.style.display = 'block';
+        
+        try {
+            const sortParam = topTracksSort === 'plays' ? 'play_count' : 'favorite_count';
+            const url = `https://api.dj1.ru/api/tracks?page=${topTracksPage}&limit=20&privacy=public&sort=${sortParam}&order=DESC`;
+            
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Failed to load tracks');
+            
+            const data = await response.json();
+            const tracks = data.data || [];
+            const meta = data.meta || {};
+            
+            topTracksHasMore = topTracksPage < (meta.pages || 1);
+            
+            const newTracks = tracks.map((track, index) => ({
+                id: track.id,
+                name: track.title,
+                file: track.audio_url || track.full_url || null,
+                cover: track.image_url || null,
+                duration: track.duration_s || null,
+                plays: track.play_count || 0,
+                favorites: track.favorite_count || 0,
+                rank: (topTracksPage - 1) * 20 + index + 1
+            }));
+            
+            if (newTracks.length > 0) {
+                topTracks = topTracks.concat(newTracks);
+                renderTopTracks(newTracks);
+            }
+            
+            topTracksPage++;
+        } catch (err) {
+            console.error('Error loading top tracks:', err);
+        } finally {
+            isLoadingTopTracks = false;
+            loadingEl.style.display = topTracksHasMore ? 'block' : 'none';
+        }
+    }
+
+    function renderTopTracks(tracksToRender) {
+        if (topTracksPage === 1) {
+            topTracksView.innerHTML = `
+                <div class="top-tracks-header">
+                    <h2 class="top-tracks-title">🔥 Топ треков</h2>
+                    <div class="top-tracks-sort">
+                        <button class="sort-btn ${topTracksSort === 'plays' ? 'active' : ''}" data-sort="plays">
+                            ▶ Прослушивания
+                        </button>
+                        <button class="sort-btn ${topTracksSort === 'favorites' ? 'active' : ''}" data-sort="favorites">
+                            ♥ Лайки
+                        </button>
+                    </div>
+                </div>
+                <div class="top-tracks-list" id="topTracksList"></div>
+            `;
+            
+            // Обработчики сортировки
+            topTracksView.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const newSort = btn.dataset.sort;
+                    if (newSort === topTracksSort) return;
+                    
+                    topTracksSort = newSort;
+                    topTracksPage = 1;
+                    topTracks = [];
+                    topTracksHasMore = true;
+                    loadTopTracks();
+                });
+            });
+        }
+        
+        const list = document.getElementById('topTracksList');
+        
+        tracksToRender.forEach(track => {
+            const item = document.createElement('div');
+            item.className = 'top-track-item';
+            item.innerHTML = `
+                <div class="top-track-rank">#${track.rank}</div>
+                <img class="top-track-cover" src="${track.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'48\' height=\'48\' viewBox=\'0 0 48 48\'%3E%3Crect width=\'48\' height=\'48\' fill=\'%23333\'/%3E%3C/svg%3E'}" alt="">
+                <div class="top-track-info">
+                    <div class="top-track-name">${escapeHtml(track.name)}</div>
+                    <div class="top-track-stats">
+                        <span class="top-track-stat">▶ ${formatNumber(track.plays)}</span>
+                        <span class="top-track-stat">♥ ${formatNumber(track.favorites)}</span>
+                    </div>
+                </div>
+                <button class="top-track-play" title="Воспроизвести">
+                    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+            `;
+            
+            item.addEventListener('click', (e) => {
+                if (e.target.closest('.top-track-play')) {
+                    playTopTrack(track);
+                }
+            });
+            
+            list.appendChild(item);
+        });
+    }
+
+    function playTopTrack(track) {
+        if (!playerBar.classList.contains('active')) {
+            playerBar.classList.add('active');
+        }
+        
+        // Создаем виртуальный альбом для трека
+        currentAlbum = {
+            id: 'top-tracks',
+            title: '🔥 Топ треков',
+            cover: track.cover,
+            tracks: topTracks.map(t => ({
+                name: t.name,
+                file: t.file,
+                cover: t.cover,
+                duration: t.duration
+            }))
+        };
+        
+        const trackIndex = topTracks.findIndex(t => t.id === track.id);
+        selectTrack(currentAlbum, trackIndex);
+        
+        playlistAlbumTitle.textContent = '🔥 Топ треков';
+        renderPlaylist();
+    }
+
+    function formatNumber(num) {
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+        return num.toString();
+    }
+
+    // Бесконечный скролл для топа треков
+    function setupTopTracksInfiniteScroll() {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && currentView === 'top-tracks' && !isLoadingTopTracks && topTracksHasMore) {
+                loadTopTracks();
+            }
+        }, { rootMargin: '100px' });
+        
+        observer.observe(loadingEl);
+    }
+
     // ==================== СТАРТ ====================
+    initViewTabs();
+    setupTopTracksInfiniteScroll();
     loadLibrary();
 })();

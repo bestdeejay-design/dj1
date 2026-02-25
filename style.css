@@ -45,6 +45,233 @@ body {
     overflow-x: hidden;
 }
 
+/* Табы переключения видов */
+.view-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.view-tab {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    padding: 0.8rem 1.5rem;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.view-tab:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+}
+
+.view-tab.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+[data-theme="light"] .view-tab {
+    background: rgba(0,0,0,0.05);
+    border-color: rgba(0,0,0,0.1);
+    color: rgba(0,0,0,0.6);
+}
+
+[data-theme="light"] .view-tab:hover {
+    background: rgba(0,0,0,0.08);
+    border-color: rgba(0,0,0,0.2);
+    color: rgba(0,0,0,0.8);
+}
+
+[data-theme="light"] .view-tab.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Топ треков - вид */
+.top-tracks-view {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.top-tracks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.top-tracks-title {
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--text-primary);
+}
+
+.top-tracks-sort {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.sort-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.sort-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-primary);
+}
+
+.sort-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Список топ треков */
+.top-track-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    margin-bottom: 0.5rem;
+}
+
+.top-track-item:hover {
+    background: rgba(255,255,255,0.03);
+    border-color: var(--border-hover);
+}
+
+.top-track-rank {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 40px;
+    text-align: center;
+}
+
+.top-track-cover {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #2a2a2a;
+}
+
+.top-track-info {
+    flex: 1;
+    overflow: hidden;
+}
+
+.top-track-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.top-track-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.2rem;
+}
+
+.top-track-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.top-track-play {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.top-track-play:hover {
+    background: var(--accent);
+    color: var(--bg-dark);
+    transform: scale(1.05);
+}
+
+.top-track-play svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+/* Адаптация табов */
+@media (max-width: 600px) {
+    .view-tabs {
+        padding: 1rem;
+        gap: 0.5rem;
+    }
+    
+    .view-tab {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+    
+    .top-tracks-view {
+        padding: 0.5rem 1rem;
+    }
+    
+    .top-tracks-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .top-track-item {
+        padding: 0.6rem;
+    }
+    
+    .top-track-rank {
+        font-size: 1rem;
+        min-width: 30px;
+    }
+    
+    .top-track-cover {
+        width: 40px;
+        height: 40px;
+    }
+}
+
 /* Шапка */
 .header {
     padding: 2.5rem 1.5rem;
@@ -308,6 +535,17 @@ audio {
     min-width: 200px;
 }
 
+/* Прогресс бар (десктоп) */
+.track-progress-container {
+    display: none; /* На десктопе показываем нативный audio */
+}
+
+@media (max-width: 700px) {
+    .track-progress-container {
+        display: flex; /* На мобильном показываем кастомный прогресс */
+    }
+}
+
 audio::-webkit-media-controls-panel {
     background: #2a2a2a;
 }
@@ -496,8 +734,18 @@ audio::-moz-media-controls-panel {
 
 .loading, .error {
     text-align: center;
-    padding: 4rem;
+    padding: 2rem;
     color: #888;
+    height: 60px; /* Фиксированная высота чтобы не было скачка */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Предотвращаем скачок контента при появлении загрузки */
+#loading {
+    position: relative;
+    z-index: 1;
 }
 
 .error {
@@ -558,10 +806,42 @@ audio::-moz-media-controls-panel {
         height: 26px;
     }
 
-    audio {
+    /* Прогресс бар на мобильном */
+    .track-progress-container {
         order: 3;
         width: 100%;
-        min-width: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 0.5rem;
+    }
+
+    .track-time {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        min-width: 32px;
+        text-align: center;
+    }
+
+    .track-progress-bar {
+        flex: 1;
+        height: 4px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 2px;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .track-progress-fill {
+        height: 100%;
+        background: var(--accent);
+        border-radius: 2px;
+        width: 0%;
+        transition: width 0.1s linear;
+    }
+
+    audio {
+        display: none; /* Скрываем нативные контролы полностью */
     }
 
     .playlist-toggle {
