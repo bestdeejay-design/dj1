@@ -402,8 +402,15 @@
     }
 
     // Преобразуем клиентское значение сортировки в параметр API
-    function getApiSortParam(sortValue) {
-        const sortMap = {
+    function getApiSortParam(sortValue, isTracks = false) {
+        const sortMap = isTracks ? {
+            // Для треков API использует title, а не name
+            'name': 'title',
+            'created': 'created_at',
+            'plays': 'play_count',
+            'favorites': 'favorite_count'
+        } : {
+            // Для плейлистов
             'name': 'name',
             'created': 'created_at',
             'plays': 'play_count',
@@ -438,7 +445,7 @@
 
         try {
             // Формируем URL с параметрами серверной сортировки и фильтрации
-            const sortParam = getApiSortParam(currentSort);
+            const sortParam = getApiSortParam(currentSort, false);
             const orderParam = currentOrder.toUpperCase();
             let url = `https://api.dj1.ru/api/playlists?page=${currentPage}&limit=${itemsPerPage}&sort=${sortParam}&order=${orderParam}`;
             
@@ -1087,7 +1094,7 @@
         loadingEl.style.display = 'block';
         
         try {
-            const sortParam = getApiSortParam(topTracksSort);
+            const sortParam = getApiSortParam(topTracksSort, true);
             const orderParam = topTracksOrder.toUpperCase();
             let url = `https://api.dj1.ru/api/tracks?page=${topTracksPage}&limit=20&sort=${sortParam}&order=${orderParam}`;
             
