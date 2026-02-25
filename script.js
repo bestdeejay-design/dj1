@@ -261,13 +261,14 @@
                     z-index: 50;
                 }
                 
-                /* Язычок Control Panel */
+                /* Язычок Control Panel - сдвинут вправо для iPhone Dynamic Island */
                 .sort-controls::after {
                     content: '⚙️ Filters';
                     position: absolute;
                     bottom: -28px;
-                    left: 50%;
-                    transform: translateX(-50%);
+                    right: 20px;
+                    left: auto;
+                    transform: none;
                     padding: 4px 16px;
                     background: rgba(255, 255, 255, 0.1);
                     backdrop-filter: blur(10px);
