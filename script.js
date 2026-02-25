@@ -18,7 +18,8 @@
     // Топ треков
     let topTracks = [];
     let currentView = localStorage.getItem('currentView') || 'albums'; // 'albums' | 'top-tracks'
-    let topTracksSort = 'plays'; // 'plays' | 'favorites'
+    let topTracksSort = 'plays';
+    let topTracksOrder = 'desc'; // 'asc' | 'desc'
     let topTracksPage = 1;
     let topTracksHasMore = true;
     let isLoadingTopTracks = false;
@@ -326,8 +327,12 @@
                 currentOrder = currentOrder === 'asc' ? 'desc' : 'asc';
                 e.target.textContent = currentOrder === 'asc' ? '↑' : '↓';
                 resetAndReload();
+            } else {
+                // Для топа треков
+                topTracksOrder = topTracksOrder === 'asc' ? 'desc' : 'asc';
+                e.target.textContent = topTracksOrder === 'asc' ? '↑' : '↓';
+                resetAndReloadTopTracks();
             }
-            // Для топа треков порядок всегда DESC (по убыванию)
         });
         
         // Мобильное поведение - тап по язычку открывает/закрывает панель
@@ -377,7 +382,8 @@
     function updateSortControlsForView(view) {
         const sortSelect = document.getElementById('sortSelect');
         const privacySelect = document.getElementById('privacySelect');
-        if (!sortSelect || !privacySelect) return;
+        const sortOrderBtn = document.getElementById('sortOrderBtn');
+        if (!sortSelect || !privacySelect || !sortOrderBtn) return;
         
         // Обновляем privacy select
         privacySelect.value = privacyFilter;
@@ -389,6 +395,10 @@
             <option value="plays" ${(view === 'albums' ? currentSort : topTracksSort) === 'plays' ? 'selected' : ''}>Total Plays</option>
             <option value="favorites" ${(view === 'albums' ? currentSort : topTracksSort) === 'favorites' ? 'selected' : ''}>Total Favorites</option>
         `;
+        
+        // Обновляем кнопку направления сортировки
+        const currentOrderValue = view === 'albums' ? currentOrder : topTracksOrder;
+        sortOrderBtn.textContent = currentOrderValue === 'asc' ? '↑' : '↓';
     }
 
     // Преобразуем клиентское значение сортировки в параметр API
@@ -1078,7 +1088,8 @@
         
         try {
             const sortParam = getApiSortParam(topTracksSort);
-            let url = `https://api.dj1.ru/api/tracks?page=${topTracksPage}&limit=20&sort=${sortParam}&order=DESC`;
+            const orderParam = topTracksOrder.toUpperCase();
+            let url = `https://api.dj1.ru/api/tracks?page=${topTracksPage}&limit=20&sort=${sortParam}&order=${orderParam}`;
             
             // Фильтр публичности
             if (privacyFilter === 'public') {
