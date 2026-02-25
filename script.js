@@ -1046,6 +1046,13 @@
     async function loadTopTracks() {
         if (isLoadingTopTracks || !topTracksHasMore) return;
         
+        // Ждем загрузки bestUserId если он еще не загружен
+        if (!bestUserId) {
+            console.log('Waiting for BEST user ID...');
+            setTimeout(() => loadTopTracks(), 100);
+            return;
+        }
+        
         isLoadingTopTracks = true;
         loadingEl.style.display = 'block';
         
@@ -1054,9 +1061,7 @@
             let url = `https://api.dj1.ru/api/tracks?page=${topTracksPage}&limit=20&privacy=public&sort=${sortParam}&order=DESC`;
             
             // Фильтр по автору BEST
-            if (bestUserId) {
-                url += `&user_id=${bestUserId}`;
-            }
+            url += `&user_id=${bestUserId}`;
             
             const response = await fetch(url);
             if (!response.ok) throw new Error('Failed to load tracks');
