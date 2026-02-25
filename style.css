@@ -737,14 +737,50 @@ audio {
     min-width: 200px;
 }
 
-/* Прогресс бар (десктоп) */
+/* Прогресс бар (десктоп и мобильный) */
 .track-progress-container {
-    display: none; /* На десктопе показываем нативный audio */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 2;
+    min-width: 200px;
 }
 
+.track-time {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    min-width: 36px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.track-progress-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.track-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.track-progress-bar:hover .track-progress-fill {
+    background: #1ed760;
+}
+
+/* На мобильном — те же стили, но скрываем нативный audio */
 @media (max-width: 700px) {
     .track-progress-container {
-        display: flex; /* На мобильном показываем кастомный прогресс */
+        order: 3;
+        width: 100%;
     }
 }
 
@@ -1030,39 +1066,6 @@ audio::-moz-media-controls-panel {
     }
 
     /* Прогресс бар на мобильном */
-    .track-progress-container {
-        order: 3;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 0 0.5rem;
-    }
-
-    .track-time {
-        font-size: 0.7rem;
-        color: var(--text-secondary);
-        min-width: 32px;
-        text-align: center;
-    }
-
-    .track-progress-bar {
-        flex: 1;
-        height: 4px;
-        background: rgba(255,255,255,0.1);
-        border-radius: 2px;
-        cursor: pointer;
-        position: relative;
-    }
-
-    .track-progress-fill {
-        height: 100%;
-        background: var(--accent);
-        border-radius: 2px;
-        width: 0%;
-        transition: width 0.1s linear;
-    }
-
     audio {
         display: none; /* Скрываем нативные контролы полностью */
     }
