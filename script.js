@@ -345,6 +345,8 @@
         albums = [];
         gallery.innerHTML = '';
         albumTracksCache.clear();
+        // Прокручиваем к началу галереи
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         loadMoreAlbums();
     }
 
@@ -353,6 +355,8 @@
         topTracksHasMore = true;
         topTracks = [];
         topTracksView.innerHTML = '';
+        // Прокручиваем к началу
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         loadTopTracks();
     }
 
