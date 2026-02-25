@@ -286,6 +286,74 @@ body {
     fill: currentColor;
 }
 
+/* Раздел By Tags */
+.tags-view {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1rem 2rem 100px;
+    position: relative;
+    z-index: 1;
+}
+
+.tags-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    padding: 20px 0 30px;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 20px;
+}
+
+.tag-cloud-item {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.tag-cloud-item:hover {
+    background: rgba(29,185,84,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.tag-cloud-item.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+}
+
+.tag-tracks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tag-tracks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.tag-tracks-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+
+.tag-tracks-count {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
 /* Адаптация табов */
 @media (max-width: 600px) {
     .view-tabs {

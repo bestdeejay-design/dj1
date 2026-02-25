@@ -17,12 +17,18 @@
     
     // Топ треков
     let topTracks = [];
-    let currentView = localStorage.getItem('currentView') || 'albums'; // 'albums' | 'top-tracks'
+    let currentView = localStorage.getItem('currentView') || 'albums'; // 'albums' | 'top-tracks' | 'tags'
     let topTracksSort = 'plays';
     let topTracksOrder = 'desc'; // 'asc' | 'desc'
     let topTracksPage = 1;
     let topTracksHasMore = true;
     let isLoadingTopTracks = false;
+    
+    // By Tags view
+    let allTags = [];
+    let allTagsLoaded = false;
+    let currentTag = null;
+    let tagTracks = [];
     
     // Фильтр публичности (общий для альбомов и треков)
     let privacyFilter = localStorage.getItem('privacyFilter') || 'public'; // 'public' | 'all'
@@ -87,6 +93,11 @@
     // Топ треков элементы
     const viewTabs = document.getElementById('viewTabs');
     const topTracksView = document.getElementById('topTracksView');
+    
+    // By Tags элементы
+    const tagsView = document.getElementById('tagsView');
+    const tagsCloud = document.getElementById('tagsCloud');
+    const tagTracksList = document.getElementById('tagTracksList');
 
     // ==================== ЗАГРУЗКА ДАННЫХ ====================
     async function loadLibrary() {
@@ -383,7 +394,16 @@
         const sortSelect = document.getElementById('sortSelect');
         const privacySelect = document.getElementById('privacySelect');
         const sortOrderBtn = document.getElementById('sortOrderBtn');
+        const sortControls = document.querySelector('.sort-controls');
         if (!sortSelect || !privacySelect || !sortOrderBtn) return;
+        
+        // Скрываем сортировку для tags view
+        if (view === 'tags') {
+            if (sortControls) sortControls.style.display = 'none';
+            return;
+        } else {
+            if (sortControls) sortControls.style.display = 'flex';
+        }
         
         // Обновляем privacy select
         privacySelect.value = privacyFilter;
@@ -1125,16 +1145,25 @@
         // Переключаем вид
         updateSortControlsForView(view);
         
+        // Скрываем все виды
+        gallery.style.display = 'none';
+        topTracksView.style.display = 'none';
+        tagsView.style.display = 'none';
+        
         if (view === 'albums') {
             gallery.style.display = 'grid';
-            topTracksView.style.display = 'none';
             loadingEl.style.display = hasMore ? 'block' : 'none';
-        } else {
-            gallery.style.display = 'none';
+        } else if (view === 'top-tracks') {
             topTracksView.style.display = 'block';
             loadingEl.style.display = topTracksHasMore ? 'block' : 'none';
             if (topTracks.length === 0) {
                 loadTopTracks();
+            }
+        } else if (view === 'tags') {
+            tagsView.style.display = 'block';
+            loadingEl.style.display = 'none';
+            if (!allTagsLoaded) {
+                loadAllTags();
             }
         }
     }
@@ -1157,6 +1186,11 @@
             topTracksView.style.display = 'block';
             updateSortControlsForView('top-tracks');
             loadTopTracks();
+        } else if (savedView === 'tags') {
+            gallery.style.display = 'none';
+            tagsView.style.display = 'block';
+            updateSortControlsForView('tags');
+            loadAllTags();
         } else {
             updateSortControlsForView('albums');
         }
@@ -1540,6 +1574,190 @@
         observer.observe(loadingEl);
     }
 
+    // ==================== BY TAGS VIEW ====================
+    
+    // Загружаем все треки для извлечения тегов
+    async function loadAllTags() {
+        if (!bestUserId) {
+            console.log('Waiting for BEST user ID...');
+            setTimeout(() => loadAllTags(), 100);
+            return;
+        }
+        
+        try {
+            // Загружаем первую партию треков
+            const response = await fetch(`https://api.dj1.ru/api/tracks?author_id=${bestUserId}&limit=100&sort=play_count&order=DESC`);
+            if (!response.ok) throw new Error('Failed to load tracks for tags');
+            
+            const data = await response.json();
+            const tracks = data.data || [];
+            
+            // Извлекаем теги из всех треков
+            const tagCounts = new Map();
+            
+            tracks.forEach(track => {
+                if (track.sound) {
+                    const tags = extractTagsFromSound(track.sound);
+                    tags.forEach(tag => {
+                        tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+                    });
+                }
+            });
+            
+            // Сортируем теги по популярности
+            allTags = Array.from(tagCounts.entries())
+                .sort((a, b) => b[1] - a[1])
+                .map(([tag, count]) => ({ tag, count }));
+            
+            allTagsLoaded = true;
+            renderTagsCloud();
+            
+        } catch (err) {
+            console.error('Error loading tags:', err);
+        }
+    }
+    
+    // Рендерим облако тегов
+    function renderTagsCloud() {
+        if (!tagsCloud) return;
+        
+        tagsCloud.innerHTML = allTags.map(({ tag, count }) => `
+            <span class="tag-cloud-item" data-tag="${escapeHtml(tag)}">
+                ${escapeHtml(tag)} (${count})
+            </span>
+        `).join('');
+        
+        // Добавляем обработчики клика
+        tagsCloud.querySelectorAll('.tag-cloud-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const tag = item.dataset.tag;
+                selectTag(tag);
+            });
+        });
+    }
+    
+    // Выбираем тег и показываем треки
+    async function selectTag(tag) {
+        currentTag = tag;
+        
+        // Обновляем активный тег в облаке
+        tagsCloud.querySelectorAll('.tag-cloud-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.tag === tag);
+        });
+        
+        // Загружаем треки с этим тегом
+        try {
+            const response = await fetch(`https://api.dj1.ru/api/tracks?author_id=${bestUserId}&limit=100&sort=play_count&order=DESC`);
+            if (!response.ok) throw new Error('Failed to load tracks');
+            
+            const data = await response.json();
+            const tracks = data.data || [];
+            
+            // Фильтруем треки по тегу
+            tagTracks = tracks.filter(track => {
+                if (!track.sound) return false;
+                const trackTags = extractTagsFromSound(track.sound);
+                return trackTags.includes(tag.toLowerCase());
+            }).map(track => ({
+                id: track.id,
+                name: track.title,
+                file: track.audio_url || track.full_url || null,
+                cover: track.image_url || null,
+                duration: track.duration_s || null,
+                plays: track.play_count || 0,
+                favorites: track.favorite_count || 0,
+                sound: track.sound,
+                lyrics: track.lyrics,
+                model: track.model_display_name
+            }));
+            
+            renderTagTracks();
+            
+        } catch (err) {
+            console.error('Error loading tracks by tag:', err);
+        }
+    }
+    
+    // Рендерим треки выбранного тега
+    function renderTagTracks() {
+        if (!tagTracksList) return;
+        
+        const headerHtml = currentTag ? `
+            <div class="tag-tracks-header">
+                <h3>🏷️ ${escapeHtml(currentTag)}</h3>
+                <span class="tag-tracks-count">${tagTracks.length} tracks</span>
+            </div>
+        ` : '';
+        
+        const tracksHtml = tagTracks.map((track, index) => `
+            <div class="top-track-item" data-track-id="${track.id}">
+                <div class="top-track-rank">#${index + 1}</div>
+                <img class="top-track-cover" src="${track.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'48\' height=\'48\' viewBox=\'0 0 48 48\'%3E%3Crect width=\'48\' height=\'48\' fill=\'%23333\'/%3E%3C/svg%3E'}" alt="">
+                <div class="top-track-info">
+                    <div class="top-track-name">${escapeHtml(track.name)}</div>
+                    <div class="top-track-stats">
+                        <span class="top-track-stat">▶ ${formatNumber(track.plays)}</span>
+                        <span class="top-track-stat">♥ ${formatNumber(track.favorites)}</span>
+                    </div>
+                </div>
+                <button class="top-track-play" title="Воспроизвести">
+                    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+            </div>
+        `).join('');
+        
+        tagTracksList.innerHTML = headerHtml + tracksHtml;
+        
+        // Добавляем обработчики клика на треки
+        tagTracksList.querySelectorAll('.top-track-item').forEach((item, index) => {
+            item.addEventListener('click', (e) => {
+                if (e.target.closest('.top-track-play')) {
+                    playTagTrack(tagTracks[index]);
+                }
+            });
+        });
+    }
+    
+    // Воспроизведение трека из раздела By Tags
+    function playTagTrack(track) {
+        if (!playerBar.classList.contains('active')) {
+            playerBar.classList.add('active');
+        }
+        
+        // Убираем класс playing со всех карточек
+        document.querySelectorAll('.album-card.playing, .top-track-item.playing').forEach(el => {
+            el.classList.remove('playing');
+        });
+        
+        // Добавляем класс playing на текущий трек
+        const trackItems = tagTracksList.querySelectorAll('.top-track-item');
+        const trackIndex = tagTracks.findIndex(t => t.id === track.id);
+        if (trackItems[trackIndex]) {
+            trackItems[trackIndex].classList.add('playing');
+        }
+        
+        // Создаем виртуальный альбом для трека
+        currentAlbum = {
+            id: 'tag-tracks',
+            title: `🏷️ ${currentTag}`,
+            cover: track.cover,
+            tracks: tagTracks.map(t => ({
+                name: t.name,
+                file: t.file,
+                cover: t.cover,
+                duration: t.duration,
+                sound: t.sound,
+                lyrics: t.lyrics,
+                model: t.model
+            }))
+        };
+        
+        selectTrack(currentAlbum, trackIndex);
+        
+        playlistAlbumTitle.textContent = `🏷️ ${currentTag}`;
+        renderPlaylist();
+    }
+
     // ==================== МОДАЛЬНОЕ ОКНО ДЕТАЛЕЙ ТРЕКА ====================
     const trackInfoBtn = document.getElementById('trackInfoBtn');
     const trackDetailsModal = document.getElementById('trackDetailsModal');
@@ -1630,10 +1848,9 @@
     
     // Фильтрация по тегу
     function filterByTag(tag) {
-        // Переключаемся на топ треков и ищем по тегу
-        switchView('top-tracks');
-        // TODO: добавить фильтрацию по sound полю
-        console.log('Filter by tag:', tag);
+        // Переключаемся на раздел By Tags и выбираем тег
+        switchView('tags');
+        selectTag(tag);
     }
     
     if (trackInfoBtn) {

@@ -32,10 +32,15 @@
     <div class="view-tabs" id="viewTabs">
         <button class="view-tab active" data-view="albums">Albums</button>
         <button class="view-tab" data-view="top-tracks">🔥 Top Tracks</button>
+        <button class="view-tab" data-view="tags">🏷️ By Tags</button>
     </div>
 
     <div class="gallery" id="gallery"></div>
     <div class="top-tracks-view" id="topTracksView" style="display: none;"></div>
+    <div class="tags-view" id="tagsView" style="display: none;">
+        <div class="tags-cloud" id="tagsCloud"></div>
+        <div class="tag-tracks-list" id="tagTracksList"></div>
+    </div>
     <div class="loading" id="loading">Загрузка коллекции...</div>
     <div class="error" id="error" style="display: none;"></div>
 
