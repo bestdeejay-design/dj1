@@ -456,6 +456,52 @@ body {
     border-color: var(--border-hover);
 }
 
+/* Индикатор "Продолжить с трека" */
+.resume-track-indicator {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: #000;
+    padding: 12px 24px;
+    border-radius: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 20px rgba(29,185,84,0.4);
+    z-index: 200;
+    animation: resume-slide-down 0.4s ease;
+    transition: all 0.3s ease;
+}
+
+.resume-track-indicator:hover {
+    transform: translateX(-50%) scale(1.05);
+    box-shadow: 0 6px 30px rgba(29,185,84,0.5);
+}
+
+.resume-track-icon {
+    font-size: 14px;
+}
+
+.resume-track-text {
+    white-space: nowrap;
+}
+
+@keyframes resume-slide-down {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
 /* Индикатор "сейчас играет" на карточке альбома */
 .album-card.playing {
     border-color: var(--accent);
