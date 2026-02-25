@@ -1603,41 +1603,26 @@
 
     // ==================== BY TAGS VIEW ====================
     
-    // Загружаем все треки для извлечения тегов
+    // Загружаем статичный JSON с тегами
     async function loadAllTags() {
-        if (!bestUserId) {
-            console.log('Waiting for BEST user ID...');
-            setTimeout(() => loadAllTags(), 100);
-            return;
-        }
-        
         try {
-            // Загружаем первую партию треков
-            const response = await fetch(`https://api.dj1.ru/api/tracks?author_id=${bestUserId}&limit=100&sort=play_count&order=DESC`);
-            if (!response.ok) throw new Error('Failed to load tracks for tags');
+            const response = await fetch('data/tags-data.json');
+            if (!response.ok) throw new Error('Failed to load tags data');
             
             const data = await response.json();
-            const tracks = data.data || [];
             
-            // Извлекаем теги из всех треков
-            const tagCounts = new Map();
+            // Преобразуем данные в формат для облака тегов
+            allTags = Object.entries(data.tags)
+                .sort((a, b) => b[1].count - a[1].count)
+                .map(([tag, info]) => ({ tag, count: info.count }));
             
-            tracks.forEach(track => {
-                if (track.sound) {
-                    const tags = extractTagsFromSound(track.sound);
-                    tags.forEach(tag => {
-                        tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
-                    });
-                }
-            });
-            
-            // Сортируем теги по популярности
-            allTags = Array.from(tagCounts.entries())
-                .sort((a, b) => b[1] - a[1])
-                .map(([tag, count]) => ({ tag, count }));
+            // Сохраняем полные данные для быстрого доступа
+            window.tagsData = data;
             
             allTagsLoaded = true;
             renderTagsCloud();
+            
+            console.log(`Loaded ${allTags.length} tags from static file`);
             
         } catch (err) {
             console.error('Error loading tags:', err);
@@ -1663,8 +1648,8 @@
         });
     }
     
-    // Выбираем тег и показываем треки
-    async function selectTag(tag) {
+    // Выбираем тег и показываем треки (из статичного JSON)
+    function selectTag(tag) {
         currentTag = tag;
         
         // Обновляем активный тег в облаке
@@ -1672,37 +1657,23 @@
             item.classList.toggle('active', item.dataset.tag === tag);
         });
         
-        // Загружаем треки с этим тегом
-        try {
-            const response = await fetch(`https://api.dj1.ru/api/tracks?author_id=${bestUserId}&limit=100&sort=play_count&order=DESC`);
-            if (!response.ok) throw new Error('Failed to load tracks');
-            
-            const data = await response.json();
-            const tracks = data.data || [];
-            
-            // Фильтруем треки по тегу
-            tagTracks = tracks.filter(track => {
-                if (!track.sound) return false;
-                const trackTags = extractTagsFromSound(track.sound);
-                return trackTags.includes(tag.toLowerCase());
-            }).map(track => ({
-                id: track.id,
-                name: track.title,
-                file: track.audio_url || track.full_url || null,
-                cover: track.image_url || null,
-                duration: track.duration_s || null,
-                plays: track.play_count || 0,
-                favorites: track.favorite_count || 0,
-                sound: track.sound,
-                lyrics: track.lyrics,
-                model: track.model_display_name
-            }));
-            
+        // Получаем треки из статичных данных
+        if (!window.tagsData || !window.tagsData.tags[tag]) {
+            tagTracks = [];
             renderTagTracks();
-            
-        } catch (err) {
-            console.error('Error loading tracks by tag:', err);
+            return;
         }
+        
+        const tagInfo = window.tagsData.tags[tag];
+        const allTracks = window.tagsData.tracks;
+        
+        // Собираем полные данные треков
+        tagTracks = tagInfo.tracks
+            .map(trackId => allTracks[trackId])
+            .filter(track => track) // Убираем undefined
+            .sort((a, b) => (b.plays || 0) - (a.plays || 0)); // Сортируем по популярности
+        
+        renderTagTracks();
     }
     
     // Рендерим треки выбранного тега

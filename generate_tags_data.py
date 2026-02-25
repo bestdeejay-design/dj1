@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+# Скрипт для генерации статичного JSON с тегами и треками
+
+import json
+import re
+from datetime import datetime
+
+# Читаем скачанные данные
+with open('/tmp/all_tracks.json', 'r') as f:
+    data = json.load(f)
+
+tracks = data.get('data', [])
+print(f"Total tracks: {len(tracks)}")
+
+# Расширенный список тегов
+COMMON_TAGS = [
+    '90s', '80s', '70s', '2000s', 'retro', 'vintage', 'modern', 'futuristic',
+    'electronic', 'synth', 'bass', 'hip-hop', 'rap', 'pop', 'rock', 'jazz',
+    'ambient', 'chill', 'upbeat', 'energetic', 'melodic', 'rhythmic',
+    'female', 'male', 'vocal', 'instrumental', 'acoustic', 'digital',
+    'night', 'club', 'party', 'romantic', 'sad', 'happy', 'dark', 'bright',
+    'lo-fi', 'hi-fi', 'crisp', 'warm', 'cold', 'fuzzy', 'clean',
+    'psychedelic', 'soul', 'funk', 'disco', 'house', 'techno', 'trance',
+    'reggae', 'latin', 'reggaeton', 'blues', 'country', 'folk', 'classical',
+    'trap', 'drill', 'grime', 'dubstep', 'garage', 'r&b',
+    'indie', 'alternative', 'punk', 'metal', 'grunge', 'new wave',
+    'minimal', 'progressive', 'deep', 'tech', 'tribal', 'tropical',
+    'summer', 'winter', 'spring', 'autumn', 'morning', 'evening',
+    'dreamy', 'nostalgic', 'aggressive', 'calm', 'intense', 'mellow',
+    'groovy', 'funky', 'jazzy', 'bluesy', 'rocky', 'poppy',
+    'spacious', 'intimate', 'epic', 'cinematic', 'organic', 'synthetic'
+]
+
+def extract_tags_from_sound(sound):
+    """Извлекает теги из описания звука"""
+    if not sound:
+        return []
+    
+    found_tags = set()
+    lower_sound = sound.lower()
+    
+    # Простые совпадения
+    for tag in COMMON_TAGS:
+        if tag.lower() in lower_sound:
+            found_tags.add(tag.lower())
+    
+    # Жанры через regex
+    genre_pattern = r'(\w+\s+)?(pop|rock|hip-hop|rap|jazz|blues|electronic|house|techno|trance|ambient|lo-fi|synthwave|disco|funk|soul|r&b|reggae|latin|reggaeton|edm|trap|drill|grime|psychedelic|indie|alternative|punk|metal|grunge|new wave|minimal|progressive|deep|tech|tribal|tropical|country|folk|classical|dubstep|garage)(\s+\w+)?'
+    matches = re.findall(genre_pattern, lower_sound, re.IGNORECASE)
+    for match in matches:
+        # match is a tuple of groups
+        for group in match:
+            if group and group.strip():
+                found_tags.add(group.strip().lower())
+    
+    return list(found_tags)[:15]
+
+# Собираем данные
+tags_data = {
+    'generatedAt': datetime.now().isoformat(),
+    'totalTracks': len(tracks),
+    'tags': {},
+    'tracks': {}
+}
+
+# Обрабатываем треки
+for track in tracks:
+    if not track.get('sound'):
+        continue
+    
+    tags = extract_tags_from_sound(track['sound'])
+    
+    track_info = {
+        'id': track['id'],
+        'name': track['title'],
+        'file': track.get('audio_url') or track.get('full_url'),
+        'cover': track.get('image_url'),
+        'duration': track.get('duration_s'),
+        'plays': track.get('play_count', 0),
+        'favorites': track.get('favorite_count', 0),
+        'sound': track['sound'],
+        'lyrics': track.get('lyrics'),
+        'model': track.get('model_display_name')
+    }
+    
+    # Сохраняем трек
+    tags_data['tracks'][track['id']] = track_info
+    
+    # Добавляем к тегам
+    for tag in tags:
+        if tag not in tags_data['tags']:
+            tags_data['tags'][tag] = {
+                'count': 0,
+                'tracks': []
+            }
+        tags_data['tags'][tag]['count'] += 1
+        tags_data['tags'][tag]['tracks'].append(track['id'])
+
+# Сортируем теги по популярности
+sorted_tags = dict(sorted(tags_data['tags'].items(), key=lambda x: x[1]['count'], reverse=True))
+tags_data['tags'] = sorted_tags
+tags_data['totalTags'] = len(sorted_tags)
+
+# Сохраняем
+with open('/Users/admin/Documents/dj1/dj1/data/tags-data.json', 'w') as f:
+    json.dump(tags_data, f, indent=2)
+
+print(f"\nGenerated {tags_data['totalTags']} tags")
+print("Top 10 tags:")
+for tag, data in list(sorted_tags.items())[:10]:
+    print(f"  {tag}: {data['count']} tracks")
+
+print(f"\nSaved to: data/tags-data.json")
+print(f"File size: {len(json.dumps(tags_data))} bytes")
