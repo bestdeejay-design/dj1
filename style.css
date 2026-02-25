@@ -365,13 +365,38 @@ body {
     cursor: pointer;
     border: 1px solid var(--border-light);
     backdrop-filter: blur(2px);
-    opacity: 0;
-    transform: translateY(20px);
-}
-
-.album-card.visible {
+    /* Убираем начальное скрытие — карточки видны сразу */
     opacity: 1;
     transform: translateY(0);
+}
+
+/* Скелетон-заглушка для загрузки */
+.album-card.skeleton {
+    background: linear-gradient(90deg, var(--card-bg) 25%, rgba(255,255,255,0.05) 50%, var(--card-bg) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+.album-card.skeleton .album-cover {
+    background: #2a2a2a;
+}
+
+.album-card.skeleton .album-title,
+.album-card.skeleton .album-meta {
+    background: #333;
+    border-radius: 4px;
+    height: 1rem;
+    margin: 0.5rem 1rem;
+}
+
+.album-card.skeleton .album-meta {
+    width: 60%;
+    height: 0.85rem;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 .album-card:hover {

@@ -437,11 +437,35 @@
         observer.observe(sentinel);
     }
 
+    // Создаем скелетон-заглушки
+    function createSkeletonCards(count) {
+        const fragment = document.createDocumentFragment();
+        for (let i = 0; i < count; i++) {
+            const card = document.createElement('div');
+            card.className = 'album-card skeleton';
+            card.innerHTML = `
+                <div class="album-cover"></div>
+                <div class="album-info">
+                    <div class="album-title"></div>
+                    <div class="album-meta"></div>
+                </div>
+            `;
+            fragment.appendChild(card);
+        }
+        gallery.appendChild(fragment);
+    }
+    
+    // Удаляем скелетоны
+    function removeSkeletonCards() {
+        document.querySelectorAll('.album-card.skeleton').forEach(el => el.remove());
+    }
+
     async function loadMoreAlbums() {
         if (isLoading || !hasMore) return;
         
         isLoading = true;
-        loadingEl.style.display = 'block';
+        // Создаем скелетоны заранее, чтобы сетка не прыгала
+        createSkeletonCards(itemsPerPage);
 
         try {
             // Формируем URL с параметрами серверной сортировки и фильтрации
@@ -490,6 +514,9 @@
                     tracks: [] // Треки загрузим позже при необходимости
                 }));
 
+            // Удаляем скелетоны перед добавлением реальных данных
+            removeSkeletonCards();
+            
             // Добавляем новые альбомы
             if (newAlbums.length > 0) {
                 albums = albums.concat(newAlbums);
@@ -500,6 +527,7 @@
             
         } catch (err) {
             console.error('Error loading albums:', err);
+            removeSkeletonCards();
             errorEl.style.display = 'block';
             errorEl.textContent = 'Ошибка загрузки: ' + err.message;
         } finally {
@@ -541,9 +569,21 @@
     }
 
     function renderAlbums(albumsToRender) {
-        albumsToRender.forEach(album => {
-            const card = document.createElement('div');
-            card.className = 'album-card';
+        // Ищем скелетоны для замены
+        const skeletons = document.querySelectorAll('.album-card.skeleton');
+        
+        albumsToRender.forEach((album, index) => {
+            let card;
+            // Если есть скелетон — заменяем его, иначе создаем новый
+            if (skeletons[index]) {
+                card = skeletons[index];
+                card.className = 'album-card';
+                card.innerHTML = '';
+            } else {
+                card = document.createElement('div');
+                card.className = 'album-card';
+                gallery.appendChild(card);
+            }
             card.dataset.albumId = album.id;
             
             const safeTitle = escapeHtml(album.title);
@@ -608,15 +648,15 @@
                     togglePlaylistPanel();
                 }
             });
-            
-            gallery.appendChild(card);
         });
 
-        // Анимация для новых элементов
+        // Плавное появление новых элементов без смещения
         if (typeof gsap !== 'undefined') {
-            gsap.fromTo('.album-card', 
-                { y: 30, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.4, stagger: 0.05, ease: 'power2.out' }
+            gsap.fromTo('.album-card:not(.animated)', 
+                { opacity: 0, scale: 0.95 },
+                { opacity: 1, scale: 1, duration: 0.3, stagger: 0.03, ease: 'power2.out', onComplete: function() {
+                    document.querySelectorAll('.album-card').forEach(card => card.classList.add('animated'));
+                }}
             );
         }
         
