@@ -1603,7 +1603,7 @@
 
     // ==================== BY TAGS VIEW ====================
     
-    // Загружаем статичный JSON с тегами
+    // Загружаем статичный JSON с тегами (с категориями)
     async function loadAllTags() {
         try {
             const response = await fetch('data/tags-data.json');
@@ -1611,13 +1611,40 @@
             
             const data = await response.json();
             
-            // Преобразуем данные в формат для облака тегов
-            allTags = Object.entries(data.tags)
-                .sort((a, b) => b[1].count - a[1].count)
-                .map(([tag, info]) => ({ tag, count: info.count }));
-            
-            // Сохраняем полные данные для быстрого доступа
+            // Сохраняем полные данные
             window.tagsData = data;
+            
+            // Собираем все теги из категорий
+            allTags = [];
+            
+            // Из категорий
+            if (data.categories) {
+                Object.entries(data.categories).forEach(([catKey, catData]) => {
+                    Object.entries(catData.tags).forEach(([tagKey, tagInfo]) => {
+                        allTags.push({
+                            tag: tagKey,
+                            count: tagInfo.count,
+                            displayName: tagInfo.displayName || tagKey,
+                            category: catData.label
+                        });
+                    });
+                });
+            }
+            
+            // Из популярных без категории
+            if (data.popularTags) {
+                Object.entries(data.popularTags).forEach(([tag, info]) => {
+                    allTags.push({
+                        tag: tag,
+                        count: info.count,
+                        displayName: tag,
+                        category: 'Popular'
+                    });
+                });
+            }
+            
+            // Сортируем по популярности
+            allTags.sort((a, b) => b.count - a.count);
             
             allTagsLoaded = true;
             renderTagsCloud();
@@ -1629,15 +1656,42 @@
         }
     }
     
-    // Рендерим облако тегов
+    // Рендерим облако тегов с категориями
     function renderTagsCloud() {
         if (!tagsCloud) return;
         
-        tagsCloud.innerHTML = allTags.map(({ tag, count }) => `
-            <span class="tag-cloud-item" data-tag="${escapeHtml(tag)}">
-                ${escapeHtml(tag)} (${count})
-            </span>
-        `).join('');
+        // Группируем теги по категориям
+        const byCategory = {};
+        allTags.forEach(({ tag, count, displayName, category }) => {
+            if (!byCategory[category]) {
+                byCategory[category] = [];
+            }
+            byCategory[category].push({ tag, count, displayName });
+        });
+        
+        // Порядок категорий
+        const categoryOrder = ['🎵 Genres', '🎤 Vocals', '🎹 Instruments', '✨ Mood', '🎨 Style', '📅 Era', '🎧 Context', 'Popular'];
+        
+        let html = '';
+        
+        categoryOrder.forEach(category => {
+            if (!byCategory[category] || byCategory[category].length === 0) return;
+            
+            html += `
+                <div class="tag-category">
+                    <h4 class="tag-category-title">${escapeHtml(category)}</h4>
+                    <div class="tag-category-items">
+                        ${byCategory[category].map(({ tag, count, displayName }) => `
+                            <span class="tag-cloud-item" data-tag="${escapeHtml(tag)}" title="${count} tracks">
+                                ${escapeHtml(displayName)}
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+        
+        tagsCloud.innerHTML = html;
         
         // Добавляем обработчики клика
         tagsCloud.querySelectorAll('.tag-cloud-item').forEach(item => {
@@ -1648,7 +1702,7 @@
         });
     }
     
-    // Выбираем тег и показываем треки (из статичного JSON)
+    // Выбираем тег и показываем треки (из статичного JSON с категориями)
     function selectTag(tag) {
         currentTag = tag;
         
@@ -1657,14 +1711,31 @@
             item.classList.toggle('active', item.dataset.tag === tag);
         });
         
-        // Получаем треки из статичных данных
-        if (!window.tagsData || !window.tagsData.tags[tag]) {
+        // Ищем тег в категориях или популярных
+        let tagInfo = null;
+        
+        if (window.tagsData) {
+            // Ищем в категориях
+            if (window.tagsData.categories) {
+                for (const catData of Object.values(window.tagsData.categories)) {
+                    if (catData.tags && catData.tags[tag]) {
+                        tagInfo = catData.tags[tag];
+                        break;
+                    }
+                }
+            }
+            // Ищем в популярных
+            if (!tagInfo && window.tagsData.popularTags && window.tagsData.popularTags[tag]) {
+                tagInfo = window.tagsData.popularTags[tag];
+            }
+        }
+        
+        if (!tagInfo) {
             tagTracks = [];
             renderTagTracks();
             return;
         }
         
-        const tagInfo = window.tagsData.tags[tag];
         const allTracks = window.tagsData.tracks;
         
         // Собираем полные данные треков
