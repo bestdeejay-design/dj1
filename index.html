@@ -28,7 +28,13 @@
         <div class="sub">creative memory gallery</div>
     </div>
 
+    <div class="view-tabs" id="viewTabs">
+        <button class="view-tab active" data-view="albums">Альбомы</button>
+        <button class="view-tab" data-view="top-tracks">🔥 Топ треков</button>
+    </div>
+
     <div class="gallery" id="gallery"></div>
+    <div class="top-tracks-view" id="topTracksView" style="display: none;"></div>
     <div class="loading" id="loading">Загрузка коллекции...</div>
     <div class="error" id="error" style="display: none;"></div>
 
@@ -78,7 +84,16 @@
                 </button>
             </div>
 
-            <audio id="audioPlayer" controls></audio>
+            <!-- Прогресс бар трека -->
+            <div class="track-progress-container">
+                <span class="track-time current" id="currentTime">0:00</span>
+                <div class="track-progress-bar" id="progressBar">
+                    <div class="track-progress-fill" id="progressFill"></div>
+                </div>
+                <span class="track-time duration" id="duration">0:00</span>
+            </div>
+
+            <audio id="audioPlayer"></audio>
             <button class="playlist-toggle" id="togglePlaylist">
                 <svg viewBox="0 0 24 24">
                     <path d="M3 13h12v-2H3v2zm0-6v2h18V7H3zm0 10h6v-2H3v2zm15-3h2v-3h3v-2h-3V7h-2v3h-3v2h3v3z"/>
