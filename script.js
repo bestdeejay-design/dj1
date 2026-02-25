@@ -1353,16 +1353,61 @@
                 // Переключаемся на топ треков
                 switchView('top-tracks');
                 
-                // Ждём загрузки топа треков и восстанавливаем
-                setTimeout(() => {
+                // Показываем индикатор "Продолжить с трека #N"
+                const showResumeIndicator = () => {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'resume-track-indicator';
+                    indicator.innerHTML = `
+                        <span class="resume-track-icon">▶</span>
+                        <span class="resume-track-text">Resume from track #${state.trackIndex + 1}</span>
+                    `;
+                    indicator.addEventListener('click', () => {
+                        if (topTracks.length > 0 && state.trackIndex < topTracks.length) {
+                            const track = topTracks[state.trackIndex];
+                            if (track) {
+                                playTopTrack(track);
+                                audioPlayer.currentTime = state.currentTime || 0;
+                                indicator.remove();
+                            }
+                        }
+                    });
+                    document.body.appendChild(indicator);
+                    
+                    // Скрываем через 15 секунд
+                    setTimeout(() => {
+                        if (indicator.parentNode) {
+                            indicator.style.opacity = '0';
+                            setTimeout(() => indicator.remove(), 300);
+                        }
+                    }, 15000);
+                };
+                
+                // Функция для восстановления с повторными попытками
+                const restoreTopTrack = (attempt = 0) => {
+                    if (attempt > 10) {
+                        console.warn('Failed to restore top track after retries');
+                        showResumeIndicator(); // Показываем индикатор даже если не удалось восстановить
+                        return;
+                    }
+                    
+                    // Проверяем что треки загружены
                     if (topTracks.length > 0 && state.trackIndex < topTracks.length) {
                         const track = topTracks[state.trackIndex];
                         if (track) {
-                            playTopTrack(track);
-                            audioPlayer.currentTime = state.currentTime || 0;
+                            // Показываем индикатор где остановились
+                            showResumeIndicator();
+                            // Прокручиваем к треку
+                            setTimeout(() => scrollToCurrentTopTrack(), 500);
                         }
+                    } else {
+                        // Треки ещё не загружены — пробуем ещё раз
+                        console.log('Waiting for top tracks to load... attempt', attempt + 1);
+                        setTimeout(() => restoreTopTrack(attempt + 1), 1000);
                     }
-                }, 2000);
+                };
+                
+                // Запускаем восстановление
+                setTimeout(() => restoreTopTrack(), 1000);
                 return;
             }
             
