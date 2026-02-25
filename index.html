@@ -101,6 +101,36 @@
                 </svg>
                 <span>Плейлист</span>
             </button>
+            
+            <button class="track-info-btn" id="trackInfoBtn" title="Track Details">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Модальное окно деталей трека -->
+    <div class="track-details-modal" id="trackDetailsModal">
+        <div class="track-details-content">
+            <div class="track-details-header">
+                <h2 id="modalTrackTitle">Track Details</h2>
+                <button class="close-modal" id="closeTrackDetails">×</button>
+            </div>
+            <div class="track-details-body">
+                <div class="track-details-section">
+                    <h3>🎵 Sound / Prompt</h3>
+                    <p id="modalTrackSound" class="track-sound-text"></p>
+                </div>
+                <div class="track-details-section">
+                    <h3>📝 Lyrics</h3>
+                    <pre id="modalTrackLyrics" class="track-lyrics-text"></pre>
+                </div>
+                <div class="track-details-section" id="modalTagsSection" style="display: none;">
+                    <h3>🏷️ Tags</h3>
+                    <div id="modalTrackTags" class="track-tags"></div>
+                </div>
+            </div>
         </div>
     </div>
 

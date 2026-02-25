@@ -555,7 +555,10 @@
                 name: track.title,
                 file: track.audio_url || track.full_url || null,
                 cover: track.image_url || null,
-                duration: track.duration_s || null
+                duration: track.duration_s || null,
+                sound: track.sound || null,
+                lyrics: track.lyrics || null,
+                model: track.model_display_name || null
             }));
 
             // Сохраняем в кэш
@@ -1212,7 +1215,10 @@
                 duration: track.duration_s || null,
                 plays: track.play_count || 0,
                 favorites: track.favorite_count || 0,
-                rank: (topTracksPage - 1) * 20 + index + 1
+                rank: (topTracksPage - 1) * 20 + index + 1,
+                sound: track.sound || null,
+                lyrics: track.lyrics || null,
+                model: track.model_display_name || null
             }));
             
             if (newTracks.length > 0) {
@@ -1527,6 +1533,126 @@
         
         observer.observe(loadingEl);
     }
+
+    // ==================== МОДАЛЬНОЕ ОКНО ДЕТАЛЕЙ ТРЕКА ====================
+    const trackInfoBtn = document.getElementById('trackInfoBtn');
+    const trackDetailsModal = document.getElementById('trackDetailsModal');
+    const closeTrackDetails = document.getElementById('closeTrackDetails');
+    const modalTrackTitle = document.getElementById('modalTrackTitle');
+    const modalTrackSound = document.getElementById('modalTrackSound');
+    const modalTrackLyrics = document.getElementById('modalTrackLyrics');
+    const modalTrackTags = document.getElementById('modalTrackTags');
+    const modalTagsSection = document.getElementById('modalTagsSection');
+    
+    // Текущие данные трека для модалки
+    let currentTrackDetails = null;
+    
+    function openTrackDetailsModal() {
+        if (!currentAlbum || currentTrackIndex < 0) return;
+        
+        const track = currentAlbum.tracks[currentTrackIndex];
+        if (!track) return;
+        
+        modalTrackTitle.textContent = track.name || 'Track Details';
+        modalTrackSound.textContent = track.sound || 'No sound description available.';
+        modalTrackLyrics.textContent = track.lyrics || 'No lyrics available.';
+        
+        // Извлекаем теги из промта
+        if (track.sound) {
+            const tags = extractTagsFromSound(track.sound);
+            if (tags.length > 0) {
+                modalTagsSection.style.display = 'block';
+                modalTrackTags.innerHTML = tags.map(tag => 
+                    `<span class="track-tag" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</span>`
+                ).join('');
+                
+                // Добавляем обработчики клика на теги
+                modalTrackTags.querySelectorAll('.track-tag').forEach(tagEl => {
+                    tagEl.addEventListener('click', () => {
+                        const tag = tagEl.dataset.tag;
+                        filterByTag(tag);
+                        closeTrackDetailsModal();
+                    });
+                });
+            } else {
+                modalTagsSection.style.display = 'none';
+            }
+        } else {
+            modalTagsSection.style.display = 'none';
+        }
+        
+        trackDetailsModal.classList.add('open');
+    }
+    
+    function closeTrackDetailsModal() {
+        trackDetailsModal.classList.remove('open');
+    }
+    
+    // Извлекаем ключевые слова из промта
+    function extractTagsFromSound(sound) {
+        const commonTags = [
+            '90s', '80s', '70s', '2000s', 'retro', 'vintage', 'modern', 'futuristic',
+            'electronic', 'synth', 'bass', 'hip-hop', 'rap', 'pop', 'rock', 'jazz',
+            'ambient', 'chill', 'upbeat', 'energetic', 'melodic', 'rhythmic',
+            'female', 'male', 'vocal', 'instrumental', 'acoustic', 'digital',
+            'night', 'club', 'party', 'romantic', 'sad', 'happy', 'dark', 'bright',
+            'lo-fi', 'hi-fi', 'crisp', 'warm', 'cold', 'fuzzy', 'clean'
+        ];
+        
+        const foundTags = [];
+        const lowerSound = sound.toLowerCase();
+        
+        commonTags.forEach(tag => {
+            if (lowerSound.includes(tag.toLowerCase())) {
+                foundTags.push(tag);
+            }
+        });
+        
+        // Добавляем жанры и стили из описания
+        const genreMatches = sound.match(/(\w+\s+)?(pop|rock|hip-hop|rap|jazz|blues|electronic|house|techno|trance|ambient|lo-fi|synthwave|disco|funk|soul|r&b|reggae|latin|reggaeton|edm|trap|drill|grime)(\s+\w+)?/gi);
+        if (genreMatches) {
+            genreMatches.forEach(match => {
+                const clean = match.trim().toLowerCase();
+                if (!foundTags.includes(clean)) {
+                    foundTags.push(clean);
+                }
+            });
+        }
+        
+        return foundTags.slice(0, 12); // Максимум 12 тегов
+    }
+    
+    // Фильтрация по тегу
+    function filterByTag(tag) {
+        // Переключаемся на топ треков и ищем по тегу
+        switchView('top-tracks');
+        // TODO: добавить фильтрацию по sound полю
+        console.log('Filter by tag:', tag);
+    }
+    
+    if (trackInfoBtn) {
+        trackInfoBtn.addEventListener('click', openTrackDetailsModal);
+    }
+    
+    if (closeTrackDetails) {
+        closeTrackDetails.addEventListener('click', closeTrackDetailsModal);
+    }
+    
+    // Закрытие по клику на фон
+    if (trackDetailsModal) {
+        trackDetailsModal.addEventListener('click', (e) => {
+            if (e.target === trackDetailsModal) {
+                closeTrackDetailsModal();
+            }
+        });
+    }
+    
+    // Закрытие по Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && trackDetailsModal.classList.contains('open')) {
+            closeTrackDetailsModal();
+        }
+    });
 
     // ==================== СТАРТ ====================
     initViewTabs();

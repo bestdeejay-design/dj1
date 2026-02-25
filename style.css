@@ -456,6 +456,181 @@ body {
     border-color: var(--border-hover);
 }
 
+/* Кнопка деталей трека в плеере */
+.track-info-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+}
+
+.track-info-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.1);
+}
+
+.track-info-btn svg {
+    fill: currentColor;
+}
+
+/* Модальное окно деталей трека */
+.track-details-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.track-details-modal.open {
+    display: flex;
+}
+
+.track-details-content {
+    background: var(--surface);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    border: 1px solid var(--border);
+}
+
+.track-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+}
+
+.track-details-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.close-modal {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.close-modal:hover {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.1);
+}
+
+.track-details-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.track-details-section {
+    margin-bottom: 24px;
+}
+
+.track-details-section:last-child {
+    margin-bottom: 0;
+}
+
+.track-details-section h3 {
+    margin: 0 0 12px 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.track-sound-text {
+    margin: 0;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-style: italic;
+}
+
+.track-lyrics-text {
+    margin: 0;
+    line-height: 1.8;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    white-space: pre-wrap;
+    font-family: inherit;
+    background: rgba(255,255,255,0.03);
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 3px solid var(--accent);
+}
+
+.track-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.track-tag {
+    background: rgba(29,185,84,0.15);
+    color: var(--accent);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(29,185,84,0.3);
+}
+
+.track-tag:hover {
+    background: var(--accent);
+    color: #000;
+}
+
+@media (max-width: 640px) {
+    .track-details-modal {
+        padding: 0;
+    }
+    
+    .track-details-content {
+        max-height: 100vh;
+        border-radius: 0;
+    }
+    
+    .track-details-body {
+        padding: 16px;
+    }
+}
+
 /* Индикатор "сейчас играет" на карточке альбома */
 .album-card.playing {
     border-color: var(--accent);
