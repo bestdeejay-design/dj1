@@ -1924,13 +1924,14 @@
         tagTracksHasMore = true;
         tagTracks = [];
         
-        // Очищаем список и показываем загрузку
+        // Очищаем список и создаём структуру
         if (tagTracksList) {
             tagTracksList.innerHTML = `
                 <div class="tag-tracks-header">
                     <h3>🏷️ ${escapeHtml(currentTag)}</h3>
                     <span class="tag-tracks-count">Loading...</span>
                 </div>
+                <div class="tag-tracks-list" id="tagTracksListContainer"></div>
             `;
             tagTracksList.style.display = 'block';
         }
@@ -2031,8 +2032,11 @@
             el.classList.remove('playing');
         });
         
+        // Находим контейнер
+        const container = document.getElementById('tagTracksListContainer') || tagTracksList;
+        
         // Добавляем на текущий
-        const trackItems = tagTracksList.querySelectorAll('.top-track-item');
+        const trackItems = container.querySelectorAll('.top-track-item');
         if (trackItems[currentTrackIndex]) {
             trackItems[currentTrackIndex].classList.add('playing');
             // Прокручиваем к центру
@@ -2046,7 +2050,8 @@
     function scrollToCurrentTagTrack() {
         if (currentView !== 'tags' || !currentAlbum || currentAlbum.id !== 'tag-tracks') return;
         
-        const trackItems = tagTracksList.querySelectorAll('.top-track-item');
+        const container = document.getElementById('tagTracksListContainer') || tagTracksList;
+        const trackItems = container.querySelectorAll('.top-track-item');
         const currentItem = trackItems[currentTrackIndex];
         
         if (currentItem) {
@@ -2105,28 +2110,17 @@
     function renderTagTracksPage(pageTracks) {
         if (!tagTracksList) return;
         
-        // Если это первая страница — создаём заголовок
-        if (tagTracksPage === 2) {
-            const headerHtml = currentTag ? `
-                <div class="tag-tracks-header">
-                    <h3>🏷️ ${escapeHtml(currentTag)}</h3>
-                    <span class="tag-tracks-count">${pageTracks.length} tracks</span>
-                </div>
-            ` : '';
-            // Вставляем заголовок перед треками
-            const firstTrack = tagTracksList.querySelector('.top-track-item');
-            if (firstTrack) {
-                firstTrack.insertAdjacentHTML('beforebegin', headerHtml);
-            } else {
-                tagTracksList.innerHTML = headerHtml;
-            }
+        // Находим или создаём контейнер для треков
+        let container = document.getElementById('tagTracksListContainer');
+        if (!container) {
+            container = tagTracksList;
         }
         
         // Добавляем треки страницы
         const startIndex = tagTracks.length - pageTracks.length;
         pageTracks.forEach((track, index) => {
             const trackHtml = createTagTrackHtml(track, startIndex + index);
-            tagTracksList.insertAdjacentHTML('beforeend', trackHtml);
+            container.insertAdjacentHTML('beforeend', trackHtml);
         });
         
         attachTagTrackListeners();
@@ -2155,13 +2149,16 @@
     
     // Добавляем обработчики клика на треки
     function attachTagTrackListeners() {
-        tagTracksList.querySelectorAll('.top-track-item').forEach((item) => {
-            // Удаляем старые обработчики (если есть)
-            const newItem = item.cloneNode(true);
-            item.parentNode.replaceChild(newItem, item);
+        // Находим контейнер для треков
+        const container = document.getElementById('tagTracksListContainer') || tagTracksList;
+        
+        container.querySelectorAll('.top-track-item').forEach((item) => {
+            // Пропускаем если уже обработан
+            if (item.dataset.hasListener) return;
+            item.dataset.hasListener = 'true';
             
-            newItem.addEventListener('click', (e) => {
-                const trackId = newItem.dataset.trackId;
+            item.addEventListener('click', (e) => {
+                const trackId = item.dataset.trackId;
                 const trackIndex = tagTracks.findIndex(t => t.id === trackId);
                 
                 if (trackIndex === -1) return;
