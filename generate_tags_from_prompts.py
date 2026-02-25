@@ -85,6 +85,7 @@ TAG_PATTERNS = {
         'tense': r'\btense\b',
         'playful': r'\bplayful\b',
         'serious': r'\bserious\b',
+        'conscious': r'\bconscious\b',
         'warm': r'\bwarm\b',
         'cold': r'\bcold\b',
         'cinematic': r'\bcinematic\b',
