@@ -730,9 +730,23 @@
         if (!track) return;
         
         currentTrackIndex = trackIndex;
+        
+        // Останавливаем текущее воспроизведение перед сменой источника
+        if (!audioPlayer.paused) {
+            audioPlayer.pause();
+        }
+        
         audioPlayer.src = track.file;
-        audioPlayer.load();
-        audioPlayer.play();
+        
+        // Используем Promise для избежания конфликтов
+        const playPromise = audioPlayer.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(err => {
+                if (err.name !== 'AbortError') {
+                    console.warn('Play error:', err);
+                }
+            });
+        }
         
         currentTrackName.textContent = track.name;
         currentAlbumName.textContent = album.title;
@@ -1256,6 +1270,51 @@
         });
     }
 
+    // Восстановление плеера для топа треков без автовоспроизведения
+    function restoreTopTrackPlayer(track, currentTime) {
+        if (!playerBar.classList.contains('active')) {
+            playerBar.classList.add('active');
+        }
+        
+        // Убираем класс playing со всех карточек
+        document.querySelectorAll('.album-card.playing, .top-track-item.playing').forEach(el => {
+            el.classList.remove('playing');
+        });
+        
+        // Добавляем класс playing на текущий трек в топе
+        const trackItems = document.querySelectorAll('.top-track-item');
+        const topTrackIndex = topTracks.findIndex(t => t.id === track.id);
+        if (trackItems[topTrackIndex]) {
+            trackItems[topTrackIndex].classList.add('playing');
+        }
+        
+        // Создаем виртуальный альбом для трека
+        currentAlbum = {
+            id: 'top-tracks',
+            title: '🔥 Top Tracks',
+            cover: track.cover,
+            tracks: topTracks.map(t => ({
+                name: t.name,
+                file: t.file,
+                cover: t.cover,
+                duration: t.duration
+            }))
+        };
+        
+        currentTrackIndex = topTrackIndex;
+        audioPlayer.src = track.file;
+        audioPlayer.currentTime = currentTime;
+        
+        // Обновляем UI без воспроизведения
+        currentTrackName.textContent = track.name;
+        currentAlbumName.textContent = '🔥 Top Tracks';
+        currentTrackCover.src = track.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3C/svg%3E';
+        
+        playlistAlbumTitle.textContent = '🔥 Top Tracks';
+        renderPlaylist();
+        highlightPlaylistItem(topTrackIndex);
+    }
+
     function playTopTrack(track) {
         if (!playerBar.classList.contains('active')) {
             playerBar.classList.add('active');
@@ -1402,10 +1461,8 @@
                     if (topTracks.length > 0 && state.trackIndex < topTracks.length) {
                         const track = topTracks[state.trackIndex];
                         if (track) {
-                            // Восстанавливаем плеер сразу
-                            playTopTrack(track);
-                            audioPlayer.currentTime = state.currentTime || 0;
-                            audioPlayer.pause(); // Ставим на паузу, пользователь сам нажмёт play
+                            // Восстанавливаем плеер сразу (без автовоспроизведения)
+                            restoreTopTrackPlayer(track, state.currentTime || 0);
                             
                             // Показываем индикатор где остановились
                             showResumeIndicator();
