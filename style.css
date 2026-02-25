@@ -354,11 +354,17 @@ body {
     font-size: 0.9rem;
 }
 
-/* Адаптация табов */
+/* Адаптация для мобильных */
 @media (max-width: 600px) {
+    /* Отступ сверху для Control Panel */
+    body {
+        padding-top: 40px;
+    }
+    
     .view-tabs {
         padding: 1rem;
         gap: 0.5rem;
+        margin-top: 0.5rem;
     }
     
     .view-tab {

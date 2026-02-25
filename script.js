@@ -244,61 +244,67 @@
                 border-color: rgba(0, 0, 0, 0.25);
             }
             
-            /* Мобильная адаптация - свайп/тап по правому краю */
+            /* Мобильная адаптация - Control Panel сверху */
             @media (max-width: 600px) {
                 .sort-controls {
                     position: fixed;
-                    top: 50%;
-                    right: -140px; /* Скрыт за краем */
-                    transform: translateY(-50%);
-                    padding: 16px;
-                    gap: 10px;
-                    flex-direction: column;
-                    border-radius: 16px 0 0 16px;
-                    transition: right 0.3s ease;
-                    min-width: 120px;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    transform: none;
+                    padding: 8px 12px;
+                    gap: 8px;
+                    flex-direction: row;
+                    justify-content: center;
+                    border-radius: 0 0 16px 16px;
+                    min-width: auto;
+                    z-index: 50;
                 }
                 
-                .sort-controls::before {
-                    content: '☰';
+                /* Язычок Control Panel */
+                .sort-controls::after {
+                    content: '⚙️ Filters';
                     position: absolute;
-                    left: -40px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    width: 40px;
-                    height: 60px;
+                    bottom: -28px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    padding: 4px 16px;
                     background: rgba(255, 255, 255, 0.1);
                     backdrop-filter: blur(10px);
                     -webkit-backdrop-filter: blur(10px);
                     border: 1px solid rgba(255, 255, 255, 0.2);
-                    border-right: none;
-                    border-radius: 12px 0 0 12px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 18px;
+                    border-top: none;
+                    border-radius: 0 0 12px 12px;
+                    font-size: 11px;
                     color: rgba(255, 255, 255, 0.8);
                     cursor: pointer;
+                    white-space: nowrap;
+                    letter-spacing: 0.5px;
                 }
                 
-                .sort-controls:hover,
-                .sort-controls.active {
-                    right: 0;
+                /* Скрытая панель */
+                .sort-controls.collapsed {
+                    top: -60px;
+                }
+                
+                .sort-controls.collapsed::after {
+                    content: '⚙️ Filters';
                 }
                 
                 .sort-controls label {
-                    font-size: 10px;
+                    font-size: 9px;
                     text-align: center;
                 }
                 
                 .sort-controls select,
                 .sort-controls button {
-                    width: 100%;
+                    padding: 4px 8px;
+                    font-size: 12px;
                 }
             }
             
-            /* Светлая тема для мобильной кнопки */
-            [data-theme="light"] .sort-controls::before {
+            /* Светлая тема для мобильной панели */
+            [data-theme="light"] .sort-controls::after {
                 background: rgba(0, 0, 0, 0.05);
                 border-color: rgba(0, 0, 0, 0.15);
                 color: rgba(0, 0, 0, 0.6);
@@ -346,22 +352,35 @@
             }
         });
         
-        // Мобильное поведение - тап по язычку открывает/закрывает панель
+        // Мобильное поведение - Control Panel сверху
         if (window.innerWidth <= 600) {
+            // По умолчанию свёрнута
+            sortContainer.classList.add('collapsed');
+            
+            // Клик по язычку (псевдоэлемент) - тоггл панели
+            // Используем делегирование событий
             sortContainer.addEventListener('click', (e) => {
-                // Если клик по селекту или кнопке - не тогглим панель
-                if (e.target === sortSelect || e.target === sortOrderBtn) {
+                const rect = sortContainer.getBoundingClientRect();
+                const isClickOnTab = e.clientY > rect.bottom;
+                
+                // Если клик по самому язычку (ниже панели) - тогглим
+                if (isClickOnTab) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    sortContainer.classList.toggle('collapsed');
                     return;
                 }
                 
-                // Тоггл панели по клику внутри контейнера (включая язычок)
-                sortContainer.classList.toggle('active');
+                // Если клик по селекту или кнопке - не тогглим
+                if (e.target === sortSelect || e.target === sortOrderBtn || e.target === privacySelect) {
+                    return;
+                }
             });
             
             // Закрыть при клике вне панели
             document.addEventListener('click', (e) => {
                 if (!sortContainer.contains(e.target)) {
-                    sortContainer.classList.remove('active');
+                    sortContainer.classList.add('collapsed');
                 }
             });
         }
