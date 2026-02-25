@@ -718,6 +718,11 @@
             albumCard.classList.add('playing');
         }
         
+        // Если играем топ треков — обновляем выделение
+        if (album.id === 'top-tracks') {
+            updateTopTrackHighlight();
+        }
+        
         // Сохраняем состояние плеера
         savePlayerState(album, trackIndex);
         
@@ -774,13 +779,14 @@
             let nextShuffleIndex = shuffleCurrentIndex + 1;
             if (nextShuffleIndex >= shuffleIndices.length) {
                 if (repeatMode === REPEAT_ALL) {
-                    nextShuffleIndex = 0;
+                    nextShuffleIndex = 0; // Бесконечное повторение
                 } else if (repeatMode === REPEAT_ONE) {
                     audioPlayer.currentTime = 0;
                     audioPlayer.play();
                     return;
                 } else {
-                    return;
+                    // По умолчанию — повторяем плейлист с начала
+                    nextShuffleIndex = 0;
                 }
             }
             shuffleCurrentIndex = nextShuffleIndex;
@@ -790,17 +796,22 @@
             let nextIndex = currentTrackIndex + 1;
             if (nextIndex >= currentAlbum.tracks.length) {
                 if (repeatMode === REPEAT_ALL) {
-                    nextIndex = 0;
+                    nextIndex = 0; // Бесконечное повторение
                 } else if (repeatMode === REPEAT_ONE) {
                     audioPlayer.currentTime = 0;
                     audioPlayer.play();
                     return;
                 } else {
-                    return;
+                    // По умолчанию — повторяем плейлист с начала
+                    nextIndex = 0;
                 }
             }
             selectTrack(currentAlbum, nextIndex);
         }
+        
+        // Прокручиваем к текущему треку в топе
+        scrollToCurrentTopTrack();
+        updateTopTrackHighlight();
     }
 
     function prevTrack() {
@@ -1204,10 +1215,14 @@
         }
         
         const list = document.getElementById('topTracksList');
+        const isPlayingFromTop = currentAlbum && currentAlbum.id === 'top-tracks';
         
-        tracksToRender.forEach(track => {
+        tracksToRender.forEach((track, index) => {
             const item = document.createElement('div');
-            item.className = 'top-track-item';
+            // Проверяем, является ли этот трек текущим
+            const isCurrentTrack = isPlayingFromTop && currentTrackIndex === (topTracksPage - 1) * 20 + index;
+            item.className = 'top-track-item' + (isCurrentTrack ? ' playing' : '');
+            item.dataset.trackId = track.id;
             item.innerHTML = `
                 <div class="top-track-rank">#${track.rank}</div>
                 <img class="top-track-cover" src="${track.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'48\' height=\'48\' viewBox=\'0 0 48 48\'%3E%3Crect width=\'48\' height=\'48\' fill=\'%23333\'/%3E%3C/svg%3E'}" alt="">
@@ -1250,6 +1265,9 @@
             trackItems[topTrackIndex].classList.add('playing');
         }
         
+        // Прокручиваем к текущему треку
+        setTimeout(() => scrollToCurrentTopTrack(), 100);
+        
         // Создаем виртуальный альбом для трека
         currentAlbum = {
             id: 'top-tracks',
@@ -1273,6 +1291,34 @@
         if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
         if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
         return num.toString();
+    }
+    
+    // Прокручиваем к текущему треку в топе
+    function scrollToCurrentTopTrack() {
+        if (currentView !== 'top-tracks' || !currentAlbum || currentAlbum.id !== 'top-tracks') return;
+        
+        const trackItems = document.querySelectorAll('.top-track-item');
+        const currentItem = trackItems[currentTrackIndex];
+        
+        if (currentItem) {
+            currentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+    
+    // Обновляем выделение текущего трека в топе
+    function updateTopTrackHighlight() {
+        if (currentView !== 'top-tracks' || !currentAlbum || currentAlbum.id !== 'top-tracks') return;
+        
+        // Убираем выделение со всех
+        document.querySelectorAll('.top-track-item.playing').forEach(el => {
+            el.classList.remove('playing');
+        });
+        
+        // Добавляем на текущий
+        const trackItems = document.querySelectorAll('.top-track-item');
+        if (trackItems[currentTrackIndex]) {
+            trackItems[currentTrackIndex].classList.add('playing');
+        }
     }
     
     // Сохраняем состояние плеера в localStorage
