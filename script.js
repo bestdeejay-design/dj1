@@ -1106,6 +1106,8 @@
             // Фильтр по автору BEST (используем author_id для треков)
             url += `&author_id=${bestUserId}`;
             
+            console.log('Top Tracks URL:', url);
+            
             const response = await fetch(url);
             if (!response.ok) throw new Error('Failed to load tracks');
             
