@@ -1949,6 +1949,8 @@
     async function loadMoreTagTracks() {
         if (isLoadingTagTracks || !tagTracksHasMore || !currentTag) return;
         
+        console.log('loadMoreTagTracks called:', { tagTracksPage, tagTracksHasMore, currentTag });
+        
         isLoadingTagTracks = true;
         loadingEl.style.display = 'block';
         
@@ -1970,6 +1972,7 @@
             }
             
             if (!tagInfo) {
+                console.warn('Tag info not found for:', currentTag);
                 tagTracksHasMore = false;
                 return;
             }
@@ -1981,6 +1984,14 @@
             const startIndex = (tagTracksPage - 1) * TAG_TRACKS_PER_PAGE;
             const endIndex = startIndex + TAG_TRACKS_PER_PAGE;
             const pageTrackIds = allTagTrackIds.slice(startIndex, endIndex);
+            
+            console.log('Tag tracks pagination:', {
+                totalTracks: allTagTrackIds.length,
+                startIndex,
+                endIndex,
+                pageTrackIds: pageTrackIds.length,
+                tagTracksPage
+            });
             
             // Собираем полные данные треков для страницы
             const pageTracks = pageTrackIds
@@ -1994,6 +2005,8 @@
             // Проверяем есть ли ещё треки
             tagTracksHasMore = endIndex < allTagTrackIds.length;
             
+            console.log('Page tracks loaded:', pageTracks.length, 'Has more:', tagTracksHasMore);
+            
             if (pageTracks.length > 0) {
                 tagTracks = tagTracks.concat(pageTracks);
                 // Сортируем все загруженные треки
@@ -2003,6 +2016,8 @@
             }
             
             tagTracksPage++;
+            
+            console.log('tagTracksPage incremented to:', tagTracksPage);
             
             // Обновляем счётчик треков в заголовке
             updateTagTracksCount(allTagTrackIds.length);
