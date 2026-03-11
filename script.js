@@ -1,4 +1,9 @@
 // script.js — логика плеера, галереи, темы
+//
+// 💡 ПОДСКАЗКА ДЛЯ РАЗРАБОТЧИКА:
+// - Перед изменением проверь docs/CODE_CHEATSHEET.md на наличие зависимостей
+// - Критичные функции помечены комментариями "⚠️ CRITICAL" и "🔒 LOCKED"
+// - Не нарушать порядок инициализации: loadLibrary → setupInfiniteScroll → switchView
 
 (function() {
     // ==================== УТИЛИТЫ ====================
@@ -1239,6 +1244,10 @@
 
     // ==================== ТОП ТРЕКОВ ====================
     // Функция переключения вида (albums / top-tracks)
+    // ⚠️ CRITICAL: Переключение между видами
+    // 🔒 LOCKED: Очищает observer и таймеры ПЕРЕД переключением!
+    // Зависимости: currentView, gallery, topTracksView, tagsView
+    // Порядок: cleanup → switch → load data → setup new view
     function switchView(view) {
         if (view === currentView) return;
         
@@ -1321,6 +1330,10 @@
         });
     }
 
+    // ⚠️ CRITICAL: Загрузка топа треков (API pagination)
+    // 🔒 LOCKED: Эталонная реализация пагинации ✅
+    // Зависимости: topTracksPage, topTracksHasMore, bestUserId
+    // Отличия от Tags: НЕТ IntersectionObserver, браузер скроллит сам
     async function loadTopTracks() {
         if (isLoadingTopTracks || !topTracksHasMore) return;
         
@@ -1486,7 +1499,9 @@
         highlightPlaylistItem(topTrackIndex);
     }
     
-    // Восстановление плеера для тегов без автовоспроизведения
+    // ⚠️ CRITICAL: Восстановление состояния плеера для Tags
+    // 🔒 LOCKED: Вызывать ПОСЛЕ selectTrack() для сохранения позиции
+    // Зависимости: tagTracks, currentTag, currentTrackIndex
     function restoreTagTrackPlayer(track, currentTime) {
         if (!playerBar.classList.contains('active')) {
             playerBar.classList.add('active');
@@ -1943,7 +1958,10 @@
         }
     }
     
-    // Подгрузка треков по тегу (постранично как в Top Tracks)
+    // ⚠️ CRITICAL: Загрузка треков тега (пагинация)
+    // 🔒 LOCKED: Проверять isLoadingTagTracks перед вызовом!
+    // Зависимости: tagTracksPage, tagTracksHasMore, currentTag
+    // Цепочка: IntersectionObserver → loadMoreTagTracks() → renderTagTracksPage()
     async function loadMoreTagTracks() {
         if (isLoadingTagTracks || !tagTracksHasMore || !currentTag) return;
         
@@ -2072,7 +2090,9 @@
         }
     }
     
-    // Бесконечный скролл для треков по тегу
+    // ⚠️ CRITICAL: Infinite Scroll для Tags view
+    // 🔒 LOCKED: Вызывается ОДИН раз в selectTag(), НЕ пересоздавать!
+    // Зависимости: tagTracksObserver, tagTracksHasMore, isLoadingTagTracks
     let tagTracksObserver = null;
     function setupTagTracksInfiniteScroll() {
         // Удаляем старый observer если есть
@@ -2134,7 +2154,9 @@
         attachTagTrackListeners();
     }
     
-    // Рендерим страницу треков (добавляем к существующим)
+    // ⚠️ CRITICAL: Рендеринг страницы треков
+    // 🔒 LOCKED: НЕ вызывать setupTagTracksInfiniteScroll() здесь!
+    // Вызывать только updateSentinel text после рендера
     function renderTagTracksPage(pageTracks) {
         if (!tagTracksList) return;
         
@@ -2154,7 +2176,7 @@
         attachTagTrackListeners();
         
         // Пересоздаём sentinel после добавления треков
-        setupTagTracksInfiniteScroll();
+        setupTagTracksInfiniteScroll(); // ⚠️ WARNING: Пересоздание observer!
     }
     
     // Создаём HTML для трека тега
