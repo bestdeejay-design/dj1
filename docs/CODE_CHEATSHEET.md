@@ -1,8 +1,77 @@
 # 📖 ШПАРГАЛКА ПО КОДУ (CODE CHEATSHEET)
 
-## 🎯 БЫСТРЫЙ ПОИСК ФУНКЦИЙ В script.js
+> **💡 ДЛЯ РАЗРАБОТЧИКА:** Этот документ обновляется при каждом изменении архитектуры. Перед добавлением новой функции — проверь этот файл на наличие существующих реализаций.
 
-### Переключение видов
+## ⚠️ КРИТИЧНЫЕ ЗАВИСИМОСТИ И ОГРАНИЧЕНИЯ
+
+### 🚫 НЕ НАРУШАТЬ! Важные зависимости
+
+**1. Infinite Scroll инициализация:**
+- ❌ НЕ вызывать `setupTagTracksInfiniteScroll()` внутри `renderTagTracksPage()`
+- ✅ Вызывать ОДИН раз в `selectTag()` при выборе тега
+- Причина: Пересоздание observer приводит к дублированию вызовов
+
+**2. Восстановление состояния плеера:**
+- ❌ НЕ использовать `setTimeout` для async операций
+- ✅ Использовать callback после загрузки данных
+- Причина: Таймаут не гарантирует готовность данных
+
+**3. Переключение видов:**
+- ❌ НЕ менять `currentView` напрямую без `switchView()`
+- ✅ Всегда использовать `switchView('view-name')`
+- Причина: `switchView` очищает таймеры и observer
+
+**4. Пагинация API:**
+- ❌ НЕ сбрасывать `topTracksPage` без смены сортировки
+- ✅ Сбрасывать только в `resetAndReloadTopTracks()`
+- Причина: Потеря прогресса пагинации
+
+**5. Работа с тегами:**
+- ❌ НЕ модифицировать `window.tagsData.tracks` напрямую
+- ✅ Использовать slice/mapping для извлечения
+- Причина: Данные используются в нескольких местах
+
+---
+
+### 🔒 БЛОКИРОВКИ (Flags)
+
+| Флаг | Когда true | Что блокирует | Где проверять |
+|------|------------|---------------|---------------|
+| `isLoadingTagTracks` | Загрузка страницы треков | Повторный вызов `loadMoreTagTracks()` | Observer, click handlers |
+| `isLoadingTopTracks` | Загрузка топа | Повторный fetch API | Скролл, retry logic |
+| `tagTracksHasMore` | Достигнут конец списка | Бесконечный скролл | Observer, UI sentinel |
+| `isLoading` | Загрузка альбомов | Параллельные запросы | Infinite scroll |
+
+---
+
+### ⛓️ ЦЕПОЧКИ ВЫЗОВОВ
+
+**Запуск трека из Tags:**
+```
+click track → playTagTrack() → selectTrack() → renderPlaylist()
+                                      ↓
+                              restoreTagTrackPlayer() ← ВОССТАНОВЛЕНИЕ
+```
+
+**Переключение вида:**
+```
+click tab → switchView() → cleanup observers → load data → setup new view
+                                ↓
+                        savePlayerState() ← СОХРАНЕНИЕ
+```
+
+**Пагинация Tags:**
+```
+scroll → sentinel visible → IntersectionObserver → loadMoreTagTracks()
+                                                      ↓
+                                              renderTagTracksPage()
+                                                      ↓
+                                          updateSentinel text ONLY!
+```
+
+---
+
+## 🎯 БЫСТРЫЙ ПОИСК ФУНКЦИЙ В script.js
 ```javascript
 switchView('albums')      // строка ~1240
 switchView('top-tracks')  // строка ~1240
