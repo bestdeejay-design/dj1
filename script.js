@@ -1282,8 +1282,6 @@
                     updateTagTrackHighlight();
                 }
             }, 100);
-            // Настраиваем бесконечный скролл для тегов
-            setupTagTracksInfiniteScroll();
         }
     }
 
@@ -2082,23 +2080,35 @@
             tagTracksObserver.disconnect();
         }
         
-        // Создаем sentinel для отслеживания
+        // Создаем sentinel для отслеживания - добавляем в конец списка треков
+        const container = document.getElementById('tagTracksListContainer') || tagTracksList;
         let sentinel = document.getElementById('tag-tracks-sentinel');
-        if (!sentinel) {
+        
+        if (!sentinel && container) {
             sentinel = document.createElement('div');
             sentinel.id = 'tag-tracks-sentinel';
-            sentinel.style.height = '20px';
+            sentinel.style.height = '50px';
             sentinel.style.marginTop = '20px';
-            tagsView.appendChild(sentinel);
+            sentinel.style.background = 'rgba(255,255,255,0.05)'; // Временно видно
+            sentinel.textContent = 'Loading more...';
+            sentinel.style.color = '#666';
+            sentinel.style.textAlign = 'center';
+            sentinel.style.paddingTop = '15px';
+            container.appendChild(sentinel);
         }
         
-        tagTracksObserver = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting && !isLoadingTagTracks && tagTracksHasMore && currentTag) {
-                loadMoreTagTracks();
-            }
-        }, { rootMargin: '200px' });
-        
-        tagTracksObserver.observe(sentinel);
+        if (sentinel) {
+            tagTracksObserver = new IntersectionObserver((entries) => {
+                console.log('IntersectionObserver triggered:', entries[0].isIntersecting);
+                if (entries[0].isIntersecting && !isLoadingTagTracks && tagTracksHasMore && currentTag) {
+                    loadMoreTagTracks();
+                }
+            }, { rootMargin: '300px' });
+            
+            tagTracksObserver.observe(sentinel);
+        } else {
+            console.warn('Sentinel element not found');
+        }
     }
     
     // Рендерим все треки выбранного тега (при сортировке)
@@ -2139,6 +2149,9 @@
         });
         
         attachTagTrackListeners();
+        
+        // Пересоздаём sentinel после добавления треков
+        setupTagTracksInfiniteScroll();
     }
     
     // Создаём HTML для трека тега
