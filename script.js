@@ -2078,36 +2078,39 @@
         // Удаляем старый observer если есть
         if (tagTracksObserver) {
             tagTracksObserver.disconnect();
+            tagTracksObserver = null;
+        }
+        
+        // Удаляем старый sentinel если есть
+        const oldSentinel = document.getElementById('tag-tracks-sentinel');
+        if (oldSentinel) {
+            oldSentinel.remove();
         }
         
         // Создаем sentinel для отслеживания - добавляем в конец списка треков
         const container = document.getElementById('tagTracksListContainer') || tagTracksList;
-        let sentinel = document.getElementById('tag-tracks-sentinel');
         
-        if (!sentinel && container) {
-            sentinel = document.createElement('div');
+        if (container && tagTracksHasMore) {
+            const sentinel = document.createElement('div');
             sentinel.id = 'tag-tracks-sentinel';
-            sentinel.style.height = '50px';
+            sentinel.style.height = '60px';
             sentinel.style.marginTop = '20px';
-            sentinel.style.background = 'rgba(255,255,255,0.05)'; // Временно видно
-            sentinel.textContent = 'Loading more...';
-            sentinel.style.color = '#666';
+            sentinel.style.background = 'transparent';
+            sentinel.textContent = isLoadingTagTracks ? '⏳ Loading...' : '';
+            sentinel.style.color = '#888';
             sentinel.style.textAlign = 'center';
-            sentinel.style.paddingTop = '15px';
+            sentinel.style.paddingTop = '20px';
+            sentinel.style.fontSize = '13px';
             container.appendChild(sentinel);
-        }
-        
-        if (sentinel) {
+            
             tagTracksObserver = new IntersectionObserver((entries) => {
-                console.log('IntersectionObserver triggered:', entries[0].isIntersecting);
+                console.log('IntersectionObserver triggered:', entries[0].isIntersecting, 'isLoading:', isLoadingTagTracks, 'hasMore:', tagTracksHasMore);
                 if (entries[0].isIntersecting && !isLoadingTagTracks && tagTracksHasMore && currentTag) {
                     loadMoreTagTracks();
                 }
             }, { rootMargin: '300px' });
             
             tagTracksObserver.observe(sentinel);
-        } else {
-            console.warn('Sentinel element not found');
         }
     }
     
