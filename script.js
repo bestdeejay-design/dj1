@@ -2236,10 +2236,10 @@
             const currentTrackElement = document.querySelector(`.top-track-item[data-track-id="${trackId}"]`);
             if (currentTrackElement) {
                 currentTrackElement.classList.add('playing');
-                // Прокручиваем к центру
+                // Прокручиваем к центру с большей задержкой
                 setTimeout(() => {
                     currentTrackElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 100);
+                }, 400);
             }
         }
     }
@@ -2416,6 +2416,7 @@
             title: `🏷️ ${currentTag}`,
             cover: track.cover,
             tracks: tagTracks.map(t => ({
+                id: t.id, // 🔥 FIX: Сохраняем ID для savePlayerState()
                 name: t.name,
                 file: t.file,
                 cover: t.cover,
@@ -2433,6 +2434,12 @@
         if (trackItems[trackIndex]) {
             trackItems[trackIndex].classList.add('playing');
         }
+        
+        // 🔥 FIX: Обновляем подсветку через updateTagTrackHighlight()
+        setTimeout(() => {
+            updateTagTrackHighlight();
+            console.log('✓ Tag track highlight updated on play');
+        }, 300);
         
         // Прокручиваем к текущему треку
         setTimeout(() => scrollToCurrentTagTrack(), 100);
