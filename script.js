@@ -1508,6 +1508,21 @@
             if (newTracks.length > 0) {
                 topTracks = topTracks.concat(newTracks);
                 renderTopTracks(newTracks);
+                
+                // 🔥 FIX: Обновляем currentAlbum.tracks если играет трек из топа
+                if (currentAlbum && currentAlbum.id === 'top-tracks') {
+                    currentAlbum.tracks = topTracks.map(t => ({
+                        id: t.id,
+                        name: t.name,
+                        file: t.file,
+                        cover: t.cover,
+                        duration: t.duration,
+                        sound: t.sound,
+                        lyrics: t.lyrics,
+                        model: t.model
+                    }));
+                    console.log('✓ Updated currentAlbum.tracks:', currentAlbum.tracks.length, 'tracks');
+                }
             }
             
             topTracksPage++;
@@ -2196,6 +2211,21 @@
                 sortTagTracks(false); // false = не перерендеривать полностью
                 // Рендерим только новые
                 renderTagTracksPage(pageTracks);
+                
+                // 🔥 FIX: Обновляем currentAlbum.tracks если играет трек из этого тега
+                if (currentAlbum && currentAlbum.id === 'tag-tracks' && currentTag) {
+                    currentAlbum.tracks = tagTracks.map(t => ({
+                        id: t.id,
+                        name: t.name,
+                        file: t.file,
+                        cover: t.cover,
+                        duration: t.duration,
+                        sound: t.sound,
+                        lyrics: t.lyrics,
+                        model: t.model
+                    }));
+                    console.log('✓ Updated currentAlbum.tracks:', currentAlbum.tracks.length, 'tracks');
+                }
             }
             
             tagTracksPage++;
