@@ -121,7 +121,14 @@
     <div class="track-details-modal" id="trackDetailsModal">
         <div class="track-details-content">
             <div class="track-details-header">
-                <h2 id="modalTrackTitle">Track Details</h2>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="back-to-player-btn" id="backToPlayerBtn" title="Вернуться к плееру">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                        </svg>
+                    </button>
+                    <h2 id="modalTrackTitle">Track Details</h2>
+                </div>
                 <button class="close-modal" id="closeTrackDetails">×</button>
             </div>
             <div class="track-details-body">

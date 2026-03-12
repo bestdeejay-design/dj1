@@ -606,6 +606,18 @@ body {
     flex-direction: column;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     border: 1px solid var(--border);
+    animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .track-details-header {
@@ -625,24 +637,50 @@ body {
 }
 
 .close-modal {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.1);
     border: none;
-    color: var(--text-secondary);
+    color: #fff;
     font-size: 28px;
     cursor: pointer;
     padding: 0;
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    transition: all 0.2s ease;
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .close-modal:hover {
-    color: var(--text-primary);
-    background: rgba(255,255,255,0.1);
+    color: #fff;
+    background: var(--accent);
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 6px 20px rgba(29,185,84,0.4);
+}
+
+.back-to-player-btn {
+    background: rgba(29, 185, 84, 0.2);
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.back-to-player-btn:hover {
+    background: var(--accent);
+    color: #000;
+    transform: translateX(-4px);
+    box-shadow: 0 4px 16px rgba(29,185,84,0.4);
 }
 
 .track-details-body {
@@ -696,19 +734,24 @@ body {
 }
 
 .track-tag {
-    background: rgba(29,185,84,0.15);
+    background: linear-gradient(135deg, rgba(29,185,84,0.15) 0%, rgba(29,185,84,0.05) 100%);
     color: var(--accent);
-    padding: 6px 14px;
+    padding: 8px 16px;
     border-radius: 20px;
     font-size: 0.85rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid rgba(29,185,84,0.3);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(29,185,84,0.1);
 }
 
 .track-tag:hover {
     background: var(--accent);
     color: #000;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(29,185,84,0.4);
 }
 
 @media (max-width: 640px) {
