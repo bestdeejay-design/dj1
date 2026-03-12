@@ -151,6 +151,9 @@
                 <option value="favorites">Total Favorites</option>
             </select>
             <button id="sortOrderBtn" title="Toggle sort order">↓</button>
+            <button id="clearStateBtn" class="clear-state-btn" title="Clear all state & reload">
+                ✕
+            </button>
         `;
         document.body.appendChild(sortContainer);
 
@@ -223,6 +226,29 @@
                 background: rgba(255, 255, 255, 0.2);
                 border-color: rgba(255, 255, 255, 0.4);
                 transform: translateY(-1px);
+            }
+            
+            /* Кнопка очистки состояния (крестик) */
+            .clear-state-btn {
+                background: rgba(239, 68, 68, 0.2) !important;
+                border-color: rgba(239, 68, 68, 0.4) !important;
+                color: #ef4444 !important;
+                font-weight: bold;
+                font-size: 16px !important;
+                padding: 6px 10px !important;
+                margin-left: 8px;
+                transition: all 0.2s ease;
+            }
+            
+            .clear-state-btn:hover {
+                background: rgba(239, 68, 68, 0.4) !important;
+                border-color: rgba(239, 68, 68, 0.6) !important;
+                transform: scale(1.1) rotate(90deg);
+            }
+            
+            [data-theme="light"] .clear-state-btn {
+                background: rgba(239, 68, 68, 0.1) !important;
+                color: #dc2626 !important;
             }
             
             /* Адаптация для светлой темы */
@@ -399,6 +425,62 @@
                 }
             });
         }
+        
+        // 🔥 FIX: Обработчик кнопки очистки состояния
+        const clearStateBtn = document.getElementById('clearStateBtn');
+        if (clearStateBtn) {
+            clearStateBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                clearAllStateAndReload();
+            });
+        }
+    }
+
+    // 🔥 FIX: Полная очистка DOM и localStorage (как при первом заходе)
+    function clearAllStateAndReload() {
+        console.log('🧹 Clearing all state...');
+        
+        // 1. Очищаем localStorage
+        localStorage.removeItem('playerState');
+        localStorage.removeItem('currentView');
+        localStorage.removeItem('theme');
+        
+        // 2. Останавливаем плеер
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+        audioPlayer.src = '';
+        
+        // 3. Сбрасываем переменные состояния
+        currentAlbum = null;
+        currentTrackIndex = -1;
+        currentView = 'albums';
+        currentPage = 1;
+        hasMore = true;
+        albums = [];
+        topTracks = [];
+        tagTracks = [];
+        currentTag = null;
+        
+        // 4. Очищаем DOM
+        gallery.innerHTML = '';
+        topTracksView.innerHTML = '';
+        tagsView.innerHTML = '<div class="tags-cloud" id="tagsCloud"></div><div class="tag-tracks-list" id="tagTracksList"></div>';
+        playlist.innerHTML = '';
+        
+        // 5. Скрываем плеер
+        playerBar.classList.remove('active');
+        document.title = 'DJ1.RU — Music Library';
+        
+        // 6. Очищаем название трека
+        currentTrackName.textContent = 'Выберите трек';
+        currentAlbumName.textContent = '';
+        currentTrackCover.src = '';
+        
+        // 7. Перезагружаем страницу
+        setTimeout(() => {
+            location.reload();
+        }, 300);
     }
 
     function resetAndReload() {
