@@ -53,11 +53,19 @@
     <!-- Плеер -->
     <div class="player-bar" id="playerBar">
         <div class="player-main-row">
-            <div class="track-info" id="trackInfo">
-                <img class="track-cover" id="currentTrackCover" src="" alt="cover">
+            <!-- Информация о треке -->
+            <div class="track-info">
+                <img class="track-cover" id="currentTrackCover" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Crect width='56' height='56' fill='%23333'/%3E%3C/svg%3E" alt="Cover">
                 <div class="track-details">
-                    <div class="track-name" id="currentTrackName">Выберите трек</div>
-                    <div class="album-name" id="currentAlbumName"></div>
+                    <div class="track-name-wrapper" id="trackNameWrapper" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="track-name" id="currentTrackName">Выберите трек</span>
+                        <button class="track-info-btn" id="trackInfoBtn" title="Информация о треке">
+                            <svg viewBox="0 0 24 24" width="18" height="18">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <span class="album-name" id="currentAlbumName"></span>
                 </div>
             </div>
 
@@ -105,12 +113,6 @@
                     <path d="M3 13h12v-2H3v2zm0-6v2h18V7H3zm0 10h6v-2H3v2zm15-3h2v-3h3v-2h-3V7h-2v3h-3v2h3v3z"/>
                 </svg>
                 <span>Плейлист</span>
-            </button>
-            
-            <button class="track-info-btn" id="trackInfoBtn" title="Track Details">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                </svg>
             </button>
         </div>
     </div>
