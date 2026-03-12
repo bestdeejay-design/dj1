@@ -849,11 +849,6 @@
             albumCard.classList.add('playing');
         }
         
-        // Если играем топ треков — обновляем выделение
-        if (album.id === 'top-tracks') {
-            updateTopTrackHighlight();
-        }
-        
         // Сохраняем состояние плеера
         savePlayerState(album, trackIndex);
         
@@ -861,6 +856,13 @@
         if (!track) return;
         
         currentTrackIndex = trackIndex;
+        
+        // 🔥 FIX: Обновляем выделение ПОСЛЕ установки currentTrackIndex
+        if (album.id === 'top-tracks') {
+            updateTopTrackHighlight();
+        } else if (album.id === 'tag-tracks') {
+            updateTagTrackHighlight();
+        }
         
         // Останавливаем текущее воспроизведение перед сменой источника
         if (!audioPlayer.paused) {
@@ -1424,8 +1426,8 @@
         
         tracksToRender.forEach((track, index) => {
             const item = document.createElement('div');
-            // Проверяем, является ли этот трек текущим
-            const isCurrentTrack = isPlayingFromTop && currentTrackIndex === (topTracksPage - 1) * 20 + index;
+            // 🔥 FIX: Ищем текущий трек по ID вместо использования индекса
+            const isCurrentTrack = isPlayingFromTop && currentAlbum.tracks[currentTrackIndex]?.id === track.id;
             item.className = 'top-track-item' + (isCurrentTrack ? ' playing' : '');
             item.dataset.trackId = track.id;
             item.innerHTML = `
@@ -1446,7 +1448,7 @@
             // Клик на всю карточку для play/pause
             item.addEventListener('click', (e) => {
                 const isCurrentTrack = currentAlbum && currentAlbum.id === 'top-tracks' && 
-                                      currentTrackIndex === (topTracksPage - 1) * 20 + index;
+                                      currentAlbum.tracks[currentTrackIndex]?.id === track.id;
                 
                 if (isCurrentTrack && !audioPlayer.paused) {
                     // Если это текущий трек и он играет — ставим на паузу
