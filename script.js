@@ -1583,10 +1583,12 @@
         const currentTrackElement = document.querySelector(`.top-track-item[data-track-id="${track.id}"]`);
         if (currentTrackElement) {
             currentTrackElement.classList.add('playing');
-            // Прокручиваем к элементу
+            // 🔥 FIX: Прокручиваем с большей задержкой чтобы DOM обновился
             setTimeout(() => {
                 currentTrackElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
+            }, 300);
+        } else {
+            console.warn('Track element not found in DOM:', track.id);
         }
         
         // Создаем виртуальный альбом для трека (сохраняем все поля)
@@ -1619,6 +1621,11 @@
         playlistAlbumTitle.textContent = '🔥 Top Tracks';
         renderPlaylist();
         highlightPlaylistItemById(track.id);
+        
+        // 🔥 FIX: Дополнительно обновляем подсветку после рендера
+        setTimeout(() => {
+            updateTopTrackHighlight();
+        }, 400);
     }
     
     // ⚠️ CRITICAL: Восстановление состояния плеера для Tags
@@ -1638,6 +1645,12 @@
         const currentTrackElement = document.querySelector(`.top-track-item[data-track-id="${track.id}"]`);
         if (currentTrackElement) {
             currentTrackElement.classList.add('playing');
+            // 🔥 FIX: Прокручиваем с задержкой
+            setTimeout(() => {
+                currentTrackElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        } else {
+            console.warn('Tag track element not found in DOM:', track.id);
         }
         
         // Находим индекс трека для виртуального альбома
@@ -1673,6 +1686,11 @@
         playlistAlbumTitle.textContent = `🏷️ ${currentTag}`;
         renderPlaylist();
         highlightPlaylistItemById(track.id);
+        
+        // 🔥 FIX: Дополнительно обновляем подсветку после рендера
+        setTimeout(() => {
+            updateTagTrackHighlight();
+        }, 400);
     }
 
     function playTopTrack(track) {
