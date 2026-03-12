@@ -1095,6 +1095,19 @@
             else item.classList.remove('active');
         });
     }
+    
+    // 🔥 NEW: Подсветка элемента плейлиста по ID трека
+    function highlightPlaylistItemById(trackId) {
+        const items = playlistContainer.querySelectorAll('.playlist-item');
+        items.forEach(item => {
+            const itemId = item.dataset.trackId;
+            if (itemId === trackId) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
 
     function togglePlaylistPanel() {
         playlistVisible = !playlistVisible;
@@ -1459,11 +1472,14 @@
             el.classList.remove('playing');
         });
         
-        // Добавляем класс playing на текущий трек в топе
-        const trackItems = document.querySelectorAll('.top-track-item');
-        const topTrackIndex = topTracks.findIndex(t => t.id === track.id);
-        if (trackItems[topTrackIndex]) {
-            trackItems[topTrackIndex].classList.add('playing');
+        // 🔥 FIX: Ищем трек по data-track-id вместо использования индекса
+        const currentTrackElement = document.querySelector(`.top-track-item[data-track-id="${track.id}"]`);
+        if (currentTrackElement) {
+            currentTrackElement.classList.add('playing');
+            // Прокручиваем к элементу
+            setTimeout(() => {
+                currentTrackElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
         }
         
         // Создаем виртуальный альбом для трека (сохраняем все поля)
@@ -1482,7 +1498,6 @@
             }))
         };
         
-        currentTrackIndex = topTrackIndex;
         audioPlayer.src = track.file;
         audioPlayer.currentTime = currentTime;
         
@@ -1496,12 +1511,12 @@
         
         playlistAlbumTitle.textContent = '🔥 Top Tracks';
         renderPlaylist();
-        highlightPlaylistItem(topTrackIndex);
+        highlightPlaylistItemById(track.id);
     }
     
     // ⚠️ CRITICAL: Восстановление состояния плеера для Tags
     // 🔒 LOCKED: Вызывать ПОСЛЕ selectTrack() для сохранения позиции
-    // Зависимости: tagTracks, currentTag, currentTrackIndex
+    // Зависимости: tagTracks, currentTag
     function restoreTagTrackPlayer(track, currentTime) {
         if (!playerBar.classList.contains('active')) {
             playerBar.classList.add('active');
@@ -1512,7 +1527,13 @@
             el.classList.remove('playing');
         });
         
-        // Находим индекс трека
+        // 🔥 FIX: Ищем трек по data-track-id вместо использования индекса
+        const currentTrackElement = document.querySelector(`.top-track-item[data-track-id="${track.id}"]`);
+        if (currentTrackElement) {
+            currentTrackElement.classList.add('playing');
+        }
+        
+        // Находим индекс трека для виртуального альбома
         const trackIndex = tagTracks.findIndex(t => t.id === track.id);
         
         // Создаем виртуальный альбом для трека
@@ -1531,7 +1552,6 @@
             }))
         };
         
-        currentTrackIndex = trackIndex;
         audioPlayer.src = track.file;
         audioPlayer.currentTime = currentTime;
         
@@ -1545,7 +1565,7 @@
         
         playlistAlbumTitle.textContent = `🏷️ ${currentTag}`;
         renderPlaylist();
-        highlightPlaylistItem(trackIndex);
+        highlightPlaylistItemById(track.id);
     }
 
     function playTopTrack(track) {
@@ -1558,15 +1578,15 @@
             el.classList.remove('playing');
         });
         
-        // Добавляем класс playing на текущий трек в топе
-        const trackItems = document.querySelectorAll('.top-track-item');
-        const topTrackIndex = topTracks.findIndex(t => t.id === track.id);
-        if (trackItems[topTrackIndex]) {
-            trackItems[topTrackIndex].classList.add('playing');
+        // 🔥 FIX: Ищем трек по data-track-id вместо использования индекса
+        const currentTrackElement = document.querySelector(`.top-track-item[data-track-id="${track.id}"]`);
+        if (currentTrackElement) {
+            currentTrackElement.classList.add('playing');
+            // Прокручиваем к текущему треку
+            setTimeout(() => {
+                currentTrackElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
         }
-        
-        // Прокручиваем к текущему треку
-        setTimeout(() => scrollToCurrentTopTrack(), 100);
         
         // Создаем виртуальный альбом для трека (сохраняем все поля включая sound и lyrics)
         currentAlbum = {
@@ -1584,7 +1604,7 @@
             }))
         };
         
-        selectTrack(currentAlbum, topTrackIndex);
+        selectTrack(currentAlbum, topTracks.findIndex(t => t.id === track.id));
         
         playlistAlbumTitle.textContent = '🔥 Top Tracks';
         renderPlaylist();
@@ -1600,8 +1620,8 @@
     function scrollToCurrentTopTrack() {
         if (currentView !== 'top-tracks' || !currentAlbum || currentAlbum.id !== 'top-tracks') return;
         
-        const trackItems = document.querySelectorAll('.top-track-item');
-        const currentItem = trackItems[currentTrackIndex];
+        // 🔥 FIX: Ищем активный элемент вместо использования индекса
+        const currentItem = document.querySelector('.top-track-item.playing');
         
         if (currentItem) {
             currentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1617,10 +1637,13 @@
             el.classList.remove('playing');
         });
         
-        // Добавляем на текущий
-        const trackItems = document.querySelectorAll('.top-track-item');
-        if (trackItems[currentTrackIndex]) {
-            trackItems[currentTrackIndex].classList.add('playing');
+        // 🔥 FIX: Ищем трек по ID в currentAlbum
+        const trackId = currentAlbum.tracks[currentTrackIndex]?.id;
+        if (trackId) {
+            const currentTrackElement = document.querySelector(`.top-track-item[data-track-id="${trackId}"]`);
+            if (currentTrackElement) {
+                currentTrackElement.classList.add('playing');
+            }
         }
     }
     
@@ -2063,17 +2086,17 @@
             el.classList.remove('playing');
         });
         
-        // Находим контейнер
-        const container = document.getElementById('tagTracksListContainer') || tagTracksList;
-        
-        // Добавляем на текущий
-        const trackItems = container.querySelectorAll('.top-track-item');
-        if (trackItems[currentTrackIndex]) {
-            trackItems[currentTrackIndex].classList.add('playing');
-            // Прокручиваем к центру
-            setTimeout(() => {
-                trackItems[currentTrackIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
+        // 🔥 FIX: Ищем трек по ID вместо использования индекса
+        const trackId = currentAlbum.tracks[currentTrackIndex]?.id;
+        if (trackId) {
+            const currentTrackElement = document.querySelector(`.top-track-item[data-track-id="${trackId}"]`);
+            if (currentTrackElement) {
+                currentTrackElement.classList.add('playing');
+                // Прокручиваем к центру
+                setTimeout(() => {
+                    currentTrackElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            }
         }
     }
     
@@ -2081,9 +2104,8 @@
     function scrollToCurrentTagTrack() {
         if (currentView !== 'tags' || !currentAlbum || currentAlbum.id !== 'tag-tracks') return;
         
-        const container = document.getElementById('tagTracksListContainer') || tagTracksList;
-        const trackItems = container.querySelectorAll('.top-track-item');
-        const currentItem = trackItems[currentTrackIndex];
+        // 🔥 FIX: Ищем активный элемент
+        const currentItem = document.querySelector('.top-track-item.playing');
         
         if (currentItem) {
             currentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
