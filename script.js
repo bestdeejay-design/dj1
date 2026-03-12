@@ -2575,6 +2575,7 @@
     // ==================== МОДАЛЬНОЕ ОКНО ДЕТАЛЕЙ ТРЕКА ====================
     const trackInfoBtn = document.getElementById('trackInfoBtn');
     const trackNameWrapper = document.getElementById('trackNameWrapper');
+    const backToPlayerBtn = document.getElementById('backToPlayerBtn');
     const trackDetailsModal = document.getElementById('trackDetailsModal');
     const closeTrackDetails = document.getElementById('closeTrackDetails');
     const modalTrackTitle = document.getElementById('modalTrackTitle');
@@ -2675,6 +2676,11 @@
     // 🔥 NEW: Клик по названию трека тоже открывает информацию
     if (trackNameWrapper) {
         trackNameWrapper.addEventListener('click', openTrackDetailsModal);
+    }
+    
+    // 🔥 NEW: Кнопка "Назад к плееру"
+    if (backToPlayerBtn) {
+        backToPlayerBtn.addEventListener('click', closeTrackDetailsModal);
     }
     
     if (closeTrackDetails) {
