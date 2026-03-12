@@ -1041,14 +1041,16 @@
             selectTrack(currentAlbum, nextIndex);
         }
         
-        // Прокручиваем к текущему треку в топе или тегах
-        if (currentView === 'top-tracks') {
-            scrollToCurrentTopTrack();
-            updateTopTrackHighlight();
-        } else if (currentView === 'tags') {
-            scrollToCurrentTagTrack();
-            updateTagTrackHighlight();
-        }
+        // 🔥 FIX: Прокручиваем к текущему треку с задержкой (DOM должен обновиться)
+        setTimeout(() => {
+            if (currentView === 'top-tracks') {
+                scrollToCurrentTopTrack();
+                updateTopTrackHighlight();
+            } else if (currentView === 'tags') {
+                scrollToCurrentTagTrack();
+                updateTagTrackHighlight();
+            }
+        }, 100);
     }
 
     function prevTrack() {
@@ -1086,6 +1088,17 @@
             }
             selectTrack(currentAlbum, prevIndex);
         }
+        
+        // 🔥 FIX: Прокручиваем к текущему треку с задержкой
+        setTimeout(() => {
+            if (currentView === 'top-tracks') {
+                scrollToCurrentTopTrack();
+                updateTopTrackHighlight();
+            } else if (currentView === 'tags') {
+                scrollToCurrentTagTrack();
+                updateTagTrackHighlight();
+            }
+        }, 100);
     }
 
     function generateShuffleIndices() {
