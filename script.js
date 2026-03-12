@@ -983,6 +983,22 @@
         let coverSrc = track.cover || album.cover;
         currentTrackCover.src = coverSrc || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3C/svg%3E';
         
+        // 🔥 NEW: Media Session API - показываем обложку на экране блокировки
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: track.name,
+                artist: album.title,
+                artwork: [
+                    {
+                        src: coverSrc || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'512\' height=\'512\' viewBox=\'0 0 512 512\'%3E%3Crect width=\'512\' height=\'512\' fill=\'%23333\'/%3E%3C/svg%3E',
+                        sizes: '512x512',
+                        type: 'image/jpeg'
+                    }
+                ]
+            });
+            console.log('✓ Media Session metadata updated:', track.name);
+        }
+        
         highlightPlaylistItem(trackIndex);
         
         if (shuffleOn) {
@@ -1280,6 +1296,31 @@
             currentTrackName.style.color = '';
         }, 3000);
     });
+
+    // 🔥 NEW: Media Session Action Handlers - кнопки на экране блокировки
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('play', () => {
+            playCurrent();
+            console.log('✓ Media Session: Play');
+        });
+        
+        navigator.mediaSession.setActionHandler('pause', () => {
+            pauseCurrent();
+            console.log('✓ Media Session: Pause');
+        });
+        
+        navigator.mediaSession.setActionHandler('nexttrack', () => {
+            nextTrack();
+            console.log('✓ Media Session: Next Track');
+        });
+        
+        navigator.mediaSession.setActionHandler('previoustrack', () => {
+            prevTrack();
+            console.log('✓ Media Session: Previous Track');
+        });
+        
+        console.log('✓ Media Session handlers initialized');
+    }
 
     audioPlayer.addEventListener('loadstart', () => {
         currentTrackName.style.opacity = '0.7';
