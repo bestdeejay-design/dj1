@@ -1679,6 +1679,21 @@
         // Обновляем title (без воспроизведения — показываем что на паузе)
         document.title = `⏸ ${track.name} — 🔥 Top Tracks`;
         
+        // 🔥 FIX: Media Session API - обновляем метаданные при восстановлении
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: track.name,
+                artist: '🔥 Top Tracks',
+                artwork: [
+                    {
+                        src: track.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'512\' height=\'512\' viewBox=\'0 0 512 512\'%3E%3Crect width=\'512\' height=\'512\' fill=\'%23333\'/%3E%3C/svg%3E',
+                        sizes: '512x512',
+                        type: 'image/jpeg'
+                    }
+                ]
+            });
+        }
+        
         playlistAlbumTitle.textContent = '🔥 Top Tracks';
         renderPlaylist();
         highlightPlaylistItemById(track.id);
@@ -1748,6 +1763,21 @@
         
         // Обновляем title (без воспроизведения — показываем что на паузе)
         document.title = `⏸ ${track.name} — 🏷️ ${currentTag}`;
+        
+        // 🔥 FIX: Media Session API - обновляем метаданные при восстановлении
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: track.name,
+                artist: `🏷️ ${currentTag}`,
+                artwork: [
+                    {
+                        src: track.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'512\' height=\'512\' viewBox=\'0 0 512 512\'%3E%3Crect width=\'512\' height=\'512\' fill=\'%23333\'/%3E%3C/svg%3E',
+                        sizes: '512x512',
+                        type: 'image/jpeg'
+                    }
+                ]
+            });
+        }
         
         playlistAlbumTitle.textContent = `🏷️ ${currentTag}`;
         renderPlaylist();
