@@ -1528,11 +1528,12 @@
         
         const list = document.getElementById('topTracksList');
         const isPlayingFromTop = currentAlbum && currentAlbum.id === 'top-tracks';
+        const currentTrackId = isPlayingFromTop ? currentAlbum.tracks[currentTrackIndex]?.id : null;
         
         tracksToRender.forEach((track, index) => {
             const item = document.createElement('div');
             // 🔥 FIX: Ищем текущий трек по ID вместо использования индекса
-            const isCurrentTrack = isPlayingFromTop && currentAlbum.tracks[currentTrackIndex]?.id === track.id;
+            const isCurrentTrack = isPlayingFromTop && currentTrackId === track.id;
             item.className = 'top-track-item' + (isCurrentTrack ? ' playing' : '');
             item.dataset.trackId = track.id;
             item.innerHTML = `
