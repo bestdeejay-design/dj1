@@ -2574,6 +2574,7 @@
 
     // ==================== МОДАЛЬНОЕ ОКНО ДЕТАЛЕЙ ТРЕКА ====================
     const trackInfoBtn = document.getElementById('trackInfoBtn');
+    const trackNameWrapper = document.getElementById('trackNameWrapper');
     const trackDetailsModal = document.getElementById('trackDetailsModal');
     const closeTrackDetails = document.getElementById('closeTrackDetails');
     const modalTrackTitle = document.getElementById('modalTrackTitle');
@@ -2669,6 +2670,11 @@
     
     if (trackInfoBtn) {
         trackInfoBtn.addEventListener('click', openTrackDetailsModal);
+    }
+    
+    // 🔥 NEW: Клик по названию трека тоже открывает информацию
+    if (trackNameWrapper) {
+        trackNameWrapper.addEventListener('click', openTrackDetailsModal);
     }
     
     if (closeTrackDetails) {

@@ -894,6 +894,17 @@ body {
     color: var(--text-primary);
 }
 
+.track-name-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.track-name-wrapper:hover .track-info-btn {
+    opacity: 1;
+}
+
 .album-name {
     font-size: 0.8rem;
     color: var(--text-secondary);
@@ -1000,9 +1011,81 @@ audio {
 
 /* На мобильном — те же стили, но скрываем нативный audio */
 @media (max-width: 700px) {
+    .player-bar {
+        padding: 0.5rem 1rem;
+    }
+    
+    .player-main-row {
+        gap: 0.8rem;
+    }
+    
+    .track-info {
+        min-width: 150px;
+        gap: 0.6rem;
+    }
+    
+    .track-cover {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .track-name {
+        font-size: 0.85rem;
+    }
+    
+    .album-name {
+        font-size: 0.7rem;
+    }
+    
+    .player-controls {
+        gap: 0.5rem;
+    }
+    
+    .control-btn {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .control-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .play-pause-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .play-pause-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+    
     .track-progress-container {
         order: 3;
         width: 100%;
+        gap: 6px;
+    }
+    
+    .track-time {
+        font-size: 0.7rem;
+        min-width: 32px;
+    }
+    
+    .track-progress-bar {
+        height: 5px;
+    }
+    
+    /* Кнопка информации о треке */
+    .track-info-btn {
+        width: 28px;
+        height: 28px;
+        margin-left: 0.5rem;
+    }
+    
+    .track-info-btn svg {
+        width: 16px;
+        height: 16px;
     }
 }
 
