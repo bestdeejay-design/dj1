@@ -37,4 +37,6 @@ configs/
 *.md
 !README.md
 !PROJECT_STRUCTURE.md
+!docs/HOW_TO_EDIT_TRACK_TAGS.md
+!utils/edit_track_tags.py
 ```
