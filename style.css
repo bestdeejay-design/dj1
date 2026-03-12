@@ -1302,6 +1302,12 @@ audio::-moz-media-controls-panel {
     .playlist-panel {
         width: 85%;
         max-width: 320px;
+        /* 🔥 FIX: Скрываем панель на мобильных когда закрыта */
+        display: none;
+    }
+    
+    .playlist-panel.open {
+        display: flex;
     }
 
     .playlist-item-title {
@@ -1353,6 +1359,12 @@ audio::-moz-media-controls-panel {
     .playlist-panel {
         width: 100%;
         max-width: none;
+        /* 🔥 FIX: Скрываем панель на мобильных когда закрыта */
+        display: none;
+    }
+    
+    .playlist-panel.open {
+        display: flex;
     }
 }
 
