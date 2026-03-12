@@ -1598,6 +1598,7 @@
             title: '🔥 Top Tracks',
             cover: track.cover,
             tracks: topTracks.map(t => ({
+                id: t.id, // 🔥 FIX: Сохраняем ID для savePlayerState()
                 name: t.name,
                 file: t.file,
                 cover: t.cover,
@@ -1667,6 +1668,7 @@
             title: `🏷️ ${currentTag}`,
             cover: track.cover,
             tracks: tagTracks.map(t => ({
+                id: t.id, // 🔥 FIX: Сохраняем ID для savePlayerState()
                 name: t.name,
                 file: t.file,
                 cover: t.cover,
@@ -1728,6 +1730,7 @@
             title: '🔥 Top Tracks',
             cover: track.cover,
             tracks: topTracks.map(t => ({
+                id: t.id, // 🔥 FIX: Сохраняем ID для savePlayerState()
                 name: t.name,
                 file: t.file,
                 cover: t.cover,
