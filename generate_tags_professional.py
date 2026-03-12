@@ -73,19 +73,40 @@ PROFESSIONAL_CATEGORIES = {
         'bedroom': 'Bedroom', 'studio': 'Studio', 'live': 'Live',
         'chill': 'Chill', 'party': 'Party', 'dance': 'Dance',
         'night': 'Night Club', 'deep': 'Deep'
+    },
+    
+    # === ФАЗА 1: НОВЫЕ КАТЕГОРИИ ===
+    
+    # Уровень энергии (Energy Level) - ФАЗА 1
+    'energy': {
+        'low energy': 'Low Energy',
+        'mid energy': 'Mid Energy',
+        'high energy': 'High Energy',
+        'peak time': 'Peak Time',
+        'warm up': 'Warm Up Set',
+        'chill out': 'Chill Out'
+    },
+    
+    # Современные жанры - ФАЗА 1
+    'genres': {
+        # Уже существующие + новые
+        'afrobeats': 'Afrobeats',
+        'amapiano': 'Amapiano',
+        'phonk': 'Phonk',
+        'hyperpop': 'Hyperpop',
+        'wave': 'Wave',
+        'pluggnb': 'PluggnB'
     }
 }
 
-# BPM диапазоны для категоризации
+# BPM диапазоны для категоризации - ФАЗА 1: ОПТИМИЗИРОВАНО
 BPM_RANGES = [
-    (60, 75, '60-75 BPM'),
-    (76, 90, '76-90 BPM'),
-    (91, 105, '91-105 BPM'),
-    (106, 120, '106-120 BPM'),
-    (121, 135, '121-135 BPM'),
-    (136, 150, '136-150 BPM'),
-    (151, 175, '151-175 BPM'),
-    (176, 200, '176-200 BPM')
+    (60, 90, '60-90 BPM'),       # Расширено с 60-75
+    (91, 110, '91-110 BPM'),     # Новый диапазон
+    (111, 125, '111-125 BPM'),   # Более плавный переход
+    (126, 140, '126-140 BPM'),   # Расширено
+    (141, 160, '141-160 BPM'),   # Расширено с 136-150
+    (161, 200, '161+ BPM')       # Объединено 151-175 + 176-200
 ]
 
 # Создаём плоский маппинг: тег -> (категория, отображаемое имя)
@@ -98,7 +119,15 @@ for category, tags in PROFESSIONAL_CATEGORIES.items():
 with open('/Users/admin/Documents/dj1/dj1/data/tags-data.json', 'r') as f:
     data = json.load(f)
 
-print(f"Original tags: {len(data['tags'])}")
+print(f"Loaded {data['totalTracks']:,} tracks from {len(data['categories'])} categories")
+
+# Извлекаем все треки из текущей структуры
+current_tags = {}
+for cat_key, cat_data in data['categories'].items():
+    for tag_key, tag_info in cat_data['tags'].items():
+        current_tags[tag_key] = tag_info
+
+print(f"Original tags: {len(current_tags)}")
 
 # Фильтруем и категоризуем теги с объединением по display_name
 professional_tags = {}
@@ -107,7 +136,7 @@ other_tags = {}
 # Временное хранилище для объединения
 merged_tags = {}  # (category, display_name) -> {count, tracks, original_tags}
 
-for tag, info in data['tags'].items():
+for tag, info in current_tags.items():
     tag_lower = tag.lower()
     
     # Проверяем, есть ли тег в профессиональных категориях
@@ -147,6 +176,44 @@ for (category, display_name), merged in merged_tags.items():
 
 # === ИЗВЛЕКАЕМ BPM И СОЗДАЁМ КАТЕГОРИЮ TEMPO ===
 print("\nExtracting BPM from track descriptions...")
+
+# === ФАЗА 1: ИЗВЛЕКАЕМ ENERGY LEVEL ===
+print("Extracting Energy Level from track descriptions...")
+
+energy_keywords = {
+    'low energy': ['chill', 'relaxed', 'calm', 'peaceful', 'soft', 'gentle', 'ambient'],
+    'mid energy': ['groovy', 'steady', 'moderate', 'smooth', 'laid back'],
+    'high energy': ['energetic', 'powerful', 'intense', 'driving', 'pumping'],
+    'peak time': ['peak', 'maximum', 'climax', 'banger', 'anthem'],
+    'warm up': ['warm-up', 'opener', 'intro', 'warmup'],
+    'chill out': ['chillout', 'downtempo', 'lounge', 'afterparty']
+}
+
+energy_tracks = {key: set() for key in energy_keywords.keys()}
+
+for track_id, track in data['tracks'].items():
+    if not track.get('sound'):
+        continue
+    
+    sound_lower = track['sound'].lower()
+    
+    # Проверяем ключевые слова энергии
+    for energy_level, keywords in energy_keywords.items():
+        if any(keyword in sound_lower for keyword in keywords):
+            energy_tracks[energy_level].add(track_id)
+
+# Добавляем Energy Level как категорию
+if any(len(tracks) > 0 for tracks in energy_tracks.values()):
+    professional_tags['energy'] = {}
+    for energy_level, tracks in energy_tracks.items():
+        if len(tracks) > 0:
+            tag_key = energy_level.lower().replace(' ', '-')
+            professional_tags['energy'][tag_key] = {
+                'count': len(tracks),
+                'tracks': list(tracks),
+                'displayName': energy_keywords[energy_level][0].title() + ' Energy' if 'energy' in energy_level else energy_level.title()
+            }
+    print(f"Created {len([t for t in energy_tracks.values() if len(t) > 0])} Energy Level tags")
 
 bpm_tracks = {}  # bpm_range -> set(track_ids)
 
@@ -196,7 +263,8 @@ CATEGORY_LABELS = {
     'character': '🎨 Style',
     'era': '📅 Era',
     'context': '🎧 Context',
-    'tempo': '⏱️ Tempo'
+    'tempo': '⏱️ Tempo',
+    'energy': '⚡ Energy Level'  # ФАЗА 1
 }
 
 for category, tags in professional_tags.items():
