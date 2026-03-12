@@ -1608,6 +1608,9 @@
             }))
         };
         
+        // 🔥 FIX: Устанавливаем currentTrackIndex для updateTopTrackHighlight()
+        currentTrackIndex = topTracks.findIndex(t => t.id === track.id);
+        
         audioPlayer.src = track.file;
         audioPlayer.currentTime = currentTime;
         
@@ -1673,6 +1676,9 @@
                 model: t.model
             }))
         };
+        
+        // 🔥 FIX: Устанавливаем currentTrackIndex для updateTagTrackHighlight()
+        currentTrackIndex = trackIndex;
         
         audioPlayer.src = track.file;
         audioPlayer.currentTime = currentTime;
