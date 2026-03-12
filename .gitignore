@@ -20,8 +20,21 @@ venv/
 *.log
 *.tmp
 *.swp
+*.txt
 
 # Editors
 .vscode/
 .idea/
+
+# Backups and old data
+backups/
+tests/
+utils/
+scripts/
+configs/
+*.json
+*.yaml
+*.md
+!README.md
+!PROJECT_STRUCTURE.md
 ```
