@@ -152,7 +152,7 @@
             </select>
             <button id="sortOrderBtn" title="Toggle sort order">↓</button>
             <button id="clearStateBtn" class="clear-state-btn" title="Clear all state & reload">
-                ✕
+                ×
             </button>
         `;
         document.body.appendChild(sortContainer);
@@ -230,24 +230,27 @@
             
             /* Кнопка очистки состояния (крестик) */
             .clear-state-btn {
-                background: rgba(239, 68, 68, 0.2) !important;
-                border-color: rgba(239, 68, 68, 0.4) !important;
-                color: #ef4444 !important;
+                background: rgba(239, 68, 68, 0.3) !important;
+                border-color: rgba(239, 68, 68, 0.5) !important;
+                color: #fca5a5 !important;
                 font-weight: bold;
-                font-size: 16px !important;
-                padding: 6px 10px !important;
+                font-size: 18px !important;
+                padding: 8px 12px !important;
                 margin-left: 8px;
                 transition: all 0.2s ease;
+                min-width: auto !important;
+                line-height: 1;
             }
             
             .clear-state-btn:hover {
-                background: rgba(239, 68, 68, 0.4) !important;
-                border-color: rgba(239, 68, 68, 0.6) !important;
-                transform: scale(1.1) rotate(90deg);
+                background: rgba(239, 68, 68, 0.5) !important;
+                border-color: rgba(239, 68, 68, 0.7) !important;
+                color: #fff !important;
+                transform: scale(1.15) rotate(90deg);
             }
             
             [data-theme="light"] .clear-state-btn {
-                background: rgba(239, 68, 68, 0.1) !important;
+                background: rgba(239, 68, 68, 0.2) !important;
                 color: #dc2626 !important;
             }
             
@@ -332,6 +335,13 @@
                 .sort-controls button {
                     padding: 4px 8px;
                     font-size: 12px;
+                }
+                
+                /* Кнопка очистки на мобильном */
+                .sort-controls .clear-state-btn {
+                    padding: 6px 10px !important;
+                    font-size: 16px !important;
+                    margin-left: 6px;
                 }
             }
             
