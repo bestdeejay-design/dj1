@@ -1625,7 +1625,8 @@
         // 🔥 FIX: Дополнительно обновляем подсветку после рендера
         setTimeout(() => {
             updateTopTrackHighlight();
-        }, 400);
+            console.log('✓ Top track highlight updated');
+        }, 500);
     }
     
     // ⚠️ CRITICAL: Восстановление состояния плеера для Tags
@@ -1690,7 +1691,8 @@
         // 🔥 FIX: Дополнительно обновляем подсветку после рендера
         setTimeout(() => {
             updateTagTrackHighlight();
-        }, 400);
+            console.log('✓ Tag track highlight updated');
+        }, 500);
     }
 
     function playTopTrack(track) {
@@ -1820,8 +1822,7 @@
                         if (track) {
                             // Восстанавливаем плеер сразу (без автовоспроизведения)
                             restoreTopTrackPlayer(track, state.currentTime || 0);
-                            // Прокручиваем к треку
-                            setTimeout(() => scrollToCurrentTopTrack(), 500);
+                            // 🔥 FIX: Скролл и подсветка уже внутри restoreTopTrackPlayer()
                         } else {
                             console.warn('Track not found by ID:', state.trackId);
                         }
@@ -1868,8 +1869,7 @@
                                     if (track) {
                                         // Восстанавливаем без автовоспроизведения
                                         restoreTagTrackPlayer(track, state.currentTime || 0);
-                                        // Подсвечиваем и прокручиваем
-                                        setTimeout(() => updateTagTrackHighlight(), 500);
+                                        // 🔥 FIX: Подсветка и скролл уже внутри restoreTagTrackPlayer()
                                     } else {
                                         console.warn('Tag track not found by ID:', state.trackId);
                                     }
