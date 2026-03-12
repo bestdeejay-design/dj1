@@ -40,8 +40,10 @@ configs/
 !PROJECT_STRUCTURE.md
 !docs/HOW_TO_EDIT_TRACK_TAGS.md
 !docs/SUPABASE_SETUP.md
+!docs/MIGRATION_STEPS.md
 !utils/edit_track_tags.py
 !utils/migrate_to_supabase.py
 !utils/requirements.txt
+!utils/json_to_sql.py
 !configs/setup_supabase.sql
 ```
