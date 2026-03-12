@@ -1761,6 +1761,7 @@
             albumTitle: album.title,
             albumCover: album.cover,
             trackIndex: trackIndex,
+            trackId: album.tracks[trackIndex]?.id, // 🔥 FIX: Сохраняем ID трека
             currentTime: audioPlayer.currentTime || 0,
             isPlaying: !audioPlayer.paused,
             timestamp: Date.now()
@@ -1793,14 +1794,18 @@
                         return;
                     }
                     
-                    // Проверяем что треки загружены
-                    if (topTracks.length > 0 && state.trackIndex < topTracks.length) {
-                        const track = topTracks[state.trackIndex];
+                    // 🔥 FIX: Проверяем что треки загружены И ищем трек по ID
+                    if (topTracks.length > 0) {
+                        // Ищем трек по ID вместо индекса (индекс мог измениться)
+                        const track = topTracks.find(t => t.id === state.trackId);
+                        
                         if (track) {
                             // Восстанавливаем плеер сразу (без автовоспроизведения)
                             restoreTopTrackPlayer(track, state.currentTime || 0);
                             // Прокручиваем к треку
                             setTimeout(() => scrollToCurrentTopTrack(), 500);
+                        } else {
+                            console.warn('Track not found by ID:', state.trackId);
                         }
                     } else {
                         // Треки ещё не загружены — пробуем ещё раз
@@ -1838,13 +1843,17 @@
                             
                             // Восстанавливаем плеер после выбора тега
                             setTimeout(() => {
-                                if (tagTracks.length > 0 && state.trackIndex < tagTracks.length) {
-                                    const track = tagTracks[state.trackIndex];
+                                if (tagTracks.length > 0) {
+                                    // 🔥 FIX: Ищем трек по ID вместо индекса
+                                    const track = tagTracks.find(t => t.id === state.trackId);
+                                                        
                                     if (track) {
                                         // Восстанавливаем без автовоспроизведения
                                         restoreTagTrackPlayer(track, state.currentTime || 0);
                                         // Подсвечиваем и прокручиваем
                                         setTimeout(() => updateTagTrackHighlight(), 500);
+                                    } else {
+                                        console.warn('Tag track not found by ID:', state.trackId);
                                     }
                                 }
                             }, 500);
