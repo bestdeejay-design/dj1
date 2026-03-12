@@ -45,5 +45,7 @@ configs/
 !utils/migrate_to_supabase.py
 !utils/requirements.txt
 !utils/json_to_sql.py
+!utils/generate_relations.py
+!utils/full_migration.sql
 !configs/setup_supabase.sql
 ```
