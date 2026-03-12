@@ -1319,7 +1319,28 @@
             console.log('✓ Media Session: Previous Track');
         });
         
-        console.log('✓ Media Session handlers initialized');
+        // 🔥 NEW: Перемотка вперед/назад (Android)
+        navigator.mediaSession.setActionHandler('seekforward', (details) => {
+            const seekTime = details.seekOffset || 10;
+            audioPlayer.currentTime = Math.min(audioPlayer.currentTime + seekTime, audioPlayer.duration);
+            console.log('✓ Media Session: Seek forward', seekTime, 's');
+        });
+        
+        navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+            const seekTime = details.seekOffset || 10;
+            audioPlayer.currentTime = Math.max(audioPlayer.currentTime - seekTime, 0);
+            console.log('✓ Media Session: Seek backward', seekTime, 's');
+        });
+        
+        // 🔥 NEW: Перемотка в начало (iOS)
+        navigator.mediaSession.setActionHandler('seekto', (details) => {
+            if (details.seekTime !== undefined) {
+                audioPlayer.currentTime = details.seekTime;
+                console.log('✓ Media Session: Seek to', details.seekTime, 's');
+            }
+        });
+        
+        console.log('✓ Media Session handlers initialized with full controls');
     }
 
     audioPlayer.addEventListener('loadstart', () => {
@@ -2667,6 +2688,35 @@
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && trackDetailsModal.classList.contains('open')) {
             closeTrackDetailsModal();
+        }
+    });
+    
+    // 🔥 NEW: Media keys support - клавиши управления на клавиатуре
+    document.addEventListener('keydown', (e) => {
+        // Пробел - play/pause
+        if (e.code === 'Space' && e.target === document.body) {
+            e.preventDefault();
+            togglePlayPause();
+        }
+        // Стрелка вправо - следующий трек
+        if (e.code === 'ArrowRight' && e.ctrlKey) {
+            e.preventDefault();
+            nextTrack();
+        }
+        // Стрелка влево - предыдущий трек
+        if (e.code === 'ArrowLeft' && e.ctrlKey) {
+            e.preventDefault();
+            prevTrack();
+        }
+        // Стрелка вверх - громче
+        if (e.code === 'ArrowUp' && e.ctrlKey) {
+            e.preventDefault();
+            audioPlayer.volume = Math.min(audioPlayer.volume + 0.1, 1);
+        }
+        // Стрелка вниз - тише
+        if (e.code === 'ArrowDown' && e.ctrlKey) {
+            e.preventDefault();
+            audioPlayer.volume = Math.max(audioPlayer.volume - 0.1, 0);
         }
     });
 
