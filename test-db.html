@@ -382,12 +382,12 @@
                 
                 tracksList.innerHTML = tracks.map((track, index) => `
                     <div class="track-item" id="track-${track.id}">
-                        <button class="play-btn" onclick="playTrack('${track.id}', '${escapeHtml(track.audio_url || '')}')" title="Воспроизвести">
+                        <button class="play-btn" onclick="playTrack('${track.id}', '${escapeHtml(track.file_url || '')}')" title="Воспроизвести">
                             <svg viewBox="0 0 24 24" width="20" height="20">
                                 <path d="M8 5v14l11-7z"/>
                             </svg>
                         </button>
-                        <img class="track-cover" src="${track.image_url || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2760%27 height=%2760%27 viewBox=%270 0 60 60%27%3E%3Crect width=%2760%27 height=%2760%27 fill=%27%23ccc%27/%3E%3C/svg%3E'}" alt="${escapeHtml(track.title)}" onclick="toggleDetails('${track.id}')">
+                        <img class="track-cover" src="${track.cover_url || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2760%27 height=%2760%27 viewBox=%270 0 60 60%27%3E%3Crect width=%2760%27 height=%2760%27 fill=%27%23ccc%27/%3E%3C/svg%3E'}" alt="${escapeHtml(track.title)}" onclick="toggleDetails('${track.id}')">
                         <div class="track-info">
                             <div class="track-title">${escapeHtml(track.title)}</div>
                             <div class="track-author">${escapeHtml(track.author_name)}</div>
@@ -401,7 +401,7 @@
                         </div>
                         <div class="track-actions">
                             <button class="action-btn" onclick="toggleDetails('${track.id}')">📝 Данные</button>
-                            <a class="action-btn" href="${track.audio_url || '#'}" target="_blank" download>💾 Скачать</a>
+                            <a class="action-btn" href="${track.file_url || '#'}" target="_blank" download>💾 Скачать</a>
                         </div>
                         <div class="track-details-expandable" id="details-${track.id}">
                             <div class="detail-row">
@@ -413,8 +413,12 @@
                                 <div class="lyrics-box">${escapeHtml(track.lyrics) || 'Нет текста'}</div>
                             </div>
                             <div class="detail-row">
-                                <div class="detail-label">🔗 File URL:</div>
-                                <div class="detail-value" style="font-family:monospace;font-size:12px;">${track.file_url || track.audio_url || 'Нет URL'}</div>
+                                <div class="detail-label">🔗 Audio URL:</div>
+                                <div class="detail-value" style="font-family:monospace;font-size:12px;">${track.file_url || 'Нет URL'}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">🖼️ Cover URL:</div>
+                                <div class="detail-value" style="font-family:monospace;font-size:12px;">${track.cover_url || 'Нет URL'}</div>
                             </div>
                             <div class="detail-row">
                                 <div class="detail-label">🆔 Track ID:</div>
