@@ -69,6 +69,7 @@
             padding: 15px 20px;
             border-bottom: 1px solid #eee;
             transition: background 0.2s;
+            gap: 15px;
         }
         
         .track-item:hover {
@@ -79,12 +80,47 @@
             border-bottom: none;
         }
         
+        .play-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #007aff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        
+        .play-btn:hover {
+            background: #0056b3;
+            transform: scale(1.1);
+        }
+        
+        .play-btn.playing {
+            background: #ff3b30;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
         .track-cover {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             border-radius: 6px;
             object-fit: cover;
-            margin-right: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .track-cover:hover {
+            transform: scale(1.05);
         }
         
         .track-info {
@@ -103,11 +139,72 @@
             margin-bottom: 4px;
         }
         
-        .track-meta {
+        .track-actions {
             display: flex;
-            gap: 15px;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            background: #fff;
+            cursor: pointer;
             font-size: 13px;
-            color: #999;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #f5f5f7;
+            border-color: #007aff;
+        }
+        
+        .audio-player {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .track-details-expandable {
+            width: 100%;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .track-details-expandable.show {
+            display: block;
+        }
+        
+        .detail-row {
+            margin-bottom: 10px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+        
+        .detail-value {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+        
+        .lyrics-box {
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 13px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 6px;
         }
         
         .track-stat {
@@ -217,6 +314,8 @@
         
         let currentPage = 1;
         let totalTracks = 0;
+        let currentAudio = null;
+        let currentPlayingBtn = null;
         
         // Load tracks from Supabase
         async function loadTracks() {
@@ -280,9 +379,14 @@
                     return;
                 }
                 
-                tracksList.innerHTML = tracks.map(track => `
-                    <div class="track-item">
-                        <img class="track-cover" src="${track.image_url || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2750%27 height=%2750%27 viewBox=%270 0 50 50%27%3E%3Crect width=%2750%27 height=%2750%27 fill=%27%23ccc%27/%3E%3C/svg%3E'}" alt="${escapeHtml(track.title)}">
+                tracksList.innerHTML = tracks.map((track, index) => `
+                    <div class="track-item" id="track-${track.id}">
+                        <button class="play-btn" onclick="playTrack('${track.id}', '${escapeHtml(track.audio_url || '')}')" title="Воспроизвести">
+                            <svg viewBox="0 0 24 24" width="20" height="20">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        </button>
+                        <img class="track-cover" src="${track.image_url || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2760%27 height=%2760%27 viewBox=%270 0 60 60%27%3E%3Crect width=%2760%27 height=%2760%27 fill=%27%23ccc%27/%3E%3C/svg%3E'}" alt="${escapeHtml(track.title)}" onclick="toggleDetails('${track.id}')">
                         <div class="track-info">
                             <div class="track-title">${escapeHtml(track.title)}</div>
                             <div class="track-author">${escapeHtml(track.author_name)}</div>
@@ -290,6 +394,30 @@
                                 <span class="track-stat">⏱️ ${formatDuration(track.duration_s)}</span>
                                 <span class="track-stat">▶️ ${track.play_count || 0}</span>
                                 <span class="track-stat">❤️ ${track.favorite_count || 0}</span>
+                                <span class="track-stat">📅 ${formatDate(track.created_at)}</span>
+                            </div>
+                            <audio class="audio-player" id="audio-${track.id}" controls style="display:none;"></audio>
+                        </div>
+                        <div class="track-actions">
+                            <button class="action-btn" onclick="toggleDetails('${track.id}')">📝 Данные</button>
+                            <a class="action-btn" href="${track.audio_url || '#'}" target="_blank" download>💾 Скачать</a>
+                        </div>
+                        <div class="track-details-expandable" id="details-${track.id}">
+                            <div class="detail-row">
+                                <div class="detail-label">🎵 Sound/Prompt:</div>
+                                <div class="detail-value">${escapeHtml(track.prompt) || escapeHtml(track.sound) || 'Нет данных'}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">📝 Lyrics:</div>
+                                <div class="lyrics-box">${escapeHtml(track.lyrics) || 'Нет текста'}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">🔗 File URL:</div>
+                                <div class="detail-value" style="font-family:monospace;font-size:12px;">${track.file_url || track.audio_url || 'Нет URL'}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">🆔 Track ID:</div>
+                                <div class="detail-value" style="font-family:monospace;font-size:12px;">${track.id}</div>
                             </div>
                         </div>
                     </div>
@@ -366,7 +494,76 @@
             pagination.appendChild(nextBtn);
         }
         
-        // Helper: Format duration
+        // Helper: Format date
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ru-RU', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: '2-digit'
+            });
+        }
+        
+        // Play track
+        function playTrack(trackId, audioUrl) {
+            const btn = document.querySelector(`#track-${trackId} .play-btn`);
+            
+            // Stop current playing track
+            if (currentAudio && currentAudio !== document.getElementById(`audio-${trackId}`)) {
+                currentAudio.pause();
+                currentAudio.style.display = 'none';
+                if (currentPlayingBtn) {
+                    currentPlayingBtn.classList.remove('playing');
+                    currentPlayingBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M8 5v14l11-7z"/></svg>';
+                }
+            }
+            
+            const audio = document.getElementById(`audio-${trackId}`);
+            
+            if (audio.style.display === 'block' && !audio.paused) {
+                // Pause
+                audio.pause();
+                btn.classList.remove('playing');
+                btn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M8 5v14l11-7z"/></svg>';
+            } else {
+                // Play
+                if (!audio.src) {
+                    audio.src = audioUrl;
+                }
+                audio.style.display = 'block';
+                audio.play().catch(err => {
+                    console.error('Playback error:', err);
+                    alert('Ошибка воспроизведения: ' + err.message);
+                });
+                btn.classList.add('playing');
+                btn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+                currentAudio = audio;
+                currentPlayingBtn = btn;
+                
+                audio.onended = () => {
+                    btn.classList.remove('playing');
+                    btn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M8 5v14l11-7z"/></svg>';
+                    audio.style.display = 'none';
+                };
+            }
+        }
+        
+        // Toggle details
+        function toggleDetails(trackId) {
+            const details = document.getElementById(`details-${trackId}`);
+            const wasVisible = details.classList.contains('show');
+            
+            // Close all other details
+            document.querySelectorAll('.track-details-expandable').forEach(el => {
+                el.classList.remove('show');
+            });
+            
+            if (!wasVisible) {
+                details.classList.add('show');
+                details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
         function formatDuration(seconds) {
             if (!seconds) return '0:00';
             const mins = Math.floor(seconds / 60);
