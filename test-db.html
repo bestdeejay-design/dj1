@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест БД - Треки</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: #007aff;
+        }
+        
+        .tracks-list {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .track-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+        
+        .track-item:hover {
+            background: #f9f9f9;
+        }
+        
+        .track-item:last-child {
+            border-bottom: none;
+        }
+        
+        .track-cover {
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            object-fit: cover;
+            margin-right: 15px;
+        }
+        
+        .track-info {
+            flex: 1;
+        }
+        
+        .track-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .track-author {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .track-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #999;
+        }
+        
+        .track-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 18px;
+        }
+        
+        .error {
+            background: #ff3b30;
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .refresh-btn {
+            background: #007aff;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: background 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: #0056b3;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .page-btn {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .page-btn:hover {
+            background: #f5f5f7;
+        }
+        
+        .page-btn.active {
+            background: #007aff;
+            color: #fff;
+            border-color: #007aff;
+        }
+        
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Тестирование БД - Треки</h1>
+        
+        <button class="refresh-btn" onclick="loadTracks()">🔄 Обновить</button>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-label">Всего треков в БД:</span>
+                <span class="stat-value" id="totalCount">Загрузка...</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Показано на странице:</span>
+                <span class="stat-value" id="showingCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Текущая страница:</span>
+                <span class="stat-value" id="currentPage">1</span>
+            </div>
+        </div>
+        
+        <div class="tracks-list" id="tracksList">
+            <div class="loading">Загрузка треков...</div>
+        </div>
+        
+        <div class="pagination" id="pagination" style="display: none;"></div>
+    </div>
+    
+    <script>
+        // Configuration
+        const SUPABASE_URL = 'https://nwdalhrbifkjyyhpstnt.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_XzianscA3VPcm-oPjFz-3Q_VRqXHXIH';
+        const ITEMS_PER_PAGE = 20;
+        
+        let currentPage = 1;
+        let totalTracks = 0;
+        
+        // Load tracks from Supabase
+        async function loadTracks() {
+            const tracksList = document.getElementById('tracksList');
+            const errorDiv = document.getElementById('error');
+            const totalCountEl = document.getElementById('totalCount');
+            
+            try {
+                tracksList.innerHTML = '<div class="loading">Загрузка треков...</div>';
+                errorDiv.style.display = 'none';
+                
+                // Fetch total count
+                const countResponse = await fetch(`${SUPABASE_URL}/rest/v1/tracks?select=count`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                
+                if (!countResponse.ok) {
+                    throw new Error(`Failed to get count: ${countResponse.status}`);
+                }
+                
+                const countData = await countResponse.json();
+                totalTracks = countData[0].count;
+                totalCountEl.textContent = totalTracks.toLocaleString();
+                
+                if (totalTracks === 0) {
+                    tracksList.innerHTML = '<div class="loading">База пуста</div>';
+                    document.getElementById('pagination').style.display = 'none';
+                    return;
+                }
+                
+                // Fetch tracks with pagination
+                const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/tracks?select=*&order=created_at.desc&limit=${ITEMS_PER_PAGE}&offset=${offset}`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Range': `0-${ITEMS_PER_PAGE - 1}`
+                        }
+                    }
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch tracks: ${response.status}`);
+                }
+                
+                const tracks = await response.json();
+                
+                // Update showing count
+                document.getElementById('showingCount').textContent = tracks.length;
+                document.getElementById('currentPage').textContent = currentPage;
+                
+                // Render tracks
+                if (tracks.length === 0) {
+                    tracksList.innerHTML = '<div class="loading">Треки не найдены</div>';
+                    document.getElementById('pagination').style.display = 'none';
+                    return;
+                }
+                
+                tracksList.innerHTML = tracks.map(track => `
+                    <div class="track-item">
+                        <img class="track-cover" src="${track.image_url || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2750%27 height=%2750%27 viewBox=%270 0 50 50%27%3E%3Crect width=%2750%27 height=%2750%27 fill=%27%23ccc%27/%3E%3C/svg%3E'}" alt="${escapeHtml(track.title)}">
+                        <div class="track-info">
+                            <div class="track-title">${escapeHtml(track.title)}</div>
+                            <div class="track-author">${escapeHtml(track.author_name)}</div>
+                            <div class="track-meta">
+                                <span class="track-stat">⏱️ ${formatDuration(track.duration_s)}</span>
+                                <span class="track-stat">▶️ ${track.play_count || 0}</span>
+                                <span class="track-stat">❤️ ${track.favorite_count || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Render pagination
+                renderPagination(totalTracks, ITEMS_PER_PAGE);
+                
+            } catch (error) {
+                console.error('Error loading tracks:', error);
+                errorDiv.textContent = `Ошибка: ${error.message}`;
+                errorDiv.style.display = 'block';
+                tracksList.innerHTML = '';
+                totalCountEl.textContent = 'Ошибка';
+            }
+        }
+        
+        // Render pagination controls
+        function renderPagination(total, perPage) {
+            const totalPages = Math.ceil(total / perPage);
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.style.display = 'none';
+                return;
+            }
+            
+            pagination.style.display = 'flex';
+            pagination.innerHTML = '';
+            
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'page-btn';
+            prevBtn.textContent = '← Назад';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    loadTracks();
+                }
+            };
+            pagination.appendChild(prevBtn);
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                    pageBtn.textContent = i;
+                    pageBtn.onclick = () => {
+                        currentPage = i;
+                        loadTracks();
+                    };
+                    pagination.appendChild(pageBtn);
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    const dots = document.createElement('span');
+                    dots.textContent = '...';
+                    dots.style.padding = '0 10px';
+                    pagination.appendChild(dots);
+                }
+            }
+            
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'page-btn';
+            nextBtn.textContent = 'Вперёд →';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    loadTracks();
+                }
+            };
+            pagination.appendChild(nextBtn);
+        }
+        
+        // Helper: Format duration
+        function formatDuration(seconds) {
+            if (!seconds) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // Helper: Escape HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+        
+        // Initial load
+        loadTracks();
+    </script>
+</body>
+</html>
