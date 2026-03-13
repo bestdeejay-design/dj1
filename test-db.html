@@ -351,13 +351,14 @@
                 
                 // Fetch tracks with pagination
                 const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+                
+                // Use Range header correctly or use page-based pagination
                 const response = await fetch(
                     `${SUPABASE_URL}/rest/v1/tracks?select=*&order=created_at.desc&limit=${ITEMS_PER_PAGE}&offset=${offset}`,
                     {
                         headers: {
                             'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
-                            'Range': `0-${ITEMS_PER_PAGE - 1}`
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
                         }
                     }
                 );
