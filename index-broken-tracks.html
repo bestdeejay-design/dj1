@@ -305,6 +305,7 @@
             const hasSound = track.sound && track.sound.trim() !== '';
             const soundLength = track.sound ? track.sound.length : 0;
             const wordCount = hasSound ? track.sound.trim().split(/\s+/).length : 0;
+            const hasAudio = track.audio_url && track.audio_url.trim() !== '';
             
             return `
                 <div class="track-card">
@@ -317,12 +318,12 @@
                         ${hasSound ? `"${escapeHtml(track.sound)}"` : '<span class="sound-placeholder">No sound description</span>'}
                     </div>
 
-                    ${hasSound ? `
+                    ${hasAudio ? `
                         <audio controls class="audio-player">
-                            <source src="${getAudioUrl(track)}" type="audio/mpeg">
+                            <source src="${escapeHtml(track.audio_url)}" type="audio/mpeg">
                             Your browser does not support the audio element.
                         </audio>
-                    ` : ''}
+                    ` : '<div style="color: #999; padding: 10px; font-style: italic;">⚠️ No audio file available</div>'}
 
                     <div class="tags-container">
                         ${track.tags && track.tags.length > 0 
@@ -333,12 +334,32 @@
 
                     <div class="metadata">
                         <div class="meta-item">
+                            <div class="meta-label">Title</div>
+                            <div class="meta-value">${escapeHtml(track.title || 'N/A')}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Author ID</div>
+                            <div class="meta-value" style="font-size: 0.75em;">${track.author_id || 'N/A'}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Duration</div>
+                            <div class="meta-value">${track.duration_s ? formatDuration(track.duration_s) : 'N/A'}</div>
+                        </div>
+                        <div class="meta-item">
                             <div class="meta-label">Sound Length</div>
                             <div class="meta-value">${soundLength} chars</div>
                         </div>
                         <div class="meta-item">
                             <div class="meta-label">Word Count</div>
                             <div class="meta-value">${wordCount} words</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Play Count</div>
+                            <div class="meta-value">${track.play_count || 0}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Favorite Count</div>
+                            <div class="meta-value">${track.favorite_count || 0}</div>
                         </div>
                         <div class="meta-item">
                             <div class="meta-label">Created</div>
@@ -350,13 +371,28 @@
                         </div>
                     </div>
 
+                    ${track.image_url ? `
+                        <div style="margin-top: 15px;">
+                            <div class="meta-label">Cover Image:</div>
+                            <img src="${escapeHtml(track.image_url)}" alt="Track cover" style="max-width: 200px; border-radius: 8px; margin-top: 5px;">
+                        </div>
+                    ` : ''}
+
                     <div class="actions">
                         <a href="${API_BASE}/tracks/${track.id}" target="_blank" class="btn btn-primary">
                             🔗 View in API
                         </a>
-                        ${hasSound ? `
-                            <a href="${getAudioUrl(track)}" target="_blank" class="btn btn-secondary">
-                                🎵 Open Audio
+                        ${hasAudio ? `
+                            <a href="${track.audio_url}" target="_blank" class="btn btn-secondary">
+                                🎵 Open Audio URL
+                            </a>
+                            <a href="${track.audio_url}" download class="btn btn-secondary">
+                                ⬇️ Download Audio
+                            </a>
+                        ` : ''}
+                        ${track.image_url ? `
+                            <a href="${track.image_url}" target="_blank" class="btn btn-secondary">
+                                🖼️ Open Cover Image
                             </a>
                         ` : ''}
                         <button onclick="copyId('${track.id}')" class="btn btn-secondary">
@@ -365,15 +401,6 @@
                     </div>
                 </div>
             `;
-        }
-
-        function getAudioUrl(track) {
-            // Try to extract audio URL from sound field or use placeholder
-            if (track.sound && track.sound.includes('http')) {
-                const match = track.sound.match(/https?:\/\/[^\s]+/);
-                if (match) return match[0];
-            }
-            return '#';
         }
 
         function escapeHtml(text) {
@@ -392,6 +419,13 @@
                 hour: '2-digit',
                 minute: '2-digit'
             });
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds) return 'N/A';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
 
         function copyId(id) {
@@ -428,11 +462,18 @@
 
             // Render tracks
             if (tracks.length === 0) {
-                container.innerHTML = '<div class="error">No tracks found or API error</div>';
+                container.innerHTML = '<div class="error">No tracks found or API error. Check console for details.</div>';
                 return;
             }
 
             container.innerHTML = tracks.map(createTrackCard).join('');
+            
+            // Log full track data for debugging
+            console.log('=== FULL TRACK DATA FROM API ===');
+            tracks.forEach((track, i) => {
+                console.log(`\n--- Track ${i + 1} ---`);
+                console.log(JSON.stringify(track, null, 2));
+            });
         }
 
         // Load on page ready
