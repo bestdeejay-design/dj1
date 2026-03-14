@@ -225,9 +225,9 @@
 
         async function loadTracks() {
             try {
-                // Fetch first 20 tracks with their tags
-                const response = await fetch(
-                    `${SUPABASE_URL}/rest/v1/tracks?id=not.null&select=id,sound,track_tags(tag_id,tag:tags(name,category_id,category:tag_categories(name,label)))&limit=20&order=id.asc`,
+                // Step 1: Fetch first 20 tracks
+                const tracksResponse = await fetch(
+                    `${SUPABASE_URL}/rest/v1/tracks?select=id,sound&limit=20&order=id.asc`,
                     {
                         headers: {
                             'apikey': SUPABASE_KEY,
@@ -236,12 +236,35 @@
                     }
                 );
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                if (!tracksResponse.ok) {
+                    throw new Error(`Tracks HTTP ${tracksResponse.status}`);
                 }
 
-                const tracks = await response.json();
-                renderTracks(tracks);
+                const tracks = await tracksResponse.json();
+                
+                // Step 2: Fetch tags for each track
+                const tracksWithTags = await Promise.all(tracks.map(async (track) => {
+                    const tagsResponse = await fetch(
+                        `${SUPABASE_URL}/rest/v1/track_tags?track_id=eq.${track.id}&select=tag:tags(name,category_id,category:tag_categories(name,label))`,
+                        {
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`
+                            }
+                        }
+                    );
+                    
+                    if (tagsResponse.ok) {
+                        const tagsData = await tagsResponse.json();
+                        track.track_tags = tagsData;
+                    } else {
+                        track.track_tags = [];
+                    }
+                    
+                    return track;
+                }));
+                
+                renderTracks(tracksWithTags);
                 
             } catch (error) {
                 console.error('Error loading tracks:', error);
