@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест тегов - Первые 20 треков</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .track-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .track-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        .track-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .track-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1a202c;
+        }
+        
+        .track-id {
+            font-size: 0.85rem;
+            color: #718096;
+            font-family: monospace;
+            background: #f7fafc;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: #5a67d8;
+            transform: scale(1.05);
+        }
+        
+        .btn.active {
+            background: #e53e3e;
+        }
+        
+        .track-details {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        .track-details.show {
+            display: block;
+        }
+        
+        .sound-section {
+            margin-bottom: 20px;
+        }
+        
+        .sound-label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .sound-text {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+            color: #2d3748;
+            line-height: 1.6;
+            border-left: 4px solid #667eea;
+        }
+        
+        .tags-section {
+            margin-top: 15px;
+        }
+        
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .tag {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .tag:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Category colors */
+        .tag-genre { background: #ef4444; }
+        .tag-mood { background: #f59e0b; }
+        .tag-instruments { background: #10b981; }
+        .tag-vocals { background: #3b82f6; }
+        .tag-tempo { background: #8b5cf6; }
+        .tag-era { background: #ec4899; }
+        .tag-style { background: #06b6d4; }
+        
+        .stats {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c53030;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏷️ Тест тегов - Первые 20 треков</h1>
+        
+        <div id="stats" class="stats"></div>
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="loading" class="loading">Загрузка треков...</div>
+        <div id="tracks"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://nwdalhrbifkjyyhpstnt.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53ZGFsaHJiaWZranl5aHBzdG50Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzM0MTg1NiwiZXhwIjoyMDg4OTE3ODU2fQ.c-Uj184ZuFxXthr6kozBjzq75sQ9d9Wj8jNmo4k-Kic';
+
+        async function loadTracks() {
+            try {
+                // Fetch first 20 tracks with their tags
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/tracks?id=not.null&select=id,sound,track_tags(tag_id,tag:tags(name,category_id,category:tag_categories(name,label)))&limit=20&order=id.asc`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const tracks = await response.json();
+                renderTracks(tracks);
+                
+            } catch (error) {
+                console.error('Error loading tracks:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').textContent = `Ошибка: ${error.message}`;
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+
+        function renderTracks(tracks) {
+            document.getElementById('loading').style.display = 'none';
+            
+            const tracksContainer = document.getElementById('tracks');
+            let totalTags = 0;
+            
+            tracksContainer.innerHTML = tracks.map(track => {
+                const trackTags = track.track_tags || [];
+                totalTags += trackTags.length;
+                
+                const tagsHtml = trackTags.map(tt => {
+                    const tag = tt.tag;
+                    if (!tag) return '';
+                    
+                    const categoryClass = `tag-${tag.category?.name || 'style'}`;
+                    const categoryName = tag.category?.label || tag.category?.name || 'Style';
+                    
+                    return `<a href="#" class="tag ${categoryClass}" title="${categoryName}">${tag.name}</a>`;
+                }).join('');
+                
+                return `
+                    <div class="track-card">
+                        <div class="track-header">
+                            <div>
+                                <div class="track-title">${escapeHtml(track.sound?.substring(0, 80) || 'No sound')}</div>
+                                <div class="track-id">${track.id}</div>
+                            </div>
+                            <button class="btn" onclick="toggleDetails('${track.id}')">📝 Данные</button>
+                        </div>
+                        
+                        <div id="details-${track.id}" class="track-details">
+                            <div class="sound-section">
+                                <div class="sound-label">🎵 Sound:</div>
+                                <div class="sound-text">${escapeHtml(track.sound || 'No sound')}</div>
+                            </div>
+                            
+                            <div class="tags-section">
+                                <div class="sound-label">🏷️ Теги (${trackTags.length}):</div>
+                                <div class="tags-container">
+                                    ${tagsHtml || '<span style="color: #a0aec0;">Нет тегов</span>'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Render stats
+            document.getElementById('stats').innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value">${tracks.length}</span>
+                        <span class="stat-label">Треков</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${totalTags}</span>
+                        <span class="stat-label">Тегов всего</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${(totalTags / tracks.length).toFixed(1)}</span>
+                        <span class="stat-label">В среднем на трек</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleDetails(trackId) {
+            const details = document.getElementById(`details-${trackId}`);
+            const btn = event.target;
+            
+            if (details.classList.contains('show')) {
+                details.classList.remove('show');
+                btn.classList.remove('active');
+                btn.textContent = '📝 Данные';
+            } else {
+                details.classList.add('show');
+                btn.classList.add('active');
+                btn.textContent = '❌ Закрыть';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load on page load
+        loadTracks();
+    </script>
+</body>
+</html>
