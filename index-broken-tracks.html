@@ -274,10 +274,20 @@
 
         async function fetchTrack(id) {
             try {
-                const response = await fetch(`${API_BASE}/tracks?id=eq.${id}`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                // Use REST API path pattern from openapi.yaml: /tracks/{id}
+                const url = `${API_BASE}/tracks/${id}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        console.log(`Track ${id} not found (404)`);
+                        return null;
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
                 const data = await response.json();
-                return data[0] || null;
+                return data; // TrackDetail object
             } catch (error) {
                 console.error(`Error fetching track ${id}:`, error);
                 return null;
@@ -341,7 +351,7 @@
                     </div>
 
                     <div class="actions">
-                        <a href="${API_BASE}/tracks?id=eq.${track.id}" target="_blank" class="btn btn-primary">
+                        <a href="${API_BASE}/tracks/${track.id}" target="_blank" class="btn btn-primary">
                             🔗 View in API
                         </a>
                         ${hasSound ? `
