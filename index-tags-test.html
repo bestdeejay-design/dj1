@@ -34,69 +34,20 @@
         .track-card {
             background: white;
             border-radius: 12px;
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-        }
-        
-        .track-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        }
-        
-        .track-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .track-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #1a202c;
         }
         
         .track-id {
-            font-size: 0.85rem;
-            color: #718096;
+            font-size: 0.9rem;
+            color: #6b7280;
             font-family: monospace;
-            background: #f7fafc;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-        
-        .btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        
-        .btn:hover {
-            background: #5a67d8;
-            transform: scale(1.05);
-        }
-        
-        .btn.active {
-            background: #e53e3e;
-        }
-        
-        .track-details {
-            display: none;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 2px solid #e2e8f0;
-        }
-        
-        .track-details.show {
-            display: block;
+            background: #f3f4f6;
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 15px;
         }
         
         .sound-section {
@@ -105,24 +56,36 @@
         
         .sound-label {
             font-weight: 600;
-            color: #4a5568;
+            color: #4b5563;
             margin-bottom: 8px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         
         .sound-text {
-            background: #f7fafc;
-            padding: 12px;
+            background: #f9fafb;
+            padding: 15px;
             border-radius: 8px;
-            color: #2d3748;
+            color: #1f2937;
             line-height: 1.6;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #6366f1;
+            font-size: 0.95rem;
         }
         
         .tags-section {
-            margin-top: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+        
+        .tags-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .tags-container {
@@ -320,25 +283,17 @@
                 
                 return `
                     <div class="track-card">
-                        <div class="track-header">
-                            <div>
-                                <div class="track-title">${escapeHtml(track.sound?.substring(0, 80) || 'No sound')}</div>
-                                <div class="track-id">${track.id}</div>
-                            </div>
-                            <button class="btn" onclick="toggleDetails('${track.id}')">📝 Данные</button>
+                        <div class="track-id">🆔 ${track.id}</div>
+                        
+                        <div class="sound-section">
+                            <div class="sound-label">🎵 Sound:</div>
+                            <div class="sound-text">${escapeHtml(track.sound || 'No sound')}</div>
                         </div>
                         
-                        <div id="details-${track.id}" class="track-details">
-                            <div class="sound-section">
-                                <div class="sound-label">🎵 Sound:</div>
-                                <div class="sound-text">${escapeHtml(track.sound || 'No sound')}</div>
-                            </div>
-                            
-                            <div class="tags-section">
-                                <div class="sound-label">🏷️ Теги (${trackTags.length}):</div>
-                                <div class="tags-container">
-                                    ${tagsHtml || '<span style="color: #a0aec0;">Нет тегов</span>'}
-                                </div>
+                        <div class="tags-section">
+                            <div class="tags-label">🏷️ Теги (${trackTags.length}):</div>
+                            <div class="tags-container">
+                                ${tagsHtml || '<span style="color: #9ca3af; font-style: italic;">Нет тегов</span>'}
                             </div>
                         </div>
                     </div>
@@ -362,21 +317,6 @@
                     </div>
                 </div>
             `;
-        }
-
-        function toggleDetails(trackId) {
-            const details = document.getElementById(`details-${trackId}`);
-            const btn = event.target;
-            
-            if (details.classList.contains('show')) {
-                details.classList.remove('show');
-                btn.classList.remove('active');
-                btn.textContent = '📝 Данные';
-            } else {
-                details.classList.add('show');
-                btn.classList.add('active');
-                btn.textContent = '❌ Закрыть';
-            }
         }
 
         function escapeHtml(text) {
