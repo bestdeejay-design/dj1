@@ -880,9 +880,10 @@
             
             // Загружаем и играем аудио
             if (track.audio_url) {
-                console.log('▶️ Loading audio:', track.audio_url);
+                console.log('▶️ Playing:', track.audio_url.substring(0, 80) + '...');
+                
+                // 🔥 ПРОСТО МЕНЯЕМ SRC И ЗАПУСКАЕМ (без load())
                 audioPlayer.src = track.audio_url;
-                audioPlayer.load(); // 🔥 ВАЖНО: перезагружаем аудио элемент
                 
                 audioPlayer.play().then(() => {
                     console.log('✅ Audio playing');
