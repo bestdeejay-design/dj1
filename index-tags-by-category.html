@@ -181,7 +181,7 @@
 
         async function fetchTagsWithCategories() {
             try {
-                // Получаем все теги с категориями
+                // 1. Получаем все теги с категориями
                 const url = `${SUPABASE_URL}/rest/v1/tags?select=id,name,category_id,tag_categories(name,label,color)&order=name.asc`;
                 
                 const response = await fetch(url, {
@@ -198,29 +198,36 @@
 
                 const tags = await response.json();
                 
-                // Для каждого тега получаем количество треков
-                for (let i = 0; i < tags.length && i < 100; i++) {
-                    try {
-                        const countUrl = `${SUPABASE_URL}/rest/v1/track_tags?tag_id=eq.${tags[i].id}&count=exact`;
-                        const countResponse = await fetch(countUrl, {
-                            headers: {
-                                'apikey': SUPABASE_KEY,
-                                'Authorization': `Bearer ${SUPABASE_KEY}`
-                            }
-                        });
-                        
-                        if (countResponse.ok) {
-                            const contentRange = countResponse.headers.get('content-range');
-                            if (contentRange) {
-                                const parts = contentRange.split('/');
-                                tags[i].track_count = parseInt(parts[parts.length - 1], 10);
-                            }
-                        }
-                    } catch (e) {
-                        console.warn(`Failed to get count for tag ${tags[i].name}:`, e);
-                        tags[i].track_count = 0;
+                // 2. ОДНИМ ЗАПРОСОМ получаем количество треков для ВСЕХ тегов!
+                console.log('Fetching track counts for', tags.length, 'tags...');
+                const countStart = Date.now();
+                
+                const countUrl = `${SUPABASE_URL}/rest/v1/track_tags?select=tag_id,count()`;
+                const countResponse = await fetch(countUrl, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
                     }
+                });
+                
+                let trackCounts = {};
+                if (countResponse.ok) {
+                    const allTrackTags = await countResponse.json();
+                    
+                    // Группируем по tag_id и считаем
+                    allTrackTags.forEach(tt => {
+                        const tagId = tt.tag_id;
+                        trackCounts[tagId] = (trackCounts[tagId] || 0) + 1;
+                    });
                 }
+                
+                const countEnd = Date.now();
+                console.log(`✓ Track counts loaded in ${countEnd - countStart}ms for ${Object.keys(trackCounts).length} tags`);
+                
+                // 3. Добавляем count к каждому тегу
+                tags.forEach(tag => {
+                    tag.track_count = trackCounts[tag.id] || 0;
+                });
                 
                 return tags;
             } catch (error) {
@@ -230,7 +237,7 @@
         }
 
         async function fetchTagCounts() {
-            // Функция больше не нужна - counts загружаются в fetchTagsWithCategories
+            // Функция удалена - теперь используется в fetchTagsWithCategories
             return {};
         }
 
