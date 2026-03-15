@@ -1351,7 +1351,8 @@
         }
     });
 
-    pauseIcon.style.display = 'none';
+    // Защитная проверка перед установкой display
+    if (pauseIcon) pauseIcon.style.display = 'none';
 
     // ==================== ТОП ТРЕКОВ ====================
     // Функция переключения вида (albums / top-tracks)
