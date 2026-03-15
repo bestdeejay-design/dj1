@@ -478,27 +478,26 @@
             console.log('Batch IDs:', batchIds.slice(0, 5), '...'); // Показываем первые 5
             
             try {
-                // 🔥 УМНАЯ ЗАГРУЗКА: GET с маленьким limit + фильтрация
-                // POST не работает (405), используем только GET
+                // 🔥 УМНАЯ ЗАГРУЗКА: GET /tracks/{id} для каждого track_id
+                // Это быстро и точно возвращает нужные треки
                 
-                // Запрашиваем только 50 треков (не 1000!)
-                const response = await fetch('https://api.dj1.ru/api/tracks?page=1&limit=50');
+                const promises = batchIds.map(id => 
+                    fetch(`https://api.dj1.ru/api/tracks/${id}`)
+                        .then(r => r.ok ? r.json() : null)
+                        .catch(() => null)
+                );
                 
-                if (!response.ok) {
-                    throw new Error(`API HTTP ${response.status}`);
-                }
+                const results = await Promise.all(promises);
+                filteredTracks = results.filter(r => r !== null);
                 
-                const result = await response.json();
-                console.log(`✓ Got ${result.data?.length || 0} tracks from GET`);
+                console.log(`✓ Loaded ${filteredTracks.length}/${batchIds.length} tracks from individual requests`);
                 
                 // 🔥 DEBUG: Проверяем какие ID пришли из API
-                const apiTrackIds = result.data?.map(t => t.id) || [];
+                const apiTrackIds = filteredTracks.map(t => t.id);
                 console.log('API track IDs (first 5):', apiTrackIds.slice(0, 5), '...');
                 console.log('Sample API ID format:', apiTrackIds[0]);
                 console.log('Sample Batch ID format:', batchIds[0]);
                 
-                // Фильтруем только нужные track_ids из этой пачки
-                filteredTracks = result.data.filter(track => batchIds.includes(track.id));
                 console.log(`→ Filtered to ${filteredTracks.length} tracks`);
                 
                 // 🔥 Если 0 треков, проверяем формат ID
