@@ -193,8 +193,10 @@
          */
         
         // Конфигурация Supabase
+        // ❗️ ВАЖНО: Используем ТОЛЬКО Anon Key для frontend!
+        // Service Role Key НИКОГДА не должен быть в коде сайта!
         const SUPABASE_URL = 'https://nwdalhrbifkjyyhpstnt.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53ZGFsaHJiaWZranl5aHBzdG50Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzM0MTg1NiwiZXhwIjoyMDg4OTE3ODU2fQ.c-Uj184ZuFxXthr6kozBjzq75sQ9d9Wj8jNmo4k-Kic';
+        const SUPABASE_ANON_KEY = 'sb_publishable_XzianscA3VPcm-oPjFz-3Q_VRqXHXIH';  // ← НОВЫЙ ANON KEY!
 
         // Эмодзи для категорий
         const CATEGORY_ICONS = {
@@ -276,8 +278,8 @@
                 
                 const response = await fetch(url, {
                     headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
                         'Content-Type': 'application/json'
                     }
                 });
@@ -438,8 +440,8 @@
                 const url = `${SUPABASE_URL}/rest/v1/track_tags?tag_id=eq.${tagId}&select=track_id`;
                 const response = await fetch(url, {
                     headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
                     }
                 });
                 
