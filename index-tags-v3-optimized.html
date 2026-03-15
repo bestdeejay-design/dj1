@@ -532,10 +532,13 @@
         function renderTracks(tracks) {
             const container = document.getElementById('tracksList');
             
-            tracks.forEach((track, index) => {
+            tracks.forEach((track, batchIndex) => {
+                // 🔥 НАХОДИМ ГЛОБАЛЬНЫЙ ИНДЕКС в currentPlaylist
+                const globalIndex = currentPlaylist.findIndex(t => t.id === track.id);
+                
                 const item = document.createElement('div');
                 item.className = 'track-item';
-                item.dataset.trackIndex = index;
+                item.dataset.trackIndex = globalIndex; // ← Используем глобальный индекс
                 
                 const coverUrl = track.image_url || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzMzMyIvPjwvc3ZnPg==';
                 
@@ -553,7 +556,11 @@
                     </svg>
                 `;
                 
-                item.addEventListener('click', () => playTrack(track, index, tracks));
+                // 🔥 КЛИК → playTrack с глобальным индексом
+                item.addEventListener('click', () => {
+                    console.log('🎵 Click track at global index:', globalIndex);
+                    playTrack(track, globalIndex, currentPlaylist);
+                });
                 
                 const infoBtn = item.querySelector('.track-info-btn');
                 if (infoBtn) {
@@ -728,7 +735,7 @@
                     console.log('✅ Playing');
                     isPlaying = true;
                     updatePlayPauseButton();
-                    highlightCurrentTrack();
+                    highlightCurrentTrack(); // 🔥 Подсветка трека
                     setTimeout(savePlayerState, 1000);
                 }).catch(e => console.error('Play error:', e));
             }
@@ -775,9 +782,17 @@
         }
         
         function highlightCurrentTrack() {
-            document.querySelectorAll('.track-item').forEach((item, i) => {
-                item.classList.toggle('active', i === currentTrackIndex);
+            console.log('🎨 Highlighting track index:', currentTrackIndex);
+            
+            // Подсветка в основном списке треков
+            document.querySelectorAll('#tracksList .track-item').forEach((item, i) => {
+                const isActive = i === currentTrackIndex;
+                item.classList.toggle('active', isActive);
+                item.style.background = isActive ? 'rgba(30, 215, 96, 0.2)' : 'rgba(255, 255, 255, 0.05)';
+                item.style.borderLeft = isActive ? '3px solid #1ed760' : '3px solid transparent';
             });
+            
+            // Подсветка в боковом плейлисте
             highlightPlaylistTrack();
         }
         
