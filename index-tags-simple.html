@@ -283,14 +283,20 @@
                     return;
                 }
                 
+                // 🔥 НАСТРАИВАЕМ УМНУЮ ПАГИНАЦИЮ
                 window.currentTagTrackIds = trackIds;
                 window.currentTagPage = 1;
                 window.currentTagHasMore = true;
                 window.currentTagLoading = false;
-                window.currentTagPerPage = 20;
+                window.currentTagPerPage = 10;  // Загружаем по 10 треков
+                window.currentTagLastPlayedIndex = -1;  // Последний сыгранный трек
                 
+                // Загружаем первую страницу + предзагружаем следующую
                 await loadMoreTracks();
+                preloadNextPage();  // 🔥 Фоновая загрузка следующих 10
+                
                 setupInfiniteScroll();
+                setupAutoPreload();   // 🔥 Авто-подгрузка пока играет плеер
                 
             } catch (error) {
                 console.error('Error:', error);
@@ -334,6 +340,49 @@
                     loadMoreTracks();
                 }
             }, { rootMargin: '200px' }).observe(sentinel);
+        }
+        
+        // 🔥 АВТО-ПОДГРУЗКА СЛЕДУЮЩЕЙ СТРАНИЦЫ
+        async function preloadNextPage() {
+            if (!window.currentTagHasMore || window.currentTagLoading) return;
+            
+            const nextPage = window.currentTagPage;
+            const perPage = window.currentTagPerPage;
+            const start = (nextPage - 1) * perPage;
+            const end = start + perPage;
+            
+            if (start >= window.currentTagTrackIds.length) return;
+            
+            console.log(`🔄 Preloading page ${nextPage} (tracks ${start}-${end})...`);
+            await loadMoreTracks();
+        }
+        
+        // 🔥 СЛЕДИМ ЗА ПРОИГРЫВАЕМЫМ ТРЕКОМ И ПОДГРУЖАЕМ
+        function setupAutoPreload() {
+            // Проверяем каждый 2 секунды какой трек играет
+            setInterval(() => {
+                const audio = document.querySelector('#tagTracksList audio:not([paused])');
+                if (!audio) return;  // Ничего не играет
+                
+                // Находим индекс текущего трека
+                const allAudios = Array.from(document.querySelectorAll('#tagTracksList audio'));
+                const currentIndex = allAudios.indexOf(audio);
+                
+                if (currentIndex === -1) return;
+                
+                window.currentTagLastPlayedIndex = currentIndex;
+                
+                // Если дошли до 7-го трека из 10 → загружаем следующие
+                const tracksPerPage = window.currentTagPerPage;
+                const positionInPage = (currentIndex % tracksPerPage) + 1;
+                
+                console.log(`Now playing: track #${currentIndex + 1}, position in page: ${positionInPage}/${tracksPerPage}`);
+                
+                if (positionInPage >= 7 && window.currentTagHasMore && !window.currentTagLoading) {
+                    console.log('⏳ Approaching end of page, preloading next...');
+                    preloadNextPage();
+                }
+            }, 2000);
         }
         
         function renderTracks(tracks) {
