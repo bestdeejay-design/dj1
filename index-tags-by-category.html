@@ -425,22 +425,23 @@
                 // Получаем информацию о треках через API
                 tagTracksList.innerHTML = '<div class="loading">Загрузка информации о треках...</div>';
                 
-                // Загружаем треки порциями по 20
-                const batchSize = 20;
-                const batches = [];
-                for (let i = 0; i < trackIds.length; i += batchSize) {
-                    batches.push(trackIds.slice(i, i + batchSize));
-                }
-                
+                // Загружаем треки ВСЕ сразу параллельно (максимум 100 за раз)
+                const maxConcurrent = 50;  // Максимум 50 одновременных запросов
                 let allTracks = [];
-                for (let i = 0; i < batches.length; i++) {
-                    const batch = batches[i];
+                let loaded = 0;
+                
+                for (let i = 0; i < trackIds.length; i += maxConcurrent) {
+                    const batch = trackIds.slice(i, i + maxConcurrent);
                     const batchPromises = batch.map(id => fetchTrackById(id));
                     const batchResults = await Promise.all(batchPromises);
                     allTracks = allTracks.concat(batchResults.filter(t => t !== null));
+                    loaded += batch.length;
                     
                     // Обновляем прогресс
                     tagTracksList.innerHTML = `<div class="loading">Загружено ${allTracks.length} из ${trackIds.length} треков...</div>`;
+                    
+                    // Небольшая задержка между батчами
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
                 
                 // Рендерим треки
