@@ -149,6 +149,44 @@
     </div>
 
     <script>
+        /*!
+         * ═══════════════════════════════════════════════════════════════
+         * 📚 HOW TO FETCH TRACKS BY TAG (CORRECT WAY)
+         * ═══════════════════════════════════════════════════════════════
+         * 
+         * 1. Получаем track_ids из Supabase:
+         *    GET /rest/v1/track_tags?tag_id=eq.{tagId}&select=track_id
+         *    → ["id1", "id2", "id3", ...]
+         * 
+         * 2. Отправляем массив ID в API с пагинацией:
+         *    GET https://api.dj1.ru/api/tracks?page=1&limit=50
+         *    Body: { ids: ["id1", "id2", ...] }  ← НЕ РАБОТАЕТ!
+         *    
+         *    ⚠️ API НЕ поддерживает массовую загрузку по IDs!
+         *    Нужно запрашивать каждый трек отдельно:
+         *    GET /api/tracks/{id1}
+         *    GET /api/tracks/{id2}
+         *    ...
+         * 
+         * 3. ИЛИ используем data/tags-data.json (как на index.html):
+         *    Там ВСЕ данные уже есть:
+         *    {
+         *      tracks: {
+         *        "id1": { id, name, file, cover, sound, ... },
+         *        "id2": { ... }
+         *      },
+         *      tags: { "tagName": { tracks: ["id1", "id2"] } }
+         *    }
+         * 
+         * 4. ПАГИНАЦИЯ (как на index.html):
+         *    - Берём slice(trackIds, startIndex, endIndex)
+         *    - Для каждого трека делаем fetch(`/api/tracks/${id}`)
+         *    - Рендерим страницу
+         *    - При скролле - следующая страница
+         * 
+         * ═══════════════════════════════════════════════════════════════
+         */
+        
         // Конфигурация Supabase
         const SUPABASE_URL = 'https://nwdalhrbifkjyyhpstnt.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53ZGFsaHJiaWZranl5aHBzdG50Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzM0MTg1NiwiZXhwIjoyMDg4OTE3ODU2fQ.c-Uj184ZuFxXthr6kozBjzq75sQ9d9Wj8jNmo4k-Kic';
