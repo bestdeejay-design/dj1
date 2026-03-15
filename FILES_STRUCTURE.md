@@ -5,10 +5,6 @@
 ```
 dj1/
 ├── index.html                    # Главная страница
-├── index-broken-tracks.html      # Debug: битые треки
-├── index-complex-test.html       # Тестовая страница
-├── index-tags-test.html          # Тест тегов
-├── test-db.html                  # Тест базы данных
 │
 ├── script.js                     # Основной JavaScript
 ├── style.css                     # Основные стили
@@ -22,6 +18,12 @@ dj1/
 │   ├── all_tracks_tags.json     # Все связи треков и тегов
 │   └── ...                       # Другие JSON файлы
 │
+├── debug/                        # Debug/Test файлы (в .gitignore)
+│   ├── index-broken-tracks.html  # Проверка битых треков
+│   ├── index-complex-test.html   # Тесты
+│   ├── index-tags-test.html      # Тест тегов
+│   └── test-db.html              # Тест БД
+│
 ├── archive/                      # Архив (не нужно для работы)
 │   ├── scripts/                  # Python/Bash скрипты импорта
 │   ├── sql-dumps/               # SQL файлы, дампы базы
@@ -32,7 +34,7 @@ dj1/
 │
 ├── .gitignore                    # Git ignore правила
 ├── API_SUPABASE_GUIDE.md         # Документация API & Supabase
-└── PROJECT_STRUCTURE.md          # Этот файл
+└── FILES_STRUCTURE.md            # Этот файл
 ```
 
 ---
@@ -45,16 +47,16 @@ dj1/
 - `style.css` - стили
 - `data/tags-data.json` - теги треков
 
-### **Опциональные (Debug/Test):**
-- `index-broken-tracks.html` - проверка битых треков
-- `index-complex-test.html` - тесты
-- `index-tags-test.html` - тест тегов
-- `test-db.html` - тест БД
-
 ### **Вспомогательные:**
 - `rays.js`, `rays.css` - визуальные эффекты
 - `favicon.svg` - иконка
 - `CNAME` - домен для GitHub Pages
+
+### **Debug/Test (в папке debug/):**
+- `index-broken-tracks.html` - проверка битых треков
+- `index-complex-test.html` - тесты
+- `index-tags-test.html` - тест тегов
+- `test-db.html` - тест БД
 
 ---
 
