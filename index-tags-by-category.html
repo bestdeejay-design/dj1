@@ -359,7 +359,14 @@
             const tagTracksList = document.getElementById('tagTracksList');
             const tagTracksLoading = document.getElementById('tagTracksLoading');
             
-            if (!loadingEl || !tagTracksSection) {
+            console.log('DOM elements:', {
+                tagTracksSection: !!tagTracksSection,
+                loadingEl: !!loadingEl,
+                tagTracksList: !!tagTracksList,
+                tagTracksLoading: !!tagTracksLoading
+            });
+            
+            if (!loadingEl || !tagTracksSection || !tagTracksList) {
                 console.error('Required DOM elements not found!');
                 return;
             }
@@ -370,11 +377,15 @@
             tagTracksSection.style.display = 'block';
             selectedTagName.textContent = tagName;
             tagTracksList.innerHTML = '';
-            tagTracksLoading.style.display = 'block';
+            if (tagTracksLoading) {
+                tagTracksLoading.style.display = 'block';
+            }
             
             // 🔥 СКРОЛЛИМ К СПИСКУ ТРЕКОВ!
+            console.log('Scrolling to tagTracksSection...');
             setTimeout(() => {
                 tagTracksSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                console.log('Scrolled!');
             }, 100);
             
             console.log('Fetching track_tags for tag_id:', tagId);
