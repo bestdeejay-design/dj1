@@ -475,6 +475,7 @@
             }
             
             console.log(`📥 Loading next ${batchIds.length} tracks...`);
+            console.log('Batch IDs:', batchIds.slice(0, 5), '...'); // Показываем первые 5
             
             try {
                 // 🔥 УМНАЯ ЗАГРУЗКА: GET с маленьким limit + фильтрация
@@ -490,9 +491,22 @@
                 const result = await response.json();
                 console.log(`✓ Got ${result.data?.length || 0} tracks from GET`);
                 
+                // 🔥 DEBUG: Проверяем какие ID пришли из API
+                const apiTrackIds = result.data?.map(t => t.id) || [];
+                console.log('API track IDs (first 5):', apiTrackIds.slice(0, 5), '...');
+                console.log('Sample API ID format:', apiTrackIds[0]);
+                console.log('Sample Batch ID format:', batchIds[0]);
+                
                 // Фильтруем только нужные track_ids из этой пачки
                 filteredTracks = result.data.filter(track => batchIds.includes(track.id));
                 console.log(`→ Filtered to ${filteredTracks.length} tracks`);
+                
+                // 🔥 Если 0 треков, проверяем формат ID
+                if (filteredTracks.length === 0 && batchIds.length > 0) {
+                    console.error('❌ NO MATCHES! Checking ID formats...');
+                    console.log('Batch IDs sample:', batchIds.slice(0, 3));
+                    console.log('API IDs sample:', apiTrackIds.slice(0, 3));
+                }
                 
                 // Добавляем в плейлист
                 tagTrackPlaylist.push(...filteredTracks);
