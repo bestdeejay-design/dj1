@@ -135,16 +135,17 @@
     <div class="tags-categories-view" id="tagsCategoriesView">
         <div class="loading" id="loading">Загрузка тегов из Supabase...</div>
         <div class="error" id="error" style="display: none;"></div>
-        
-        <!-- Список треков выбранного тега -->
-        <div id="tagTracksSection" style="display: none;">
-            <div class="tag-tracks-header" style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid rgba(255,255,255,0.1);">
-                <button onclick="backToCategories()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; margin-right: 1rem;">← Назад к категориям</button>
-                <h2 id="selectedTagName" style="display: inline-block; color: #fff;">Tag Name</h2>
-                <span id="selectedTagCount" style="color: #aaa; margin-left: 1rem;">0 tracks</span>
-            </div>
-            <div id="tagTracksList"></div>
+        <div id="tagsListContainer"></div>
+    </div>
+    
+    <!-- Секция треков ВЫНЕДЕНА за пределы tagsCategoriesView -->
+    <div id="tagTracksSection" style="display: none; padding: 2rem; max-width: 1400px; margin: 0 auto;">
+        <div class="tag-tracks-header" style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid rgba(255,255,255,0.1);">
+            <button onclick="backToCategories()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; margin-right: 1rem;">← Назад к категориям</button>
+            <h2 id="selectedTagName" style="display: inline-block; color: #fff;">Tag Name</h2>
+            <span id="selectedTagCount" style="color: #aaa; margin-left: 1rem;">0 tracks</span>
         </div>
+        <div id="tagTracksList"></div>
     </div>
 
     <script>
@@ -260,7 +261,7 @@
         }
 
         function renderTagsByCategories(groupedTags) {
-            const container = document.getElementById('tagsCategoriesView');
+            const container = document.getElementById('tagsListContainer');
             let html = '';
 
             Object.entries(groupedTags).forEach(([categoryKey, category]) => {
@@ -439,7 +440,7 @@
         
         function backToCategories() {
             document.getElementById('tagTracksSection').style.display = 'none';
-            document.getElementById('tagsCategoriesView').querySelector('#loading').style.display = 'block';
+            document.getElementById('loading').style.display = 'block';
         }
 
         async function init() {
