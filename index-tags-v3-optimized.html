@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DJ1.RU / TAGS V3 OPTIMIZED</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="rays.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <style>
+        /* Стили как в index-tags-v2.html */
+        .tags-view { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+        .category-section { margin-bottom: 3rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 1.5rem; backdrop-filter: blur(10px); }
+        .category-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid rgba(255, 255, 255, 0.1); }
+        .category-icon { font-size: 2rem; }
+        .category-title { font-size: 1.5rem; font-weight: bold; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
+        .tags-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+        .tag-item { background: rgba(255, 255, 255, 0.1); padding: 0.75rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; }
+        .tag-item:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+        .tag-name { color: #fff; font-size: 0.9rem; font-weight: 500; }
+        .tag-count { background: rgba(0, 0, 0, 0.3); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #aaa; }
+        .loading { text-align: center; padding: 3rem; font-size: 1.2rem; color: #aaa; }
+        .error { background: rgba(220, 38, 38, 0.2); border: 1px solid rgba(220, 38, 38, 0.5); color: #fca5a5; padding: 1rem; border-radius: 8px; margin: 1rem; }
+        .tracks-section { margin-top: 3rem; padding: 2rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; }
+        .track-item { background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem; cursor: pointer; transition: all 0.3s ease; }
+        .track-item:hover { background: rgba(255, 255, 255, 0.1); transform: translateX(5px); }
+        .track-item.active { background: rgba(255, 255, 255, 0.2); border-left: 3px solid #fff; }
+        
+        /* Плеер - стили из index.html */
+        :root { --player-bg: rgba(20, 20, 20, 0.95); --border-light: rgba(255, 255, 255, 0.1); --text-primary: #ffffff; --text-secondary: #aaaaaa; --accent: #1ed760; --accent-dim: rgba(30, 215, 96, 0.2); }
+        .player-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--player-bg); backdrop-filter: blur(16px); border-top: 1px solid var(--border-light); padding: 1rem 2rem; display: flex; flex-direction: column; gap: 0.5rem; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 100; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); }
+        .player-bar.active { transform: translateY(0); }
+        .player-main-row { display: flex; align-items: center; gap: 1.5rem; width: 100%; }
+        .track-info { display: flex; align-items: center; gap: 1rem; min-width: 220px; }
+        .track-cover { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: #2a2a2a; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .track-details { overflow: hidden; }
+        .track-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-primary); }
+        .album-name { font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .player-controls { display: flex; align-items: center; gap: 1rem; }
+        .control-btn { background: none; border: none; color: var(--text-primary); cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .control-btn:hover { background: rgba(255,255,255,0.1); }
+        .play-pause-btn { width: 48px; height: 48px; }
+        .track-progress-container { display: flex; align-items: center; gap: 0.75rem; flex: 1; }
+        .track-time { font-size: 0.8rem; color: var(--text-secondary); min-width: 40px; }
+        .track-progress-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; cursor: pointer; position: relative; }
+        .track-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; width: 0%; }
+        .playlist-toggle { background: none; border: 1px solid var(--border-light); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s; }
+        .playlist-toggle:hover { background: rgba(255,255,255,0.1); }
+        .playlist-panel { position: fixed; top: 0; right: 0; width: 350px; height: 100vh; background: var(--player-bg); backdrop-filter: blur(16px); border-left: 1px solid var(--border-light); z-index: 101; overflow-y: auto; padding: 1rem; box-shadow: -5px 0 20px rgba(0,0,0,0.5); }
+        .playlist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-light); }
+        .close-panel { background: none; border: none; color: var(--text-primary); font-size: 2rem; cursor: pointer; width: 40px; height: 40px; }
+        .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; }
+        
+        /* Модалка */
+        .track-details-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 200; overflow-y: auto; }
+        .track-details-content { margin: 5% auto; max-width: 900px; background: rgba(20, 20, 20, 0.98); padding: 2rem; border-radius: 12px; position: relative; }
+        .track-details-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .back-to-player-btn { background: none; border: none; color: #fff; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s; }
+        .back-to-player-btn:hover { background: rgba(255,255,255,0.1); }
+        .close-modal { background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        .tag-chip { background: rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 16px; font-size: 0.85rem; color: #fff; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .tag-chip:hover { background: rgba(255,255,255,0.2); }
+        .show-more-btn { margin-top: 1rem; padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px; color: #fff; cursor: pointer; font-size: 0.9rem; transition: all 0.3s ease; }
+        .show-more-btn:hover { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body>
+    <div class="tags-view">
+        <h1 style="color: #fff; margin-bottom: 2rem;">🏷️ Tags Browser V3 (Optimized)</h1>
+        
+        <div id="loading" class="loading">Загрузка тегов...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="tagsList"></div>
+        
+        <div id="tracksSection" class="tracks-section" style="display: none;">
+            <h2 id="selectedTagName" style="color: #fff; margin-bottom: 1rem;"></h2>
+            <div id="tracksLoading" class="loading">Загрузка треков...</div>
+            <div id="tracksList"></div>
+            <!-- Sentinel для infinite scroll -->
+        </div>
+    </div>
+
+    <!-- Плеер -->
+    <div class="player-bar" id="playerBar">
+        <div class="player-main-row">
+            <div class="track-info">
+                <img class="track-cover" id="currentTrackCover" alt="Cover">
+                <div class="track-details">
+                    <div class="track-name-wrapper" id="trackNameWrapper" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="track-name" id="currentTrackName">Выберите трек</span>
+                    </div>
+                    <span class="album-name" id="currentAlbumName"></span>
+                </div>
+            </div>
+
+            <div class="player-controls">
+                <button class="control-btn" id="prevBtn" title="Предыдущий">
+                    <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                </button>
+                <button class="control-btn play-pause-btn" id="playPauseBtn" title="Play/Pause">
+                    <svg viewBox="0 0 24 24">
+                        <path class="play-icon" d="M8 5v14l11-7z"/>
+                        <path class="pause-icon" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" style="display: none;"/>
+                    </svg>
+                </button>
+                <button class="control-btn" id="nextBtn" title="Следующий">
+                    <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                </button>
+                <button class="control-btn" id="repeatBtn" title="Repeat">
+                    <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+                </button>
+            </div>
+
+            <div class="track-progress-container">
+                <span class="track-time current" id="currentTime">0:00</span>
+                <div class="track-progress-bar" id="progressBar">
+                    <div class="track-progress-fill" id="progressFill"></div>
+                </div>
+                <span class="track-time duration" id="duration">0:00</span>
+            </div>
+
+            <audio id="audioPlayer"></audio>
+            <button class="playlist-toggle" id="togglePlaylist">
+                <svg viewBox="0 0 24 24"><path d="M3 13h12v-2H3v2zm0-6v2h18V7H3zm0 10h6v-2H3v2zm15-3h2v-3h3v-2h-3V7h-2v3h-3v2h3v3z"/></svg>
+                <span>Плейлист</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Модалка -->
+    <div class="track-details-modal" id="trackDetailsModal">
+        <div class="track-details-content">
+            <div class="track-details-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="back-to-player-btn" id="backToPlayerBtn" title="Вернуться к плееру">
+                        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                    </button>
+                    <h2 id="modalTrackTitle" style="color: #fff; margin: 0;">Track Details</h2>
+                </div>
+                <button class="close-modal" id="closeTrackDetails">×</button>
+            </div>
+            <div class="track-details-body">
+                <div class="track-details-section" style="margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: #fff; margin: 0;">🎵 Sound / Prompt</h3>
+                        <button id="copySoundBtn" style="background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">📋 Копировать</button>
+                    </div>
+                    <p id="modalTrackSound" style="color: #aaa; line-height: 1.6; white-space: pre-wrap;"></p>
+                </div>
+                <div class="track-details-section" style="margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: #fff; margin: 0;">🏷️ Tags</h3>
+                        <button id="copyTagsBtn" style="background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">📋 Копировать теги</button>
+                    </div>
+                    <div id="modalTrackTags" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+                </div>
+                <div class="track-details-section" style="display: flex; gap: 2rem;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="color: #fff; margin: 0;">📝 Lyrics</h3>
+                            <button id="copyLyricsBtn" style="background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">📋 Копировать</button>
+                        </div>
+                        <pre id="modalTrackLyrics" style="color: #aaa; white-space: pre-wrap; font-family: inherit; line-height: 1.6; max-height: 400px; overflow-y: auto;"></pre>
+                    </div>
+                    <div style="width: 300px; flex-shrink: 0;">
+                        <h3 style="color: #fff; margin-bottom: 1rem;">📀 Cover</h3>
+                        <img id="modalTrackCover" src="" alt="Cover" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Панель плейлиста -->
+    <div class="playlist-panel" id="playlistPanel" style="display: none;">
+        <div class="playlist-header">
+            <h2 id="playlistAlbumTitle">Плейлист</h2>
+            <button class="close-panel" id="closePlaylist">×</button>
+        </div>
+        <div id="playlist"></div>
+    </div>
+    <div class="overlay" id="overlay" style="display: none;"></div>
+
+    <script>
+        // ============================================
+        // 🔧 КОНФИГУРАЦИЯ И КЭШИ
+        // ============================================
+        const SUPABASE_URL = 'https://nwdalhrbifkjyyhpstnt.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_wdNAcYa7Ua-bbC2jDiG-FQ_b0CAPg5l';
+        const API_BASE = 'https://api.dj1.ru/api';
+        
+        // Кэши для оптимизации
+        const tagsCache = new Map();
+        const tracksCache = new Map();
+        
+        // Состояние приложения
+        let currentPlaylist = [];
+        let currentTrackIndex = -1;
+        let isPlaying = false;
+        let tagTrackPlaylist = [];
+        let displayedTrackIds = new Set();
+        let isLoadingMore = false;
+        
+        // ============================================
+        // 🚀 УТИЛИТЫ
+        // ============================================
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        async function fetchWithCache(url, cache, key) {
+            if (cache.has(key)) return cache.get(key);
+            
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            
+            cache.set(key, data);
+            return data;
+        }
+        
+        // ============================================
+        // 📥 ЗАГРУЗКА ТАГОВ (ОДИН ЗАПРОС)
+        // ============================================
+        async function loadTagsWithCategories() {
+            console.log('📥 Loading tags with categories...');
+            const startTime = Date.now();
+            
+            try {
+                const url = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?select=id,name,category_id,track_count,tag_categories(name,label,color)&order=category_id.asc,name.asc`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const tags = await response.json();
+                console.log(`✓ Loaded ${tags.length} tags in ${Date.now() - startTime}ms`);
+                
+                return tags;
+            } catch (error) {
+                console.error('❌ Error loading tags:', error);
+                throw error;
+            }
+        }
+        
+        function groupTagsByCategory(tags) {
+            const grouped = {};
+            
+            tags.forEach(tag => {
+                const categoryName = tag.tag_categories?.name || 'other';
+                const categoryLabel = tag.tag_categories?.label || categoryName;
+                const categoryColor = tag.tag_categories?.color || '#6b7280';
+                
+                if (!grouped[categoryName]) {
+                    grouped[categoryName] = {
+                        label: categoryLabel,
+                        color: categoryColor,
+                        tags: []
+                    };
+                }
+                
+                grouped[categoryName].tags.push({
+                    id: tag.id,
+                    name: tag.name,
+                    track_count: tag.track_count || 0
+                });
+            });
+            
+            // Сортировка категорий
+            const order = ['genre', 'mood', 'tempo', 'era', 'language', 'vibe', 'instrumentation', 'production', 'vocals', 'other'];
+            const sorted = {};
+            
+            order.forEach(cat => {
+                if (grouped[cat]) sorted[cat] = grouped[cat];
+            });
+            
+            Object.keys(grouped).forEach(cat => {
+                if (!order.includes(cat)) sorted[cat] = grouped[cat];
+            });
+            
+            // Свёртывание больших категорий
+            Object.values(sorted).forEach(cat => {
+                cat.collapsed = cat.tags.length > 30;
+            });
+            
+            return sorted;
+        }
+        
+        function renderTagsByCategories(groupedTags) {
+            const container = document.getElementById('tagsList');
+            let html = '';
+            
+            Object.entries(groupedTags).forEach(([key, category]) => {
+                const total = category.tags.length;
+                const display = category.collapsed ? category.tags.slice(0, 20) : category.tags;
+                const moreBtn = category.collapsed ? 
+                    `<button class="show-more-btn" data-category="${key}">Показать ещё (${total - 20})</button>` : '';
+                
+                html += `
+                    <div class="category-section" data-category="${key}">
+                        <div class="category-header">
+                            <span class="category-title" style="color: ${category.color}">${category.label}</span>
+                            <span style="color: #aaa; font-size: 0.9rem; margin-left: auto;">${total} tags</span>
+                        </div>
+                        <div class="tags-grid">
+                            ${display.map(tag => `
+                                <div class="tag-item" data-tag-id="${tag.id}" data-tag-name="${tag.name}">
+                                    <span class="tag-name">${tag.name}</span>
+                                    <span class="tag-count">${tag.track_count}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${moreBtn}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+            // Обработчики
+            setTimeout(() => {
+                document.querySelectorAll('.show-more-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const catKey = btn.getAttribute('data-category');
+                        groupedTags[catKey].collapsed = false;
+                        renderTagsByCategories(groupedTags);
+                    });
+                });
+                
+                document.querySelectorAll('.tag-item').forEach(item => {
+                    item.addEventListener('click', async () => {
+                        const tagId = parseInt(item.getAttribute('data-tag-id'));
+                        const tagName = item.getAttribute('data-tag-name');
+                        await selectTag(tagId, tagName);
+                    });
+                });
+                
+                console.log('✅ Tag click handlers attached');
+            }, 100);
+        }
+        
+        // ============================================
+        // 🎯 ВЫБОР ТАГА (БЕЗ ДУБЛИРОВАНИЯ)
+        // ============================================
+        async function selectTag(tagId, tagName) {
+            console.log(`\n🏷️ Selecting tag: ${tagName} (${tagId})`);
+            
+            // Сохраняем состояние
+            window.currentTagId = tagId;
+            window.currentTagName = tagName;
+            localStorage.setItem('lastOpenedTag', JSON.stringify({ tagId, tagName }));
+            
+            // UI
+            const tracksSection = document.getElementById('tracksSection');
+            const nameEl = document.getElementById('selectedTagName');
+            const tracksList = document.getElementById('tracksList');
+            const tracksLoading = document.getElementById('tracksLoading');
+            
+            tracksSection.style.display = 'block';
+            tracksList.innerHTML = '';
+            tracksLoading.style.display = 'block';
+            
+            // Получаем track_count для заголовка
+            try {
+                const countUrl = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?id=eq.${tagId}&select=track_count`;
+                const countResp = await fetch(countUrl, {
+                    headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}
+                });
+                
+                let trackCount = 0;
+                if (countResp.ok) {
+                    const data = await countResp.json();
+                    trackCount = data[0]?.track_count || 0;
+                }
+                
+                nameEl.innerHTML = `${tagName} <span style="color: #aaa; font-size: 0.9rem;">(${trackCount})</span>`;
+            } catch (e) {
+                console.error('Failed to get track count:', e);
+                nameEl.textContent = tagName;
+            }
+            
+            // Получаем track_ids
+            try {
+                const url = `${SUPABASE_URL}/rest/v1/track_tags?tag_id=eq.${tagId}&select=track_id`;
+                const response = await fetch(url, {
+                    headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                const trackIds = data.map(t => t.track_id);
+                
+                console.log(`✓ Found ${trackIds.length} tracks for "${tagName}"`);
+                
+                if (trackIds.length === 0) {
+                    tracksLoading.style.display = 'none';
+                    tracksList.innerHTML = '<div class="loading">Нет треков</div>';
+                    return;
+                }
+                
+                // Загружаем первые 10 треков
+                await loadTracksBatch(trackIds, 10);
+                
+                // Скроллим ПОСЛЕ загрузки
+                setTimeout(() => {
+                    tracksSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    console.log('📍 Scrolled to tracks');
+                }, 200);
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                tracksLoading.style.display = 'none';
+                tracksList.innerHTML = `<div class="error">${error.message}</div>`;
+            }
+        }
+        
+        // ============================================
+        // 🎵 ЗАГРУЗКА ТРЕКОВ (OPTIMIZED)
+        // ============================================
+        async function loadTracksBatch(trackIds, count) {
+            if (isLoadingMore) return;
+            isLoadingMore = true;
+            
+            const remaining = trackIds.filter(id => !displayedTrackIds.has(id));
+            const batchIds = remaining.slice(0, count);
+            
+            if (batchIds.length === 0) {
+                isLoadingMore = false;
+                return;
+            }
+            
+            console.log(`📥 Loading ${batchIds.length} tracks...`);
+            
+            try {
+                // 🔥 ОДИН ЗАПРОС ВМЕСТО Promise.all × 10
+                // Используем OR для получения всех треков сразу
+                const orCondition = batchIds.map(id => `id.eq.${id}`).join(',');
+                const url = `${API_BASE}/tracks?or=(${orCondition})`;
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    // Fallback к Promise.all если OR не работает
+                    throw new Error('OR query failed');
+                }
+                
+                let tracks = await response.json();
+                
+                // Если API не поддерживает OR, используем Promise.all
+                if (!tracks || tracks.length === 0) {
+                    console.log('⚠️ OR failed, using Promise.all fallback');
+                    const promises = batchIds.map(id => 
+                        fetch(`${API_BASE}/tracks/${id}`)
+                            .then(r => r.ok ? r.json() : null)
+                            .catch(() => null)
+                    );
+                    const results = await Promise.all(promises);
+                    tracks = results.filter(r => r !== null);
+                }
+                
+                console.log(`✓ Loaded ${tracks.length}/${batchIds.length} tracks`);
+                
+                // Добавляем в плейлист
+                tagTrackPlaylist.push(...tracks);
+                tracks.forEach(t => displayedTrackIds.add(t.id));
+                currentPlaylist = [...tagTrackPlaylist];
+                
+                // Рендерим
+                renderTracks(tracks);
+                updatePlayerPlaylist();
+                
+            } catch (error) {
+                console.error('❌ Load error:', error);
+                // Fallback к индивидуальному запросу
+                for (const id of batchIds) {
+                    try {
+                        const resp = await fetch(`${API_BASE}/tracks/${id}`);
+                        if (resp.ok) {
+                            const track = await resp.json();
+                            tagTrackPlaylist.push(track);
+                            displayedTrackIds.add(id);
+                            renderTracks([track]);
+                        }
+                    } catch (e) {
+                        console.error(`Failed to load ${id}:`, e);
+                    }
+                }
+                currentPlaylist = [...tagTrackPlaylist];
+                updatePlayerPlaylist();
+            }
+            
+            isLoadingMore = false;
+            document.getElementById('tracksLoading').style.display = 'none';
+        }
+        
+        function renderTracks(tracks) {
+            const container = document.getElementById('tracksList');
+            
+            tracks.forEach((track, index) => {
+                const item = document.createElement('div');
+                item.className = 'track-item';
+                item.dataset.trackIndex = index;
+                
+                const coverUrl = track.image_url || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzMzMyIvPjwvc3ZnPg==';
+                
+                item.innerHTML = `
+                    <img src="${coverUrl}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                    <div style="flex: 1;">
+                        <div style="color: #fff; font-weight: bold;">${track.title || 'Untitled'}</div>
+                        <div style="color: #aaa; font-size: 0.9rem;">${track.author_name || 'Unknown'}</div>
+                    </div>
+                    <button class="track-info-btn" title="Информация" style="background: none; border: none; color: #fff; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; margin-right: 0.5rem;">
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    </button>
+                    <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #fff; cursor: pointer;" onclick="event.stopPropagation()">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                `;
+                
+                item.addEventListener('click', () => playTrack(track, index, tracks));
+                
+                const infoBtn = item.querySelector('.track-info-btn');
+                if (infoBtn) {
+                    infoBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        showTrackInfo(track.id);
+                    });
+                }
+                
+                container.appendChild(item);
+            });
+        }
+        
+        // ============================================
+        // ℹ️ МОДАЛКА (1 ЗАПРОС ВМЕСТО 44)
+        // ============================================
+        async function showTrackInfo(trackId) {
+            console.log('ℹ️ Showing info for track:', trackId);
+            
+            try {
+                // 1. Данные трека
+                const trackResp = await fetch(`${API_BASE}/tracks/${trackId}`);
+                if (!trackResp.ok) throw new Error(`API ${trackResp.status}`);
+                const track = await trackResp.json();
+                
+                // 2. Теги - ОДИН ЗАПРОС вместо 44!
+                const tagsData = await getTagsForTrack(trackId);
+                
+                // 3. Заполняем модалку
+                document.getElementById('modalTrackTitle').textContent = track.title || 'Untitled';
+                document.getElementById('modalTrackSound').textContent = track.sound || 'No sound';
+                document.getElementById('modalTrackLyrics').textContent = track.lyrics || 'No lyrics';
+                document.getElementById('modalTrackCover').src = track.image_url || '';
+                
+                // 4. Рендерим теги
+                const tagsEl = document.getElementById('modalTrackTags');
+                tagsEl.innerHTML = tagsData.map(tag => `
+                    <span class="tag-chip" data-tag-id="${tag.id}" data-tag-name="${tag.name}">
+                        ${tag.name}
+                        <span style="background: rgba(255,255,255,0.2); padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.75rem;">${tag.count}</span>
+                    </span>
+                `).join('');
+                
+                // 5. Показываем
+                document.getElementById('trackDetailsModal').style.display = 'block';
+                document.body.style.overflow = 'hidden';
+                
+                console.log('✅ Modal opened');
+                
+            } catch (error) {
+                console.error('❌ Modal error:', error);
+            }
+        }
+        
+        async function getTagsForTrack(trackId) {
+            // Шаг 1: Получаем tag_ids
+            const url1 = `${SUPABASE_URL}/rest/v1/track_tags?track_id=eq.${trackId}&select=tag_id`;
+            const resp1 = await fetch(url1, {
+                headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}
+            });
+            
+            if (!resp1.ok) return [];
+            const data1 = await resp1.json();
+            
+            if (data1.length === 0) return [];
+            
+            const tagIds = data1.map(t => t.tag_id);
+            
+            // Шаг 2: ОДИН ЗАПРОС вместо Promise.all × N
+            const orCondition = tagIds.map(id => `id.eq.${id}`).join(',');
+            const url2 = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?or=(${orCondition})&select=id,name,track_count`;
+            
+            const resp2 = await fetch(url2, {
+                headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}
+            });
+            
+            if (!resp2.ok) return [];
+            return await resp2.json();
+        }
+        
+        // ============================================
+        // ▶️ ПЛЕЕР
+        // ============================================
+        function playTrack(track, index, playlist) {
+            console.log('🎵 Playing:', track.title);
+            
+            currentPlaylist = playlist;
+            currentTrackIndex = index;
+            
+            const audioPlayer = document.getElementById('audioPlayer');
+            const playerBar = document.getElementById('playerBar');
+            
+            playerBar.classList.add('active');
+            document.getElementById('currentTrackName').textContent = track.title || 'Untitled';
+            document.getElementById('currentAlbumName').textContent = track.author_name || 'Unknown';
+            document.getElementById('currentTrackCover').src = track.image_url || '';
+            
+            if (track.audio_url) {
+                audioPlayer.src = track.audio_url;
+                audioPlayer.play().then(() => {
+                    console.log('✅ Playing');
+                    isPlaying = true;
+                    updatePlayPauseButton();
+                    highlightCurrentTrack();
+                    setTimeout(savePlayerState, 1000);
+                }).catch(e => console.error('Play error:', e));
+            }
+        }
+        
+        function togglePlayPause() {
+            const audio = document.getElementById('audioPlayer');
+            if (isPlaying) {
+                audio.pause();
+                isPlaying = false;
+                savePlayerState();
+            } else {
+                audio.play();
+                isPlaying = true;
+                setTimeout(savePlayerState, 1000);
+            }
+            updatePlayPauseButton();
+        }
+        
+        function updatePlayPauseButton() {
+            const play = document.querySelector('.play-icon');
+            const pause = document.querySelector('.pause-icon');
+            if (play && pause) {
+                play.style.display = isPlaying ? 'none' : 'block';
+                pause.style.display = isPlaying ? 'block' : 'none';
+            }
+        }
+        
+        function nextTrack() {
+            if (currentPlaylist.length === 0) return;
+            currentTrackIndex = (currentTrackIndex + 1) % currentPlaylist.length;
+            if (!currentPlaylist[currentTrackIndex]) {
+                currentTrackIndex = (currentTrackIndex - 1 + currentPlaylist.length) % currentPlaylist.length;
+                document.getElementById('tag-tracks-sentinel')?.scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+            playTrack(currentPlaylist[currentTrackIndex], currentTrackIndex, currentPlaylist);
+        }
+        
+        function prevTrack() {
+            if (currentPlaylist.length === 0) return;
+            currentTrackIndex = (currentTrackIndex - 1 + currentPlaylist.length) % currentPlaylist.length;
+            playTrack(currentPlaylist[currentTrackIndex], currentTrackIndex, currentPlaylist);
+        }
+        
+        function highlightCurrentTrack() {
+            document.querySelectorAll('.track-item').forEach((item, i) => {
+                item.classList.toggle('active', i === currentTrackIndex);
+            });
+            highlightPlaylistTrack();
+        }
+        
+        function highlightPlaylistTrack() {
+            const playlist = document.getElementById('playlist');
+            if (!playlist) return;
+            
+            playlist.querySelectorAll('.track-item').forEach((item, i) => {
+                const active = i === currentTrackIndex;
+                item.style.background = active ? 'rgba(30, 215, 96, 0.2)' : 'rgba(255,255,255,0.05)';
+            });
+        }
+        
+        function updatePlayerPlaylist() {
+            const playlist = document.getElementById('playlist');
+            const title = document.getElementById('playlistAlbumTitle');
+            if (!playlist) return;
+            
+            if (window.currentTagName) {
+                title.textContent = `Тег: ${window.currentTagName} (${currentPlaylist.length})`;
+            }
+            
+            let html = '';
+            currentPlaylist.forEach((track, i) => {
+                const active = i === currentTrackIndex;
+                html += `
+                    <div class="track-item ${active ? 'active' : ''}" data-track-index="${i}" style="padding: 0.75rem; margin-bottom: 0.5rem; background: ${active ? 'rgba(30, 215, 96, 0.2)' : 'rgba(255,255,255,0.05)'}; border-radius: 8px; cursor: pointer;">
+                        <div style="color: #fff; font-weight: bold;">${track.title || 'Untitled'}</div>
+                        <div style="color: #aaa; font-size: 0.85rem;">${track.author_name || 'Unknown'}</div>
+                    </div>
+                `;
+            });
+            
+            playlist.innerHTML = html;
+            
+            setTimeout(() => {
+                playlist.querySelectorAll('.track-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const idx = parseInt(item.getAttribute('data-track-index'));
+                        if (currentPlaylist[idx]) {
+                            playTrack(currentPlaylist[idx], idx, currentPlaylist);
+                        }
+                    });
+                });
+            }, 100);
+        }
+        
+        function savePlayerState() {
+            if (currentTrackIndex >= 0 && currentPlaylist[currentTrackIndex]) {
+                const track = currentPlaylist[currentTrackIndex];
+                const audio = document.getElementById('audioPlayer');
+                
+                const state = {
+                    trackId: track.id,
+                    currentTime: audio.currentTime,
+                    isPlaying: isPlaying,
+                    tagId: window.currentTagId || null
+                };
+                
+                localStorage.setItem('playerState', JSON.stringify(state));
+            }
+        }
+        
+        function restorePlayerState() {
+            try {
+                return JSON.parse(localStorage.getItem('playerState'));
+            } catch {
+                return null;
+            }
+        }
+        
+        async function restoreTrackPlayback(savedState) {
+            console.log('🔄 Restoring playback:', savedState.trackId);
+            
+            const idx = tagTrackPlaylist.findIndex(t => t.id === savedState.trackId);
+            if (idx < 0) {
+                console.warn('Track not found in playlist');
+                return;
+            }
+            
+            const track = tagTrackPlaylist[idx];
+            const audio = document.getElementById('audioPlayer');
+            
+            currentTrackIndex = idx;
+            
+            document.getElementById('currentTrackName').textContent = track.title;
+            document.getElementById('currentAlbumName').textContent = track.author_name;
+            document.getElementById('currentTrackCover').src = track.image_url;
+            document.getElementById('playerBar').classList.add('active');
+            
+            audio.src = track.audio_url;
+            audio.currentTime = savedState.currentTime || 0;
+            
+            if (savedState.isPlaying) {
+                audio.play().then(() => {
+                    console.log('✅ Restored @', Math.floor(audio.currentTime), 's');
+                    isPlaying = true;
+                    updatePlayPauseButton();
+                    highlightCurrentTrack();
+                }).catch(e => console.error('Restore error:', e));
+            }
+        }
+        
+        // ============================================
+        // 📋 COPY BUTTONS
+        // ============================================
+        function setupCopyButtons() {
+            // Sound
+            const copySound = document.getElementById('copySoundBtn');
+            const soundEl = document.getElementById('modalTrackSound');
+            
+            if (copySound && soundEl) {
+                copySound.addEventListener('click', async () => {
+                    await navigator.clipboard.writeText(soundEl.textContent);
+                    const orig = copySound.textContent;
+                    copySound.textContent = '✅ Скопировано!';
+                    setTimeout(() => copySound.textContent = orig, 2000);
+                });
+            }
+            
+            // Tags
+            const copyTags = document.getElementById('copyTagsBtn');
+            const tagsEl = document.getElementById('modalTrackTags');
+            
+            if (copyTags && tagsEl) {
+                copyTags.addEventListener('click', async () => {
+                    const tagElements = tagsEl.querySelectorAll('.tag-chip');
+                    const tagNames = Array.from(tagElements).map(el => el.getAttribute('data-tag-name'));
+                    const tagsString = tagNames.join(', ');
+                    
+                    await navigator.clipboard.writeText(tagsString);
+                    const orig = copyTags.textContent;
+                    copyTags.textContent = `✅ Скопировано: ${tagNames.length} тегов!`;
+                    setTimeout(() => copyTags.textContent = orig, 2000);
+                });
+            }
+            
+            // Lyrics
+            const copyLyrics = document.getElementById('copyLyricsBtn');
+            const lyricsEl = document.getElementById('modalTrackLyrics');
+            
+            if (copyLyrics && lyricsEl) {
+                copyLyrics.addEventListener('click', async () => {
+                    await navigator.clipboard.writeText(lyricsEl.textContent);
+                    const orig = copyLyrics.textContent;
+                    copyLyrics.textContent = '✅ Скопировано!';
+                    setTimeout(() => copyLyrics.textContent = orig, 2000);
+                });
+            }
+        }
+        
+        // ============================================
+        // 🎯 ИНИЦИАЛИЗАЦИЯ
+        // ============================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Initializing tags browser v3...');
+            
+            // Setup copy buttons
+            setupCopyButtons();
+            
+            // Setup modal close
+            document.getElementById('closeTrackDetails')?.addEventListener('click', () => {
+                document.getElementById('trackDetailsModal').style.display = 'none';
+                document.body.style.overflow = '';
+            });
+            
+            document.getElementById('backToPlayerBtn')?.addEventListener('click', () => {
+                document.getElementById('trackDetailsModal').style.display = 'none';
+                document.body.style.overflow = '';
+            });
+            
+            document.getElementById('trackDetailsModal')?.addEventListener('click', (e) => {
+                if (e.target.id === 'trackDetailsModal') {
+                    document.getElementById('trackDetailsModal').style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            });
+            
+            // Setup player controls
+            document.getElementById('playPauseBtn')?.addEventListener('click', togglePlayPause);
+            document.getElementById('nextBtn')?.addEventListener('click', nextTrack);
+            document.getElementById('prevBtn')?.addEventListener('click', prevTrack);
+            
+            // Progress bar
+            const audio = document.getElementById('audioPlayer');
+            const progressFill = document.getElementById('progressFill');
+            const currentTimeEl = document.getElementById('currentTime');
+            const durationEl = document.getElementById('duration');
+            
+            if (audio) {
+                audio.addEventListener('timeupdate', () => {
+                    if (progressFill && audio.duration) {
+                        progressFill.style.width = (audio.currentTime / audio.duration * 100) + '%';
+                        if (currentTimeEl) currentTimeEl.textContent = formatTime(audio.currentTime);
+                    }
+                });
+                
+                audio.addEventListener('loadedmetadata', () => {
+                    if (durationEl) durationEl.textContent = formatTime(audio.duration);
+                });
+                
+                // Auto-next
+                audio.addEventListener('ended', () => {
+                    const repeatBtn = document.getElementById('repeatBtn');
+                    const repeatMode = repeatBtn?.dataset.repeat || 0;
+                    
+                    if (repeatMode == 1) {
+                        audio.currentTime = 0;
+                        audio.play();
+                    } else {
+                        nextTrack();
+                    }
+                });
+            }
+            
+            // Playlist toggle
+            document.getElementById('togglePlaylist')?.addEventListener('click', () => {
+                const panel = document.getElementById('playlistPanel');
+                const overlay = document.getElementById('overlay');
+                const visible = panel.style.display === 'block';
+                panel.style.display = visible ? 'none' : 'block';
+                overlay.style.display = visible ? 'none' : 'block';
+            });
+            
+            document.getElementById('closePlaylist')?.addEventListener('click', () => {
+                document.getElementById('playlistPanel').style.display = 'none';
+                document.getElementById('overlay').style.display = 'none';
+            });
+            
+            document.getElementById('overlay')?.addEventListener('click', () => {
+                document.getElementById('playlistPanel').style.display = 'none';
+                document.getElementById('overlay').style.display = 'none';
+            });
+            
+            // Repeat button
+            let repeatMode = 0;
+            const repeatBtn = document.getElementById('repeatBtn');
+            if (repeatBtn) {
+                repeatBtn.addEventListener('click', () => {
+                    repeatMode = (repeatMode + 1) % 3;
+                    repeatBtn.dataset.repeat = repeatMode;
+                    repeatBtn.style.color = repeatMode > 0 ? '#4ade80' : '#fff';
+                    console.log('Repeat mode:', repeatMode);
+                });
+            }
+            
+            // Restore player state
+            setTimeout(async () => {
+                const state = restorePlayerState();
+                if (state && state.tagId) {
+                    console.log('🔍 Restoring tag:', state.tagId);
+                    
+                    if (window.currentTagId !== state.tagId) {
+                        try {
+                            const url = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?id=eq.${state.tagId}&select=name`;
+                            const resp = await fetch(url, {
+                                headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}
+                            });
+                            
+                            if (resp.ok) {
+                                const data = await resp.json();
+                                if (data.length > 0) {
+                                    await selectTag(state.tagId, data[0].name);
+                                    setTimeout(() => restoreTrackPlayback(state), 500);
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Restore error:', e);
+                        }
+                    } else {
+                        restoreTrackPlayback(state);
+                    }
+                }
+            }, 500);
+            
+            // Load tags
+            try {
+                const tags = await loadTagsWithCategories();
+                const grouped = groupTagsByCategory(tags);
+                renderTagsByCategories(grouped);
+                console.log('✅ Tags loaded');
+            } catch (error) {
+                console.error('❌ Failed to load tags:', error);
+                document.getElementById('error').textContent = error.message;
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
