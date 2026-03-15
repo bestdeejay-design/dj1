@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DJ1.RU / BY TAGS 2</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="rays.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <style>
+        /* Стили для страницы тегов по категориям */
+        .tags-categories-view {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .category-section {
+            margin-bottom: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .category-icon {
+            font-size: 2rem;
+        }
+
+        .category-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .tags-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .tag-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid transparent;
+        }
+
+        .tag-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .tag-name {
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .tag-count {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #aaa;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+            color: #aaa;
+        }
+
+        .error {
+            background: rgba(220, 38, 38, 0.2);
+            border: 1px solid rgba(220, 38, 38, 0.5);
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem;
+        }
+
+        /* Адаптив для мобильных */
+        @media (max-width: 768px) {
+            .tags-categories-view {
+                padding: 1rem;
+            }
+
+            .tags-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 0.5rem;
+            }
+
+            .category-title {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-effects"></div>
+
+    <div class="header">
+        <div class="header-row">
+            <h1><a href="index.html" style="color: inherit; text-decoration: none;">DJ1.RU</a></h1>
+            <button id="themeToggle" class="theme-toggle" title="Сменить тему">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path class="sun" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    <path class="moon" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" style="display: none;"/>
+                </svg>
+            </button>
+        </div>
+        <div class="sub">Tags by Categories (Supabase)</div>
+    </div>
+
+    <div class="tags-categories-view" id="tagsCategoriesView">
+        <div class="loading" id="loading">Загрузка тегов из Supabase...</div>
+        <div class="error" id="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Конфигурация Supabase
+        const SUPABASE_URL = 'https://nwdalhrbifkjyyhpstnt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53ZGFsaHJiaWZranl5aHBzdG50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNDE4NTYsImV4cCI6MjA4ODkxNzg1Nn0.dZdKHMwTxgJKNqT8BjSTsn2TFRr_qCKJbqrWQcXVZKE';
+
+        // Эмодзи для категорий
+        const CATEGORY_ICONS = {
+            'genre': '🎵',
+            'mood': '😊',
+            'tempo': '⚡',
+            'era': '📅',
+            'language': '🌐',
+            'vibe': '✨',
+            'instrumentation': '🎸',
+            'production': '🎛️',
+            'vocals': '🎤',
+            'other': '📦'
+        };
+
+        const CATEGORY_LABELS = {
+            'genre': 'Genre',
+            'mood': 'Mood',
+            'tempo': 'Tempo',
+            'era': 'Era',
+            'language': 'Language',
+            'vibe': 'Vibe',
+            'instrumentation': 'Instrumentation',
+            'production': 'Production',
+            'vocals': 'Vocals',
+            'other': 'Other'
+        };
+
+        async function fetchTagsWithCategories() {
+            try {
+                // Получаем все теги с категориями
+                const url = `${SUPABASE_URL}/rest/v1/tags?select=id,name,category_id,tag_categories(name,label,color)&order=name.asc`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const tags = await response.json();
+                return tags;
+            } catch (error) {
+                console.error('Error fetching tags:', error);
+                throw error;
+            }
+        }
+
+        async function fetchTagCounts() {
+            try {
+                // Получаем количество использований каждого тега
+                const url = `${SUPABASE_URL}/rest/v1/track_tags?select=tag_id&count=exact`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+
+                if (!response.ok) {
+                    return {};
+                }
+
+                // Для простоты вернём пустой объект
+                // В будущем можно сделать группировку
+                return {};
+            } catch (error) {
+                console.error('Error fetching tag counts:', error);
+                return {};
+            }
+        }
+
+        function groupTagsByCategory(tags) {
+            const grouped = {};
+            
+            tags.forEach(tag => {
+                const categoryName = tag.tag_categories?.name || 'other';
+                const categoryLabel = tag.tag_categories?.label || CATEGORY_LABELS[categoryName] || categoryName;
+                const categoryColor = tag.tag_categories?.color || '#6b7280';
+                
+                if (!grouped[categoryName]) {
+                    grouped[categoryName] = {
+                        label: categoryLabel,
+                        color: categoryColor,
+                        tags: []
+                    };
+                }
+                
+                grouped[categoryName].tags.push({
+                    id: tag.id,
+                    name: tag.name,
+                    count: tag.usage_count || 0
+                });
+            });
+
+            // Сортируем категории по порядку
+            const categoryOrder = ['genre', 'mood', 'tempo', 'era', 'language', 'vibe', 'instrumentation', 'production', 'vocals', 'other'];
+            const sortedGrouped = {};
+            
+            categoryOrder.forEach(cat => {
+                if (grouped[cat]) {
+                    sortedGrouped[cat] = grouped[cat];
+                }
+            });
+
+            // Добавляем остальные категории
+            Object.keys(grouped).forEach(cat => {
+                if (!categoryOrder.includes(cat)) {
+                    sortedGrouped[cat] = grouped[cat];
+                }
+            });
+
+            return sortedGrouped;
+        }
+
+        function renderTagsByCategories(groupedTags) {
+            const container = document.getElementById('tagsCategoriesView');
+            let html = '';
+
+            Object.entries(groupedTags).forEach(([categoryKey, category]) => {
+                const icon = CATEGORY_ICONS[categoryKey] || '📁';
+                
+                html += `
+                    <div class="category-section">
+                        <div class="category-header">
+                            <span class="category-icon">${icon}</span>
+                            <span class="category-title" style="color: ${category.color}">${category.label}</span>
+                        </div>
+                        <div class="tags-grid">
+                            ${category.tags.map(tag => `
+                                <div class="tag-item" data-tag-id="${tag.id}" data-tag-name="${tag.name}">
+                                    <span class="tag-name">${tag.name}</span>
+                                    <span class="tag-count">${tag.count}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        async function init() {
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+            const container = document.getElementById('tagsCategoriesView');
+
+            try {
+                const tags = await fetchTagsWithCategories();
+                const groupedTags = groupTagsByCategory(tags);
+                renderTagsByCategories(groupedTags);
+                
+                loadingEl.style.display = 'none';
+            } catch (error) {
+                console.error('Error loading tags:', error);
+                loadingEl.style.display = 'none';
+                errorEl.textContent = `Ошибка загрузки: ${error.message}`;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        // Запускаем при загрузке
+        init();
+
+        // Theme toggle
+        document.getElementById('themeToggle')?.addEventListener('click', () => {
+            document.body.classList.toggle('dark-theme');
+            const sun = document.querySelector('.sun');
+            const moon = document.querySelector('.moon');
+            if (sun && moon) {
+                sun.style.display = sun.style.display === 'none' ? 'block' : 'none';
+                moon.style.display = moon.style.display === 'none' ? 'block' : 'none';
+            }
+        });
+    </script>
+</body>
+</html>
