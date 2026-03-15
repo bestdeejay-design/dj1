@@ -235,30 +235,26 @@
         
         async function loadTracksData() {
             try {
-                console.log('Loading tracks data from JSON...');
-                const response = await fetch('data/tags-data.json');
-                const data = await response.json();
+                console.log('Loading tracks data...');
                 
-                // ❗️ ВАЖНО: tags-data.json содержит ТОЛЬКО ID, не сами треки!
-                // Берём данные из window.tagsData который загружен в script.js
-                if (window.tagsData && window.tagsData.tracks) {
-                    allTracksData = window.tagsData.tracks;
-                    console.log(`✓ Loaded ${Object.keys(allTracksData).length} tracks from window.tagsData`);
-                    return true;
+                // 🔁 ЖДЁМ ПОКА script.js ЗАГРУЗИТ window.tagsData
+                let attempts = 0;
+                const maxAttempts = 50; // Ждём до 5 секунд
+                
+                while (!window.tagsData || !window.tagsData.tracks) {
+                    if (attempts >= maxAttempts) {
+                        console.error('Timeout waiting for window.tagsData');
+                        return false;
+                    }
+                    console.log(`Waiting for window.tagsData... attempt ${attempts + 1}/${maxAttempts}`);
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
                 }
                 
-                console.warn('window.tagsData not found - waiting for script.js to load...');
-                // Ждём пока script.js загрузит данные
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                if (window.tagsData && window.tagsData.tracks) {
-                    allTracksData = window.tagsData.tracks;
-                    console.log(`✓ Loaded ${Object.keys(allTracksData).length} tracks from window.tagsData (after wait)`);
-                    return true;
-                }
-                
-                console.error('ERROR: No track data available!');
-                return false;
+                // Берём данные из window.tagsData
+                allTracksData = window.tagsData.tracks;
+                console.log(`✓ Loaded ${Object.keys(allTracksData).length} tracks from window.tagsData`);
+                return true;
             } catch (error) {
                 console.error('Error loading tracks data:', error);
                 return false;
