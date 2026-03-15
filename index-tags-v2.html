@@ -604,6 +604,11 @@
         async function selectTag(tagId, tagName) {
             console.log(`\n🏷️ Select tag: ${tagName} (${tagId})`);
             
+            // 🔥 СОХРАНЯЕМ TAG ID ДЛЯ ВОССТАНОВЛЕНИЯ
+            window.currentTagId = tagId;
+            window.currentTagName = tagName;
+            localStorage.setItem('lastOpenedTag', JSON.stringify({ tagId, tagName }));
+            
             const tracksSection = document.getElementById('tracksSection');
             const tracksList = document.getElementById('tracksList');
             const tracksLoading = document.getElementById('tracksLoading');
@@ -833,15 +838,17 @@
                 const track = currentPlaylist[currentTrackIndex];
                 const audioPlayer = document.getElementById('audioPlayer');
                 
+                // 🔥 СОХРАНЯЕМ ТАКЖЕ TAG ID
                 const state = {
                     trackId: track.id,
                     playlist: currentPlaylist.map(t => t.id),
                     currentTime: audioPlayer.currentTime,
-                    isPlaying: isPlaying
+                    isPlaying: isPlaying,
+                    tagId: window.currentTagId || null  // 🔥 Запоминаем какой тег открыт
                 };
                 
                 localStorage.setItem('playerState', JSON.stringify(state));
-                console.log('💾 Player state saved:', state.trackId, '@', Math.floor(state.currentTime) + 's');
+                console.log('💾 Player state saved:', state.trackId, '@', Math.floor(state.currentTime) + 's', 'tag:', state.tagId);
             }
         }
         
@@ -850,7 +857,7 @@
                 const state = JSON.parse(localStorage.getItem('playerState'));
                 if (!state || !state.trackId) return null;
                 
-                console.log('🔄 Restoring player state for track:', state.trackId);
+                console.log('🔄 Restoring player state for track:', state.trackId, 'from tag:', state.tagId);
                 return state;
             } catch (e) {
                 console.error('❌ Failed to restore player state:', e);
@@ -947,6 +954,54 @@
             });
         }
         
+        // 🔥 ВОССТАНОВЛЕНИЕ ВОСПРОИЗВЕДЕНИЯ ТРЕКА
+        function restoreTrackPlayback(savedState) {
+            console.log('🎵 Restoring track playback:', savedState.trackId);
+            
+            // Ищем трек в текущем плейлисте
+            const trackIndex = tagTrackPlaylist.findIndex(t => t.id === savedState.trackId);
+            
+            if (trackIndex >= 0) {
+                const track = tagTrackPlaylist[trackIndex];
+                const audioPlayer = document.getElementById('audioPlayer');
+                
+                // Устанавливаем трек
+                currentTrackIndex = trackIndex;
+                
+                // Обновляем UI плеера
+                const currentTrackName = document.getElementById('currentTrackName');
+                const currentAlbumName = document.getElementById('currentAlbumName');
+                const currentTrackCover = document.getElementById('currentTrackCover');
+                const playerBar = document.getElementById('playerBar');
+                
+                playerBar.classList.add('active');
+                currentTrackName.textContent = track.title || 'Untitled';
+                currentAlbumName.textContent = track.author_name || 'Unknown';
+                currentTrackCover.src = track.image_url || '';
+                
+                // Устанавливаем время и запускаем
+                audioPlayer.src = track.audio_url;
+                audioPlayer.currentTime = savedState.currentTime || 0;
+                
+                if (savedState.isPlaying) {
+                    audioPlayer.play().then(() => {
+                        console.log('✅ Track restored and playing @', Math.floor(audioPlayer.currentTime) + 's');
+                        isPlaying = true;
+                        updatePlayPauseButton();
+                        highlightCurrentTrack();
+                    }).catch(err => {
+                        console.error('❌ Restore play error:', err);
+                    });
+                } else {
+                    console.log('⏸️ Track restored (paused) @', Math.floor(audioPlayer.currentTime) + 's');
+                    isPlaying = false;
+                    updatePlayPauseButton();
+                }
+            } else {
+                console.warn('⚠️ Track not found in playlist:', savedState.trackId);
+            }
+        }
+        
         // 🔥 ОБРАБОТЧИКИ СОБЫТИЙ ПЛЕЕРА
         document.addEventListener('DOMContentLoaded', () => {
             const playPauseBtn = document.getElementById('playPauseBtn');
@@ -963,12 +1018,44 @@
             const durationEl = document.getElementById('duration');
             
             // 🔥 ВОССТАНОВЛЕНИЕ ПЛЕЕРА ПРИ ЗАГРУЗКЕ
-            setTimeout(() => {
+            setTimeout(async () => {
                 const savedState = restorePlayerState();
-                if (savedState) {
-                    console.log('🔍 Looking for saved track:', savedState.trackId);
-                    // TODO: Найти трек в текущем плейлисте и восстановить
-                    // Для этого нужно сначала загрузить треки тега
+                if (savedState && savedState.tagId) {
+                    console.log('🔍 Restoring tag:', savedState.tagId);
+                    
+                    // Проверяем, открыт ли уже этот тег
+                    if (window.currentTagId !== savedState.tagId) {
+                        // Нужно открыть сохранённый тег
+                        try {
+                            // Получаем название тега из Supabase
+                            const url = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?id=eq.${savedState.tagId}&select=name`;
+                            const response = await fetch(url, {
+                                headers: {
+                                    'apikey': SUPABASE_ANON_KEY,
+                                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                                }
+                            });
+                            
+                            const result = await response.json();
+                            if (result && result.length > 0) {
+                                const tagName = result[0].name;
+                                console.log('✓ Found tag name:', tagName);
+                                
+                                // Открываем тег
+                                await selectTag(savedState.tagId, tagName);
+                                
+                                // Ждём пока загрузятся треки и восстанавливаем плеер
+                                setTimeout(() => {
+                                    restoreTrackPlayback(savedState);
+                                }, 2000);
+                            }
+                        } catch (error) {
+                            console.error('❌ Failed to restore tag:', error);
+                        }
+                    } else {
+                        // Тег уже открыт, просто восстанавливаем трек
+                        restoreTrackPlayback(savedState);
+                    }
                 }
             }, 500);
             
