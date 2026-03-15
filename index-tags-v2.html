@@ -414,14 +414,14 @@
     </div>
 
     <!-- Панель плейлиста -->
-    <div class="playlist-panel" id="playlistPanel">
+    <div class="playlist-panel" id="playlistPanel" style="display: none;">
         <div class="playlist-header">
             <h2 id="playlistAlbumTitle">Плейлист</h2>
             <button class="close-panel" id="closePlaylist">×</button>
         </div>
         <div id="playlist"></div>
     </div>
-    <div class="overlay" id="overlay"></div>
+    <div class="overlay" id="overlay" style="display: none;"></div>
 
     <script>
         // Конфигурация Supabase
@@ -700,44 +700,26 @@
             console.log(`📥 Loading next ${batchIds.length} tracks...`);
             
             try {
-                // 🔥 БЫСТРАЯ ЗАГРУЗКА: GET /tracks/{id} с кешированием
-                // Используем Promise.all для параллельных запросов
+                // 🔥 БЫСТРАЯ ЗАГРУЗКА: GET /tracks?page=N&limit=50 (как в index.html!)
+                // ОДИН запрос вместо 10 отдельных!
                 
-                const cache = new Map(); // Простой кеш в памяти
+                const page = Math.ceil(displayedTrackIds.size / 50) + 1;
+                console.log(`📄 Fetching page ${page} (displayed: ${displayedTrackIds.size})...`);
                 
-                const promises = batchIds.map(id => {
-                    // Проверяем кеш
-                    if (cache.has(id)) {
-                        return cache.get(id);
-                    }
-                    
-                    const promise = fetch(`https://api.dj1.ru/api/tracks/${id}`)
-                        .then(r => r.ok ? r.json() : null)
-                        .catch(() => null);
-                    
-                    cache.set(id, promise);
-                    return promise;
-                });
+                const response = await fetch(`https://api.dj1.ru/api/tracks?page=${page}&limit=50`);
                 
-                const results = await Promise.all(promises);
-                filteredTracks = results.filter(r => r !== null);
+                if (!response.ok) {
+                    throw new Error(`API HTTP ${response.status}`);
+                }
                 
-                console.log(`✓ Loaded ${filteredTracks.length}/${batchIds.length} tracks (${Date.now() % 10000}ms)`);
+                const result = await response.json();
+                console.log(`✓ Got ${result.data?.length || 0} tracks from API in ${Date.now() % 10000}ms`);
                 
-                // 🔥 DEBUG: Проверяем какие ID пришли из API
-                const apiTrackIds = filteredTracks.map(t => t.id);
-                console.log('API track IDs (first 5):', apiTrackIds.slice(0, 5), '...');
-                console.log('Sample API ID format:', apiTrackIds[0]);
-                console.log('Sample Batch ID format:', batchIds[0]);
+                // Фильтруем только нужные track_ids из этой пачки
+                const apiTracks = result.data || [];
+                filteredTracks = apiTracks.filter(track => batchIds.includes(track.id));
                 
                 console.log(`→ Filtered to ${filteredTracks.length} tracks`);
-                
-                // 🔥 Если 0 треков, проверяем формат ID
-                if (filteredTracks.length === 0 && batchIds.length > 0) {
-                    console.error('❌ NO MATCHES! Checking ID formats...');
-                    console.log('Batch IDs sample:', batchIds.slice(0, 3));
-                    console.log('API IDs sample:', apiTrackIds.slice(0, 3));
-                }
                 
                 // Добавляем в плейлист
                 tagTrackPlaylist.push(...filteredTracks);
