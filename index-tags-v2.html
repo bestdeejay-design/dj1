@@ -1264,7 +1264,7 @@
                             
                             // 🔥 Получаем все теги ПАРАЛЛЕЛЬНО через Promise.all
                             const tagPromises = tagIds.map(id =>
-                                fetch(`${SUPABASE_URL}/rest/v1/tags?id=eq.${id}&select=id,name,track_count`, {
+                                fetch(`${SUPABASE_URL}/rest/v1/tags?id=eq.${id}&select=id,name`, {
                                     headers: {
                                         'apikey': SUPABASE_ANON_KEY,
                                         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
@@ -1308,13 +1308,12 @@
                 // 🔥 ОБРАБАТЫВАЕМ данные
                 let trackTags = [];
                 if (Array.isArray(tagsData)) {
-                    // 🔥 tagsData - это уже массив [{id, name, track_count}, ...]
+                    // 🔥 tagsData - это уже массив [{id, name}, ...]
                     trackTags = tagsData.map(t => {
                         console.log('Processing tag:', t);
                         return {
                             id: t.id,
-                            name: t.name || 'Unknown',
-                            count: t.track_count || 0
+                            name: t.name || 'Unknown'
                         };
                     }).filter(tag => tag.name !== 'Unknown');
                     
@@ -1336,7 +1335,7 @@
                 if (lyricsEl) lyricsEl.textContent = track.lyrics || 'No lyrics';
                 if (coverEl) coverEl.src = track.image_url || '';
                 
-                // Рендерим теги с кликом и счетчиком
+                // Рендерим теги с кликом (БЕЗ чисел)
                 if (tagsEl) {
                     tagsEl.innerHTML = trackTags.map(tag => `
                         <span class="tag-chip" data-tag-id="${tag.id}" data-tag-name="${tag.name}" style="
@@ -1347,17 +1346,8 @@
                             color: #fff;
                             cursor: pointer;
                             transition: background 0.2s;
-                            display: inline-flex;
-                            align-items: center;
-                            gap: 0.5rem;
                         " onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
                             ${tag.name}
-                            <span style="
-                                background: rgba(255,255,255,0.2);
-                                padding: 0.15rem 0.5rem;
-                                border-radius: 10px;
-                                font-size: 0.75rem;
-                            ">${tag.count}</span>
                         </span>
                     `).join('');
                     
