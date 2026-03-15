@@ -14,25 +14,68 @@
             max-width: 1400px;
             margin: 0 auto;
         }
+        
+        /* Категории тегов */
+        .category-section {
+            margin-bottom: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .category-icon {
+            font-size: 2rem;
+        }
+        
+        .category-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        /* Сетка тегов - несколько в ряд */
+        .tags-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
         .tag-item {
             background: rgba(255, 255, 255, 0.1);
-            padding: 1rem;
+            padding: 0.75rem 1rem;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.5rem;
+            border: 1px solid transparent;
         }
+        
         .tag-item:hover {
             background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
         }
+        
         .tag-name {
             color: #fff;
+            font-size: 0.9rem;
             font-weight: 500;
         }
+        
         .tag-count {
             background: rgba(0, 0, 0, 0.3);
             padding: 0.25rem 0.5rem;
@@ -98,13 +141,13 @@
         const SUPABASE_URL = 'https://nwdalhrbifkjyyhpstnt.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_wdNAcYa7Ua-bbC2jDiG-FQ_b0CAPg5l';
         
-        // Шаг 1: Получаем список тегов с количеством треков
-        async function fetchTagsWithCounts() {
+        // Шаг 1: Получаем список тегов с категориями и количеством треков
+        async function fetchTagsWithCategories() {
             try {
-                console.log('📥 Fetching tags from Supabase...');
+                console.log('📥 Fetching tags with categories from Supabase...');
                 
-                // Используем VIEW tags_with_track_counts
-                const url = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?select=id,name,category_id,track_count&order=name.asc`;
+                // Используем VIEW tags_with_track_counts + join с категориями
+                const url = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?select=id,name,category_id,track_count,tag_categories(name,label,color)&order=name.asc`;
                 
                 const response = await fetch(url, {
                     headers: {
@@ -119,7 +162,7 @@
                 }
                 
                 const tags = await response.json();
-                console.log(`✓ Loaded ${tags.length} tags`);
+                console.log(`✓ Loaded ${tags.length} tags with categories`);
                 
                 return tags;
             } catch (error) {
@@ -128,17 +171,86 @@
             }
         }
         
-        // Шаг 2: Рендерим теги
-        function renderTags(tags) {
+        // Группируем теги по категориям
+        function groupTagsByCategory(tags) {
+            const CATEGORY_ICONS = {
+                'genre': '🎵',
+                'mood': '😊',
+                'tempo': '⚡',
+                'era': '📅',
+                'language': '🌐',
+                'vibe': '✨',
+                'instrumentation': '🎸',
+                'production': '🎛️',
+                'vocals': '🎤',
+                'other': '📦'
+            };
+            
+            const grouped = {};
+            
+            tags.forEach(tag => {
+                const categoryName = tag.tag_categories?.name || 'other';
+                const categoryLabel = tag.tag_categories?.label || categoryName;
+                const categoryColor = tag.tag_categories?.color || '#6b7280';
+                
+                if (!grouped[categoryName]) {
+                    grouped[categoryName] = {
+                        label: categoryLabel,
+                        color: categoryColor,
+                        icon: CATEGORY_ICONS[categoryName] || '📁',
+                        tags: []
+                    };
+                }
+                
+                grouped[categoryName].tags.push({
+                    id: tag.id,
+                    name: tag.name,
+                    track_count: tag.track_count || 0
+                });
+            });
+            
+            // Сортируем категории по порядку
+            const categoryOrder = ['genre', 'mood', 'tempo', 'era', 'language', 'vibe', 'instrumentation', 'production', 'vocals', 'other'];
+            const sortedGrouped = {};
+            
+            categoryOrder.forEach(cat => {
+                if (grouped[cat]) {
+                    sortedGrouped[cat] = grouped[cat];
+                }
+            });
+            
+            // Добавляем остальные категории
+            Object.keys(grouped).forEach(cat => {
+                if (!categoryOrder.includes(cat)) {
+                    sortedGrouped[cat] = grouped[cat];
+                }
+            });
+            
+            return sortedGrouped;
+        }
+        
+        // Шаг 2: Рендерим теги по категориям
+        function renderTagsByCategories(groupedTags) {
             const container = document.getElementById('tagsList');
             const loadingEl = document.getElementById('loading');
             
             let html = '';
-            tags.forEach(tag => {
+            
+            Object.entries(groupedTags).forEach(([categoryKey, category]) => {
                 html += `
-                    <div class="tag-item" data-tag-id="${tag.id}" data-tag-name="${tag.name}">
-                        <span class="tag-name">${tag.name}</span>
-                        <span class="tag-count">${tag.track_count || 0} tracks</span>
+                    <div class="category-section">
+                        <div class="category-header">
+                            <span class="category-icon">${category.icon}</span>
+                            <span class="category-title" style="color: ${category.color}">${category.label}</span>
+                        </div>
+                        <div class="tags-grid">
+                            ${category.tags.map(tag => `
+                                <div class="tag-item" data-tag-id="${tag.id}" data-tag-name="${tag.name}" style="cursor: pointer;">
+                                    <span class="tag-name">${tag.name}</span>
+                                    <span class="tag-count">${tag.track_count}</span>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 `;
             });
@@ -147,13 +259,16 @@
             loadingEl.style.display = 'none';
             
             // Добавляем обработчики кликов
-            document.querySelectorAll('.tag-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const tagId = item.getAttribute('data-tag-id');
-                    const tagName = item.getAttribute('data-tag-name');
-                    selectTag(tagId, tagName);
+            setTimeout(() => {
+                document.querySelectorAll('.tag-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const tagId = item.getAttribute('data-tag-id');
+                        const tagName = item.getAttribute('data-tag-name');
+                        selectTag(tagId, tagName);
+                    });
                 });
-            });
+                console.log('✅ Click handlers attached to', document.querySelectorAll('.tag-item').length, 'tags');
+            }, 100);
         }
         
         // Шаг 3: Клик по тегу → получаем track_ids
@@ -285,8 +400,9 @@
         // Запуск
         async function init() {
             try {
-                const tags = await fetchTagsWithCounts();
-                renderTags(tags);
+                const tags = await fetchTagsWithCategories();
+                const groupedTags = groupTagsByCategory(tags);
+                renderTagsByCategories(groupedTags);
             } catch (error) {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('error').textContent = `Ошибка: ${error.message}`;
