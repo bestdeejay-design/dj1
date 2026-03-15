@@ -45,6 +45,7 @@ debug/
 !docs/SUPABASE_SETUP.md
 !docs/MIGRATION_STEPS.md
 !API_SUPABASE_GUIDE.md
+!openapi.yaml
 !utils/edit_track_tags.py
 !utils/migrate_to_supabase.py
 !utils/requirements.txt

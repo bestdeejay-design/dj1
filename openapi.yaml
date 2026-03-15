@@ -1,0 +1,331 @@
+openapi: 3.0.0
+info:
+  title: Music Catalog JSON API
+  version: 1.0.0
+  description: |
+    API для музыкального каталога (треки, плейлисты, пользователи, файлы).
+    
+    **CORS**: API поддерживает Cross-Origin Resource Sharing (CORS), что позволяет делать запросы с любых доменов.
+    Поддерживаются методы GET, POST, PUT, DELETE, PATCH, OPTIONS.
+servers:
+  - url: https://api.dj1.ru/api
+    description: Production server
+  - url: http://localhost:8080/api
+    description: Local development server
+paths:
+  /users:
+    get:
+      summary: Список пользователей
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 1000
+        - name: username
+          in: query
+          schema:
+            type: string
+        - name: is_member
+          in: query
+          schema:
+            type: integer
+            enum: [0, 1]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+  /users/{id}:
+    get:
+      summary: Детальная информация о пользователе
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetail'
+  /tracks:
+    get:
+      summary: Список треков
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: author_id
+          in: query
+          schema:
+            type: string
+        - name: title
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [id, created_at, title, duration_s, play_count, favorite_count]
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [ASC, DESC]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackListResponse'
+  /tracks/{id}:
+    get:
+      summary: Детальная информация о треке
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackDetail'
+  /playlists:
+    get:
+      summary: Список плейлистов
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: name
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistListResponse'
+  /playlists/{id}:
+    get:
+      summary: Детальная информация о плейлисте
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistDetail'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        user_id:
+          type: string
+        username:
+          type: string
+        is_member:
+          type: integer
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        image_url:
+          type: string
+          nullable: true
+
+    UserDetail:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            tracks:
+              type: array
+              items:
+                $ref: '#/components/schemas/Track'
+
+    Track:
+      type: object
+      properties:
+        id:
+          type: string
+        author_id:
+          type: string
+        author_name:
+          type: string
+        title:
+          type: string
+        duration_s:
+          type: number
+        play_count:
+          type: integer
+        favorite_count:
+          type: integer
+        created_at:
+          type: string
+        image_url:
+          type: string
+          nullable: true
+        audio_url:
+          type: string
+          nullable: true
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+
+    TrackDetail:
+      allOf:
+        - $ref: '#/components/schemas/Track'
+        - type: object
+          properties:
+            in_playlists:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  user_id:
+                    type: string
+                  user_name:
+                    type: string
+
+    Playlist:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        user_name:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+        image_url:
+          type: string
+          nullable: true
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+
+    PlaylistDetail:
+      allOf:
+        - $ref: '#/components/schemas/Playlist'
+        - type: object
+          properties:
+            tracks:
+              type: array
+              items:
+                $ref: '#/components/schemas/Track'
+
+    Attachment:
+      type: object
+      properties:
+        id:
+          type: integer
+        entity_type:
+          type: string
+        entity_id:
+          type: string
+        kind:
+          type: string
+        local_path:
+          type: string
+        full_url:
+          type: string
+        mime_type:
+          type: string
+        size_bytes:
+          type: integer
+
+    UserListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    TrackListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Track'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    PlaylistListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Playlist'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    Meta:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        pages:
+          type: integer
