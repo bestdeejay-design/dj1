@@ -1527,6 +1527,8 @@
     }
 
     function renderTopTracks(tracksToRender) {
+        if (!topTracksView) return;  // 🔥 Проверка
+        
         if (topTracksPage === 1) {
             topTracksView.innerHTML = `
                 <div class="top-tracks-list" id="topTracksList"></div>
@@ -1534,6 +1536,8 @@
         }
         
         const list = document.getElementById('topTracksList');
+        if (!list) return;  // 🔥 Проверка
+        
         const isPlayingFromTop = currentAlbum && currentAlbum.id === 'top-tracks';
         const currentTrackId = isPlayingFromTop ? currentAlbum.tracks[currentTrackIndex]?.id : null;
         
@@ -1578,6 +1582,8 @@
 
     // Восстановление плеера для топа треков без автовоспроизведения
     function restoreTopTrackPlayer(track, currentTime) {
+        if (!playerBar) return;  // 🔥 Проверка
+        
         if (!playerBar.classList.contains('active')) {
             playerBar.classList.add('active');
         }
