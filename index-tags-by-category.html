@@ -368,17 +368,15 @@
                 // Получаем информацию о треках через API
                 tagTracksList.innerHTML = '<div class="loading">Загрузка информации о треках...</div>';
                 
-                // Загружаем треки ВСЕ сразу параллельно (максимум 100 за раз)
+                // Загружаем треки ВСЕ сразу параллельно (максимум 50 за раз)
                 const maxConcurrent = 50;  // Максимум 50 одновременных запросов
                 let allTracks = [];
-                let loaded = 0;
                 
                 for (let i = 0; i < trackIds.length; i += maxConcurrent) {
                     const batch = trackIds.slice(i, i + maxConcurrent);
                     const batchPromises = batch.map(id => fetchTrackById(id));
                     const batchResults = await Promise.all(batchPromises);
                     allTracks = allTracks.concat(batchResults.filter(t => t !== null));
-                    loaded += batch.length;
                     
                     // Обновляем прогресс
                     tagTracksList.innerHTML = `<div class="loading">Загружено ${allTracks.length} из ${trackIds.length} треков...</div>`;
@@ -387,7 +385,7 @@
                     await new Promise(resolve => setTimeout(resolve, 100));
                 }
                 
-                // Рендерим треки
+                // Рендерим треки КАК НА INDEX.HTML
                 renderTrackList(allTracks, tagTracksList);
                 
             } catch (error) {
@@ -414,22 +412,31 @@
                 return;
             }
             
-            let html = '<div style="display: grid; gap: 1rem;">';
+            let html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
             
             tracks.forEach((track, index) => {
                 const hasAudio = track.audio_url && track.audio_url.trim() !== '';
+                const coverUrl = track.cover_url || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM2NjYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBjb3ZlcjwvdGV4dD48L3N2Zz4=';
                 
                 html += `
-                    <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; display: flex; align-items: center; gap: 1rem;">
+                    <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; display: flex; align-items: center; gap: 1rem; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                        <!-- Обложка -->
+                        <img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(track.title || 'No cover')}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+                        
+                        <!-- Информация -->
                         <div style="flex: 1; min-width: 0;">
-                            <div style="color: #fff; font-weight: bold; margin-bottom: 0.5rem;">${escapeHtml(track.title || 'Untitled')}</div>
-                            <div style="color: #aaa; font-size: 0.9rem;">${escapeHtml(track.sound ? track.sound.substring(0, 100) + '...' : 'No description')}</div>
+                            <div style="color: #fff; font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">${escapeHtml(track.title || 'Untitled')}</div>
+                            <div style="color: #aaa; font-size: 0.9rem; line-height: 1.4;">${escapeHtml(track.sound ? track.sound.substring(0, 150) + '...' : 'No description')}</div>
+                            ${track.prompt ? `<div style="color: #888; font-size: 0.8rem; margin-top: 0.5rem;">Prompt: ${escapeHtml(track.prompt.substring(0, 100) + '...')}</div>` : ''}
                         </div>
+                        
+                        <!-- Аудио плеер -->
                         ${hasAudio ? `
-                            <audio controls style="width: 200px;">
+                            <audio controls style="width: 250px; flex-shrink: 0;">
                                 <source src="${escapeHtml(track.audio_url)}" type="audio/mpeg">
+                                Your browser does not support the audio element.
                             </audio>
-                        ` : '<span style="color: #666;">No audio</span>'}
+                        ` : '<span style="color: #666; padding: 0.5rem 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">No audio</span>'}
                     </div>
                 `;
             });
