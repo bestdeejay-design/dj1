@@ -438,60 +438,115 @@
             }
         }
         
-        // Шаг 4: Загружаем треки из API пагинацией по 10
+        // Шаг 4: УМНАЯ ПАГИНАЦИЯ - загружаем по 10 треков, предзагрузка на 7-8
+        let tagTrackPlaylist = [];      // Полный плейлист треков тега
+        let displayedTrackIds = new Set(); // Уже отображённые track_ids
+        let isLoadingMore = false;       // Блокировка от дублирования загрузки
+        
         async function loadTracksFromAPI(trackIds) {
+            console.log(`📦 Starting smart pagination for ${trackIds.length} tracks...`);
+            
+            tagTrackPlaylist = [];
+            displayedTrackIds.clear();
+            
+            // 🔥 ЗАГРУЖАЕМ ПЕРВЫЕ 10 ТРЕКОВ
+            await loadNextBatch(trackIds, 10);
+            
+            // 🔥 НАСТРАИВАЕМ INFINITE SCROLL
+            setupInfiniteScrollForTags(trackIds);
+        }
+        
+        // Загружаем следующую пачку треков
+        async function loadNextBatch(trackIds, count) {
+            if (isLoadingMore) return;
+            isLoadingMore = true;
+            
             const tracksLoading = document.getElementById('tracksLoading');
             const tracksList = document.getElementById('tracksList');
             
-            console.log(`📦 Loading ${trackIds.length} tracks from API...`);
+            // Находим следующие track_ids которые ещё не загрузили
+            const remainingIds = trackIds.filter(id => !displayedTrackIds.has(id));
+            const batchIds = remainingIds.slice(0, count);
             
-            // 🔥 ЗАГРУЖАЕМ ВСЕ ТРЕКИ СРАЗУ (не пагинацией!)
-            // API limitation: нет endpoint для получения по IDs
-            // Используем GET /tracks с большим limit
+            if (batchIds.length === 0) {
+                console.log('✅ No more tracks to load');
+                isLoadingMore = false;
+                return;
+            }
             
-            const allTracks = [];
-            const perPage = 100; // Максимальный limit
-            let page = 1;
-            let hasMore = true;
+            console.log(`📥 Loading next ${batchIds.length} tracks...`);
             
-            while (hasMore) {
-                try {
-                    // 📡 ОТПРАВЛЯЕМ ЗАПРОС В API
-                    const response = await fetch(`https://api.dj1.ru/api/tracks?page=${page}&limit=${perPage}`);
-                    
-                    if (!response.ok) {
-                        throw new Error(`API HTTP ${response.status}`);
-                    }
-                    
-                    const result = await response.json();
-                    console.log(`✓ Page ${page}: Got ${result.data?.length || 0} tracks`);
-                    
-                    if (result.data && result.data.length > 0) {
-                        // Фильтруем только нужные track_ids
-                        const filteredTracks = result.data.filter(track => trackIds.includes(track.id));
-                        allTracks.push(...filteredTracks);
-                        console.log(`  → Filtered to ${filteredTracks.length} matching tracks (total: ${allTracks.length}/${trackIds.length})`);
-                    }
-                    
-                    hasMore = result.data && result.data.length === perPage && allTracks.length < trackIds.length;
-                    page++;
-                    
-                } catch (error) {
-                    console.error(`❌ Error loading page ${page}:`, error);
-                    break;
+            try {
+                // Загружаем все треки из API (как в index.html)
+                const response = await fetch('https://api.dj1.ru/api/tracks?page=1&limit=1000');
+                
+                if (!response.ok) {
+                    throw new Error(`API HTTP ${response.status}`);
                 }
+                
+                const result = await response.json();
+                console.log(`✓ Got ${result.data?.length || 0} tracks from API`);
+                
+                // Фильтруем только нужные track_ids из этой пачки
+                const filteredTracks = result.data.filter(track => batchIds.includes(track.id));
+                
+                console.log(`→ Filtered to ${filteredTracks.length} tracks`);
+                
+                // Добавляем в плейлист
+                tagTrackPlaylist.push(...filteredTracks);
+                
+                // Отмечаем как отображённые
+                filteredTracks.forEach(track => displayedTrackIds.add(track.id));
+                
+                // Рендерим новые треки
+                renderTracks(filteredTracks);
+                
+                // Обновляем плейлист в плеере если нужно
+                updatePlayerPlaylist();
+                
+            } catch (error) {
+                console.error(`❌ Error loading batch:`, error);
             }
             
-            console.log(`✅ Total loaded: ${allTracks.length} tracks`);
-            
-            // Рендерим все треки
-            if (allTracks.length > 0) {
-                renderTracks(allTracks);
-            } else {
-                tracksList.innerHTML = '<div class="loading">Треки не найдены</div>';
-            }
-            
+            isLoadingMore = false;
             tracksLoading.style.display = 'none';
+        }
+        
+        // Infinite scroll для подгрузки следующих треков
+        function setupInfiniteScrollForTags(trackIds) {
+            const tracksList = document.getElementById('tracksList');
+            
+            // Создаём sentinel элемент
+            const sentinel = document.createElement('div');
+            sentinel.id = 'tag-tracks-sentinel';
+            sentinel.style.height = '100px';
+            sentinel.style.background = 'transparent';
+            tracksList.appendChild(sentinel);
+            
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && !isLoadingMore) {
+                    console.log('👁️ Sentinel visible - loading more tracks...');
+                    loadNextBatch(trackIds, 10); // Загружаем ещё 10
+                }
+            }, { rootMargin: '200px' });
+            
+            observer.observe(sentinel);
+        }
+        
+        // Обновляем плейлист в плеере
+        function updatePlayerPlaylist() {
+            // Если сейчас играет трек из этого тега, обновляем currentAlbum.tracks
+            if (typeof currentAlbum !== 'undefined' && currentAlbum && currentAlbum.id === 'tag-tracks') {
+                currentAlbum.tracks = tagTrackPlaylist.map(t => ({
+                    id: t.id,
+                    name: t.title,
+                    file: t.audio_url,
+                    cover: t.image_url,
+                    duration: t.duration_s,
+                    author: t.author_name
+                }));
+                console.log('✓ Updated player playlist:', currentAlbum.tracks.length, 'tracks');
+            }
         }
         
         // Шаг 5: Рендерим треки с кликом для запуска
