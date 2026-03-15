@@ -326,14 +326,23 @@
             window.currentTagPage++;
             window.currentTagLoading = false;
             
-            document.getElementById('tagTracksLoading').style.display = window.currentTagHasMore ? 'block' : 'none';
+            const loadingEl = document.getElementById('tagTracksLoading');
+            if (loadingEl) {
+                loadingEl.style.display = window.currentTagHasMore ? 'block' : 'none';
+            }
         }
         
         function setupInfiniteScroll() {
+            const list = document.getElementById('tagTracksList');
+            if (!list) {
+                console.error('tagTracksList not found for infinite scroll!');
+                return;
+            }
+            
             const sentinel = document.createElement('div');
             sentinel.style.height = '100px';
             sentinel.style.marginTop = '20px';
-            document.getElementById('tagTracksList').appendChild(sentinel);
+            list.appendChild(sentinel);
             
             new IntersectionObserver((entries) => {
                 if (entries[0].isIntersecting && window.currentTagHasMore && !window.currentTagLoading) {
