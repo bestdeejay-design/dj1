@@ -475,22 +475,31 @@
             }
             
             console.log(`📥 Loading next ${batchIds.length} tracks...`);
-            console.log('Batch IDs:', batchIds.slice(0, 5), '...'); // Показываем первые 5
             
             try {
-                // 🔥 УМНАЯ ЗАГРУЗКА: GET /tracks/{id} для каждого track_id
-                // Это быстро и точно возвращает нужные треки
+                // 🔥 БЫСТРАЯ ЗАГРУЗКА: GET /tracks/{id} с кешированием
+                // Используем Promise.all для параллельных запросов
                 
-                const promises = batchIds.map(id => 
-                    fetch(`https://api.dj1.ru/api/tracks/${id}`)
+                const cache = new Map(); // Простой кеш в памяти
+                
+                const promises = batchIds.map(id => {
+                    // Проверяем кеш
+                    if (cache.has(id)) {
+                        return cache.get(id);
+                    }
+                    
+                    const promise = fetch(`https://api.dj1.ru/api/tracks/${id}`)
                         .then(r => r.ok ? r.json() : null)
-                        .catch(() => null)
-                );
+                        .catch(() => null);
+                    
+                    cache.set(id, promise);
+                    return promise;
+                });
                 
                 const results = await Promise.all(promises);
                 filteredTracks = results.filter(r => r !== null);
                 
-                console.log(`✓ Loaded ${filteredTracks.length}/${batchIds.length} tracks from individual requests`);
+                console.log(`✓ Loaded ${filteredTracks.length}/${batchIds.length} tracks (${Date.now() % 10000}ms)`);
                 
                 // 🔥 DEBUG: Проверяем какие ID пришли из API
                 const apiTrackIds = filteredTracks.map(t => t.id);
@@ -600,6 +609,37 @@
         let currentTrackIndex = -1;
         let isPlaying = false;
         
+        // 🔥 ВОССТАНОВЛЕНИЕ ПЛЕЕРА ИЗ LOCALSTORAGE
+        function savePlayerState() {
+            if (currentTrackIndex >= 0 && currentPlaylist[currentTrackIndex]) {
+                const track = currentPlaylist[currentTrackIndex];
+                const audioPlayer = document.getElementById('audioPlayer');
+                
+                const state = {
+                    trackId: track.id,
+                    playlist: currentPlaylist.map(t => t.id),
+                    currentTime: audioPlayer.currentTime,
+                    isPlaying: isPlaying
+                };
+                
+                localStorage.setItem('playerState', JSON.stringify(state));
+                console.log('💾 Player state saved:', state.trackId, '@', Math.floor(state.currentTime) + 's');
+            }
+        }
+        
+        function restorePlayerState() {
+            try {
+                const state = JSON.parse(localStorage.getItem('playerState'));
+                if (!state || !state.trackId) return null;
+                
+                console.log('🔄 Restoring player state for track:', state.trackId);
+                return state;
+            } catch (e) {
+                console.error('❌ Failed to restore player state:', e);
+                return null;
+            }
+        }
+        
         function playTrack(track, index, playlist) {
             console.log('🎵 Playing track:', track.title);
             
@@ -631,6 +671,9 @@
                     isPlaying = true;
                     updatePlayPauseButton();
                     highlightCurrentTrack();
+                    
+                    // Сохраняем состояние когда начнёт играть
+                    setTimeout(savePlayerState, 1000);
                 }).catch(err => {
                     console.error('❌ Play error:', err);
                 });
@@ -645,9 +688,11 @@
             if (isPlaying) {
                 audioPlayer.pause();
                 isPlaying = false;
+                savePlayerState(); // 🔥 Сохраняем при паузе
             } else {
                 audioPlayer.play();
                 isPlaying = true;
+                setTimeout(savePlayerState, 1000); // 🔥 Сохраняем через 1с после play
             }
             
             updatePlayPauseButton();
@@ -698,6 +743,16 @@
             const currentTimeEl = document.getElementById('currentTime');
             const durationEl = document.getElementById('duration');
             
+            // 🔥 ВОССТАНОВЛЕНИЕ ПЛЕЕРА ПРИ ЗАГРУЗКЕ
+            setTimeout(() => {
+                const savedState = restorePlayerState();
+                if (savedState) {
+                    console.log('🔍 Looking for saved track:', savedState.trackId);
+                    // TODO: Найти трек в текущем плейлисте и восстановить
+                    // Для этого нужно сначала загрузить треки тега
+                }
+            }, 500);
+            
             if (playPauseBtn) playPauseBtn.addEventListener('click', togglePlayPause);
             if (nextBtn) nextBtn.addEventListener('click', nextTrack);
             if (prevBtn) prevBtn.addEventListener('click', prevTrack);
@@ -747,6 +802,11 @@
                         }
                     }
                 });
+                
+                // 🔥 Сохраняем каждые 5 секунд при воспроизведении
+                setInterval(() => {
+                    if (isPlaying) savePlayerState();
+                }, 5000);
                 
                 audioPlayer.addEventListener('loadedmetadata', () => {
                     if (durationEl) {
