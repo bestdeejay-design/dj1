@@ -202,32 +202,56 @@
                 console.log('Fetching track counts for', tags.length, 'tags...');
                 const countStart = Date.now();
                 
-                const countUrl = `${SUPABASE_URL}/rest/v1/track_tags?select=tag_id`;
-                const countResponse = await fetch(countUrl, {
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`
-                    }
-                });
+                // Получаем ВСЕ track_tags с пагинацией (Supabase отдаёт по 1000)
+                let allTrackTags = [];
+                let page = 0;
+                const pageSize = 1000;
+                let hasMore = true;
                 
-                let trackCounts = {};
-                if (countResponse.ok) {
-                    const allTrackTags = await countResponse.json();
-                    console.log(`Received ${allTrackTags.length} track_tags records`);
+                while (hasMore) {
+                    const offset = page * pageSize;
+                    const countUrl = `${SUPABASE_URL}/rest/v1/track_tags?select=tag_id&order=tag_id.asc&range=${offset}-${offset + pageSize - 1}`;
                     
-                    // Группируем по tag_id и считаем
-                    allTrackTags.forEach(tt => {
-                        const tagId = tt.tag_id;
-                        trackCounts[tagId] = (trackCounts[tagId] || 0) + 1;
+                    const countResponse = await fetch(countUrl, {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
                     });
                     
-                    console.log(`Counted ${Object.keys(trackCounts).length} unique tags with tracks`);
-                } else {
-                    console.error('Failed to fetch track counts:', countResponse.status);
+                    if (!countResponse.ok) {
+                        console.error(`Failed to fetch page ${page}:`, countResponse.status);
+                        break;
+                    }
+                    
+                    const pageData = await countResponse.json();
+                    allTrackTags = allTrackTags.concat(pageData);
+                    
+                    console.log(`Fetched page ${page + 1}: ${pageData.length} records (total: ${allTrackTags.length})`);
+                    
+                    // Если получили меньше чем pageSize - значит это последняя страница
+                    if (pageData.length < pageSize) {
+                        hasMore = false;
+                    } else {
+                        page++;
+                    }
+                    
+                    // Небольшая задержка чтобы не блокировать API
+                    await new Promise(resolve => setTimeout(resolve, 50));
                 }
                 
+                console.log(`Total fetched: ${allTrackTags.length} track_tags records`);
+                
+                // Группируем по tag_id и считаем
+                let trackCounts = {};
+                allTrackTags.forEach(tt => {
+                    const tagId = tt.tag_id;
+                    trackCounts[tagId] = (trackCounts[tagId] || 0) + 1;
+                });
+                
+                console.log(`Counted ${Object.keys(trackCounts).length} unique tags with tracks`);
                 const countEnd = Date.now();
-                console.log(`✓ Track counts loaded in ${countEnd - countStart}ms for ${Object.keys(trackCounts).length} tags`);
+                console.log(`✓ Track counts loaded in ${countEnd - countStart}ms`);
                 
                 // 3. Добавляем count к каждому тегу
                 tags.forEach(tag => {
