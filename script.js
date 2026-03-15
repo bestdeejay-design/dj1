@@ -1377,23 +1377,23 @@
         // Переключаем вид
         updateSortControlsForView(view);
         
-        // Скрываем все виды
-        gallery.style.display = 'none';
-        topTracksView.style.display = 'none';
-        tagsView.style.display = 'none';
+        // Скрываем все виды (с проверкой на существование)
+        if (gallery) gallery.style.display = 'none';
+        if (topTracksView) topTracksView.style.display = 'none';
+        if (tagsView) tagsView.style.display = 'none';
         
         if (view === 'albums') {
-            gallery.style.display = 'grid';
-            loadingEl.style.display = hasMore ? 'block' : 'none';
+            if (gallery) gallery.style.display = 'grid';
+            if (loadingEl) loadingEl.style.display = hasMore ? 'block' : 'none';
         } else if (view === 'top-tracks') {
-            topTracksView.style.display = 'block';
-            loadingEl.style.display = topTracksHasMore ? 'block' : 'none';
+            if (topTracksView) topTracksView.style.display = 'block';
+            if (loadingEl) loadingEl.style.display = topTracksHasMore ? 'block' : 'none';
             if (topTracks.length === 0) {
                 loadTopTracks();
             }
         } else if (view === 'tags') {
-            tagsView.style.display = 'block';
-            loadingEl.style.display = tagTracksHasMore && currentTag ? 'block' : 'none';
+            if (tagsView) tagsView.style.display = 'block';
+            if (loadingEl) loadingEl.style.display = tagTracksHasMore && currentTag ? 'block' : 'none';
             if (!allTagsLoaded) {
                 loadAllTags();
             }
@@ -1420,13 +1420,13 @@
         
         // Применяем начальное состояние без прокрутки
         if (savedView === 'top-tracks') {
-            gallery.style.display = 'none';
-            topTracksView.style.display = 'block';
+            if (gallery) gallery.style.display = 'none';
+            if (topTracksView) topTracksView.style.display = 'block';
             updateSortControlsForView('top-tracks');
             loadTopTracks();
         } else if (savedView === 'tags') {
-            gallery.style.display = 'none';
-            tagsView.style.display = 'block';
+            if (gallery) gallery.style.display = 'none';
+            if (tagsView) tagsView.style.display = 'block';
             updateSortControlsForView('tags');
             loadAllTags();
         } else {
