@@ -32,7 +32,6 @@ backups/
 tests/
 utils/
 scripts/
-configs/
 archive/
 debug/
 *.json
