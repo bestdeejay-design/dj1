@@ -124,6 +124,224 @@
             background: rgba(255, 255, 255, 0.2);
             border-left: 3px solid #fff;
         }
+        
+        /* 🔥 СТИЛИ ПЛЕЕРА КАК В STYLE.CSS */
+        :root {
+            --player-bg: rgba(20, 20, 20, 0.95);
+            --border-light: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #aaaaaa;
+            --accent: #1ed760;
+            --accent-dim: rgba(30, 215, 96, 0.2);
+        }
+        
+        .player-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--player-bg);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid var(--border-light);
+            padding: 1rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 100;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+        
+        .player-bar.active {
+            transform: translateY(0);
+        }
+        
+        .player-main-row {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            width: 100%;
+        }
+        
+        .track-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 220px;
+        }
+        
+        .track-cover {
+            width: 56px;
+            height: 56px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #2a2a2a;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            transition: transform 0.3s;
+        }
+        
+        .track-details {
+            overflow: hidden;
+        }
+        
+        .track-name {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-primary);
+        }
+        
+        .album-name {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex: 1;
+        }
+        
+        .control-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.1s;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .play-pause-btn {
+            width: 48px;
+            height: 48px;
+        }
+        
+        .control-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+        
+        .play-pause-btn svg {
+            width: 30px;
+            height: 30px;
+        }
+        
+        .track-progress-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 2;
+            min-width: 200px;
+        }
+        
+        .track-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            min-width: 36px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .track-progress-bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .track-progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .playlist-toggle {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+        
+        .playlist-toggle:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        
+        .playlist-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 400px;
+            background: rgba(20, 20, 20, 0.98);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255,255,255,0.1);
+            z-index: 101;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        
+        .playlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .close-panel {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
@@ -652,8 +870,8 @@
             const currentTrackCover = document.getElementById('currentTrackCover');
             const playerBar = document.getElementById('playerBar');
             
-            // Показываем плеер
-            playerBar.style.display = 'block';
+            // Показываем плеер через classList.active (как в index.html!)
+            playerBar.classList.add('active');
             
             // Обновляем информацию
             currentTrackName.textContent = track.title || 'Untitled';
