@@ -607,11 +607,20 @@
             
             // Загружаем и играем аудио
             if (track.audio_url) {
+                console.log('▶️ Loading audio:', track.audio_url);
                 audioPlayer.src = track.audio_url;
-                audioPlayer.play();
-                isPlaying = true;
-                updatePlayPauseButton();
-                highlightCurrentTrack();
+                audioPlayer.load(); // 🔥 ВАЖНО: перезагружаем аудио элемент
+                
+                audioPlayer.play().then(() => {
+                    console.log('✅ Audio playing');
+                    isPlaying = true;
+                    updatePlayPauseButton();
+                    highlightCurrentTrack();
+                }).catch(err => {
+                    console.error('❌ Play error:', err);
+                });
+            } else {
+                console.error('❌ No audio_url for track:', track.id);
             }
         }
         
