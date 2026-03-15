@@ -348,7 +348,6 @@
             const tagTracksSection = document.getElementById('tagTracksSection');
             if (!tagTracksSection) {
                 console.error('ERROR: #tagTracksSection not found in DOM!');
-                console.log('Available elements:', document.querySelectorAll('*').length);
                 return;
             }
             
@@ -358,15 +357,10 @@
             const selectedTagName = document.getElementById('selectedTagName');
             const selectedTagCount = document.getElementById('selectedTagCount');
             const tagTracksList = document.getElementById('tagTracksList');
+            const tagTracksLoading = document.getElementById('tagTracksLoading');
             
             if (!loadingEl || !tagTracksSection) {
-                console.error('Required DOM elements not found!', {
-                    loadingEl: !!loadingEl,
-                    tagTracksSection: !!tagTracksSection,
-                    selectedTagName: !!selectedTagName,
-                    selectedTagCount: !!selectedTagCount,
-                    tagTracksList: !!tagTracksList
-                });
+                console.error('Required DOM elements not found!');
                 return;
             }
             
@@ -375,7 +369,13 @@
             if (errorEl) errorEl.style.display = 'none';
             tagTracksSection.style.display = 'block';
             selectedTagName.textContent = tagName;
-            tagTracksList.innerHTML = '<div class="loading">Загрузка треков...</div>';
+            tagTracksList.innerHTML = '';
+            tagTracksLoading.style.display = 'block';
+            
+            // 🔥 СКРОЛЛИМ К СПИСКУ ТРЕКОВ!
+            setTimeout(() => {
+                tagTracksSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
             
             console.log('Fetching track_tags for tag_id:', tagId);
             
@@ -399,37 +399,115 @@
                 selectedTagCount.textContent = `${trackIds.length} tracks`;
                 
                 if (trackIds.length === 0) {
+                    tagTracksLoading.style.display = 'none';
                     tagTracksList.innerHTML = '<div class="loading">Нет треков с этим тегом</div>';
                     return;
                 }
                 
-                // Получаем информацию о треках через API
-                tagTracksList.innerHTML = '<div class="loading">Загрузка информации о треках...</div>';
+                // 🔥 ИНИЦИАЛИЗИРУЕМ ПАГИНАЦИЮ
+                window.currentTagTrackIds = trackIds;
+                window.currentTagPage = 1;
+                window.currentTagHasMore = true;
+                window.currentTagLoading = false;
+                window.currentTagTracksPerPage = 20;
                 
-                // Загружаем треки ВСЕ сразу параллельно (максимум 50 за раз)
-                const maxConcurrent = 50;  // Максимум 50 одновременных запросов
-                let allTracks = [];
+                tagTracksLoading.style.display = 'block';
                 
-                for (let i = 0; i < trackIds.length; i += maxConcurrent) {
-                    const batch = trackIds.slice(i, i + maxConcurrent);
-                    const batchPromises = batch.map(id => fetchTrackById(id));
-                    const batchResults = await Promise.all(batchPromises);
-                    allTracks = allTracks.concat(batchResults.filter(t => t !== null));
-                    
-                    // Обновляем прогресс
-                    tagTracksList.innerHTML = `<div class="loading">Загружено ${allTracks.length} из ${trackIds.length} треков...</div>`;
-                    
-                    // Небольшая задержка между батчами
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
+                // Загружаем первую страницу
+                await loadMoreTagTracks();
                 
-                // Рендерим треки КАК НА INDEX.HTML
-                renderTrackList(allTracks, tagTracksList);
+                // 🔥 НАСТРАИВАЕМ INFINITE SCROLL
+                setupInfiniteScroll();
                 
             } catch (error) {
                 console.error('Error loading tag tracks:', error);
+                tagTracksLoading.style.display = 'none';
                 tagTracksList.innerHTML = `<div class="error">Ошибка: ${error.message}</div>`;
             }
+        }
+        
+        // 🔥 ЗАГРУЗКА СЛЕДУЮЩЕЙ СТРАНИЦЫ ТРЕКОВ
+        async function loadMoreTagTracks() {
+            if (window.currentTagLoading || !window.currentTagHasMore) return;
+            
+            window.currentTagLoading = true;
+            const page = window.currentTagPage;
+            const perPage = window.currentTagTracksPerPage;
+            const start = (page - 1) * perPage;
+            const end = start + perPage;
+            const pageIds = window.currentTagTrackIds.slice(start, end);
+            
+            console.log(`Loading page ${page}: tracks ${start}-${end} of ${window.currentTagTrackIds.length}`);
+            
+            // Загружаем треки параллельно по 20
+            const batchPromises = pageIds.map(id => fetchTrackById(id));
+            const batchResults = await Promise.all(batchPromises);
+            const tracks = batchResults.filter(t => t !== null);
+            
+            // Рендерим страницу
+            renderTrackListPage(tracks);
+            
+            // Проверяем есть ли ещё
+            window.currentTagHasMore = end < window.currentTagTrackIds.length;
+            window.currentTagPage++;
+            window.currentTagLoading = false;
+            
+            document.getElementById('tagTracksLoading').style.display = window.currentTagHasMore ? 'block' : 'none';
+        }
+        
+        // 🔥 INFINITE SCROLL OBSERVER
+        function setupInfiniteScroll() {
+            const sentinel = document.createElement('div');
+            sentinel.id = 'tag-tracks-sentinel';
+            sentinel.style.height = '100px';
+            sentinel.style.marginTop = '20px';
+            sentinel.style.background = 'transparent';
+            document.getElementById('tagTracksList').appendChild(sentinel);
+            
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && window.currentTagHasMore && !window.currentTagLoading) {
+                    loadMoreTagTracks();
+                }
+            }, { rootMargin: '200px' });
+            
+            observer.observe(sentinel);
+        }
+        
+        // Рендерим СТРАНИЦУ треков (не все сразу)
+        function renderTrackListPage(tracks) {
+            if (!tracks || tracks.length === 0) return;
+            
+            const container = document.getElementById('tagTracksList');
+            let html = '';
+            
+            tracks.forEach((track, index) => {
+                const hasAudio = track.audio_url && track.audio_url.trim() !== '';
+                const coverUrl = track.cover_url || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM2NjYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBjb3ZlcjwvdGV4dD48L3N2Zz4=';
+                
+                html += `
+                    <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; display: flex; align-items: center; gap: 1rem; transition: all 0.3s ease; margin-bottom: 1rem;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                        <!-- Обложка -->
+                        <img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(track.title || 'No cover')}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+                        
+                        <!-- Информация -->
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="color: #fff; font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">${escapeHtml(track.title || 'Untitled')}</div>
+                            <div style="color: #aaa; font-size: 0.9rem; line-height: 1.4;">${escapeHtml(track.sound ? track.sound.substring(0, 150) + '...' : 'No description')}</div>
+                            ${track.prompt ? `<div style="color: #888; font-size: 0.8rem; margin-top: 0.5rem;">Prompt: ${escapeHtml(track.prompt.substring(0, 100) + '...')}</div>` : ''}
+                        </div>
+                        
+                        <!-- Аудио плеер -->
+                        ${hasAudio ? `
+                            <audio controls style="width: 250px; flex-shrink: 0;" preload="none">
+                                <source src="${escapeHtml(track.audio_url)}" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        ` : '<span style="color: #666; padding: 0.5rem 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">No audio</span>'}
+                    </div>
+                `;
+            });
+            
+            container.insertAdjacentHTML('beforeend', html);
         }
         
         async function fetchTrackById(trackId) {
@@ -496,6 +574,10 @@
         function backToCategories() {
             document.getElementById('tagTracksSection').style.display = 'none';
             document.getElementById('loading').style.display = 'block';
+            // Очищаем данные
+            window.currentTagTrackIds = null;
+            window.currentTagPage = null;
+            window.currentTagHasMore = null;
         }
 
         async function init() {
