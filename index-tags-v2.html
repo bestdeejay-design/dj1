@@ -1262,22 +1262,25 @@
                             const tagIds = tagsData.map(t => t.tag_id);
                             console.log('🏷️ Tag IDs to fetch:', tagIds);
                             
-                            // Получаем все теги по их ID
-                            const tagsDetailsUrl = `${SUPABASE_URL}/rest/v1/tags?id=in.(${tagIds.join(',')})&select=id,name,track_count`;
-                            const tagsDetailsResponse = await fetch(tagsDetailsUrl, {
-                                headers: {
-                                    'apikey': SUPABASE_ANON_KEY,
-                                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                                }
-                            });
+                            // 🔥 Получаем все теги ПАРАЛЛЕЛЬНО через Promise.all
+                            const tagPromises = tagIds.map(id =>
+                                fetch(`${SUPABASE_URL}/rest/v1/tags?id=eq.${id}&select=id,name,track_count`, {
+                                    headers: {
+                                        'apikey': SUPABASE_ANON_KEY,
+                                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                                    }
+                                })
+                                .then(r => r.ok ? r.json() : null)
+                                .catch(() => null)
+                            );
                             
-                            if (tagsDetailsResponse.ok) {
-                                const tagsDetails = await tagsDetailsResponse.json();
-                                console.log('✓ Got tag details:', tagsDetails);
-                                tagsData = tagsDetails;
-                            } else {
-                                console.error('❌ Failed to fetch tag details:', tagsDetailsResponse.status);
-                            }
+                            const tagResults = await Promise.all(tagPromises);
+                            const tagsDetails = tagResults
+                                .filter(r => r !== null && Array.isArray(r) && r.length > 0)
+                                .map(r => r[0]);
+                            
+                            console.log('✓ Got tag details:', tagsDetails);
+                            tagsData = tagsDetails;
                         }
                     } else {
                         console.error('❌ Tags API error:', tagsResponse.status, tagsResponse.statusText);
