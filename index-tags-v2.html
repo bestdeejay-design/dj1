@@ -719,7 +719,30 @@
             
             // Показываем секцию треков
             tracksSection.style.display = 'block';
-            nameEl.textContent = tagName;
+            
+            // 🔥 ПОЛУЧАЕМ TRACK_COUNT ИЗ SUPABASE
+            try {
+                const countUrl = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?id=eq.${tagId}&select=track_count`;
+                const countResponse = await fetch(countUrl, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                let trackCount = 0;
+                if (countResponse.ok) {
+                    const countData = await countResponse.json();
+                    trackCount = countData[0]?.track_count || 0;
+                }
+                
+                // Обновляем заголовок с числом треков
+                nameEl.innerHTML = `${tagName} <span style="color: #aaa; font-size: 0.9rem;">(${trackCount})</span>`;
+            } catch (error) {
+                console.error('❌ Failed to get track count:', error);
+                nameEl.textContent = tagName;
+            }
+            
             tracksList.innerHTML = '';
             tracksLoading.style.display = 'block';
             
