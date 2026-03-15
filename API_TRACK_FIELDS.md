@@ -264,3 +264,181 @@ function formatDate(isoString) {
 **Дата анализа:** 2026-02-20  
 **API Version:** Current  
 **Статус:** ✅ Актуально
+
+---
+
+## 🚀 ПОСЛЕДНИЕ ДОБАВЛЕНИЯ (Февраль 2026)
+
+### Новые функции реализованные в index-tags-v3-optimized.html:
+
+#### 1. **Перемотка трека (Click-to-Seek)**
+```javascript
+// Клик по прогресс-барy перематывает трек
+progressBar.addEventListener('click', (e) => {
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    audio.currentTime = percentage * audio.duration;
+    savePlayerState(); // Сохраняет позицию
+});
+```
+
+#### 2. **Автосохранение перед перезагрузкой**
+```javascript
+// beforeunload событие сохраняет позицию перед F5
+window.addEventListener('beforeunload', () => {
+    savePlayerState();
+});
+
+// Интервал сохранения каждые 5 секунд
+const saveInterval = setInterval(savePlayerState, 5000);
+```
+
+#### 3. **Infinite Scroll для подгрузки треков**
+```javascript
+// IntersectionObserver автоматически подгружает треки
+const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !isLoadingMore) {
+        loadTracksBatch(trackIds, 10); // Загружает ещё 10
+    }
+}, { rootMargin: '200px' });
+```
+
+#### 4. **Оптимизированная загрузка через OR query**
+```javascript
+// ОДИН запрос вместо Promise.all × N
+const orCondition = batchIds.map(id => `id.eq.${id}`).join(',');
+const url = `${API_BASE}/tracks?or=(${orCondition})`;
+
+// CORS заголовки для надёжности
+fetch(url, {
+    mode: 'cors',
+    headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+    }
+});
+```
+
+#### 5. **Release Info в модалке**
+```javascript
+// Отображение даты создания, длительности, статистики
+releaseInfoEl.innerHTML = `
+    <div style="display: grid; grid-template-columns: auto 1fr;">
+        <span>🕓 Добавлен:</span>
+        <span>${formatDate(track.created_at)}</span>
+        
+        <span>⏱️ Длительность:</span>
+        <span>${formatTime(track.duration_s)}</span>
+        
+        <span>▶️ Прослушиваний:</span>
+        <span>${track.play_count}</span>
+        
+        <span>❤️ В избранном:</span>
+        <span>${track.favorite_count}</span>
+    </div>
+`;
+```
+
+#### 6. **Глобальная индексация треков**
+```javascript
+// Поиск глобального индекса вместо локального batch index
+const globalIndex = currentPlaylist.findIndex(t => t.id === track.id);
+item.dataset.trackIndex = globalIndex; // ← Правильный индекс!
+```
+
+---
+
+## 📊 ФУНКЦИИ ФОРМАТИРОВАНИЯ
+
+### formatDate(isoString) - Умное форматирование дат
+```javascript
+function formatDate(isoString) {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diff = now - date;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (days === 0) return 'Сегодня';
+    if (days === 1) return 'Вчера';
+    if (days < 7) return `${days} дн. назад`;
+    if (days < 30) return `${Math.floor(days/7)} нед. назад`;
+    if (days < 365) return `${Math.floor(days/30)} мес. назад`;
+    
+    return date.toLocaleDateString('ru-RU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+// Примеры:
+// "2025-02-17T21:48:42Z" → "3 мес. назад"
+// "2026-02-19T10:00:00Z" → "Вчера"
+// "2026-02-20T20:00:00Z" → "Сегодня"
+```
+
+### formatTime(seconds) - Форматирование времени
+```javascript
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Примеры:
+// 167.28 → "2:47"
+// 5.0 → "0:05"
+// 3661 → "61:01"
+```
+
+---
+
+## 🎯 ПОЛНЫЙ СПИСОК API ENDPOINTS
+
+### Track API:
+```
+GET https://api.dj1.ru/api/tracks/{track_id}
+GET https://api.dj1.ru/api/tracks?or=(id.eq.{id1},id.eq.{id2},...)
+```
+
+### Supabase REST:
+```
+# Теги с категориями и количеством треков
+GET /rest/v1/tags_with_track_counts?
+    select=id,name,category_id,track_count,tag_categories(name,label,color)&
+    order=category_id.asc,name.asc
+
+# Track IDs для тега
+GET /rest/v1/track_tags?tag_id=eq.{tagId}&select=track_id
+
+# Track IDs для трека (чтобы найти его теги)
+GET /rest/v1/track_tags?track_id=eq.{trackId}&select=tag_id
+
+# Данные тегов (оптимизированный OR query)
+GET /rest/v1/tags_with_track_counts?
+    or=(id.eq.{id1},id.eq.{id2},...)&
+    select=id,name,track_count
+```
+
+---
+
+## 💾 PLAYER STATE STRUCTURE
+
+### localStorage ключ: `playerState`
+```json
+{
+  "trackId": "uuid-string",
+  "currentTime": 123.45,
+  "isPlaying": true,
+  "tagId": 42
+}
+```
+
+**Сохранение происходит:**
+- При начале воспроизведения
+- Каждые 5 секунд во время воспроизведения
+- При паузе
+- При переключении трека
+- Перед перезагрузкой страницы (beforeunload)
+- При перемотке кликом
