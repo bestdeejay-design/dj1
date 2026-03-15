@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DJ1.RU / TAGS TEST</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="rays.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <style>
+        .tags-view {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* Категории тегов */
+        .category-section {
+            margin-bottom: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .category-icon {
+            font-size: 2rem;
+        }
+        
+        .category-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        /* Сетка тегов - несколько в ряд */
+        .tags-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .tag-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid transparent;
+        }
+        
+        .tag-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .tag-name {
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .tag-count {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #aaa;
+        }
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+            color: #aaa;
+        }
+        .error {
+            background: rgba(220, 38, 38, 0.2);
+            border: 1px solid rgba(220, 38, 38, 0.5);
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem;
+        }
+        .tracks-section {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+        .track-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .track-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .track-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-effects"></div>
+    
+    <div class="header">
+        <div class="header-row">
+            <h1><a href="index.html" style="color: inherit; text-decoration: none;">DJ1.RU</a></h1>
+        </div>
+        <div class="sub">Tags Test (Supabase + API)</div>
+    </div>
+
+    <div class="tags-view" id="tagsView">
+        <div class="loading" id="loading">Загрузка тегов из Supabase...</div>
+        <div class="error" id="error" style="display: none;"></div>
+        <div id="tagsList"></div>
+    </div>
+
+    <div id="tracksSection" class="tracks-section" style="display: none;">
+        <h2 id="selectedTagName" style="color: #fff; margin-bottom: 1rem;"></h2>
+        <div id="tracksList"></div>
+        <div id="tracksLoading" class="loading">Загрузка треков...</div>
+    </div>
+
+    <!-- 🔥 ПЛЕЕР КАК НА INDEX.HTML -->
+    <div class="player-bar" id="playerBar" style="display: none;">
+        <div class="player-main-row">
+            <div class="track-info">
+                <img class="track-cover" id="currentTrackCover" alt="Cover">
+                <div class="track-details">
+                    <div class="track-name-wrapper" id="trackNameWrapper" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="track-name" id="currentTrackName">Выберите трек</span>
+                    </div>
+                    <span class="album-name" id="currentAlbumName"></span>
+                </div>
+            </div>
+
+            <div class="player-controls">
+                <button class="control-btn" id="prevBtn" title="Предыдущий">
+                    <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                </button>
+                <button class="control-btn play-pause-btn" id="playPauseBtn" title="Play/Pause">
+                    <svg viewBox="0 0 24 24">
+                        <path class="play-icon" d="M8 5v14l11-7z"/>
+                        <path class="pause-icon" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" style="display: none;"/>
+                    </svg>
+                </button>
+                <button class="control-btn" id="nextBtn" title="Следующий">
+                    <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                </button>
+                <button class="control-btn" id="repeatBtn" title="Repeat">
+                    <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+                </button>
+            </div>
+
+            <div class="track-progress-container">
+                <span class="track-time current" id="currentTime">0:00</span>
+                <div class="track-progress-bar" id="progressBar">
+                    <div class="track-progress-fill" id="progressFill"></div>
+                </div>
+                <span class="track-time duration" id="duration">0:00</span>
+            </div>
+
+            <audio id="audioPlayer"></audio>
+            <button class="playlist-toggle" id="togglePlaylist">
+                <svg viewBox="0 0 24 24"><path d="M3 13h12v-2H3v2zm0-6v2h18V7H3zm0 10h6v-2H3v2zm15-3h2v-3h3v-2h-3V7h-2v3h-3v2h3v3z"/></svg>
+                <span>Плейлист</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Панель плейлиста -->
+    <div class="playlist-panel" id="playlistPanel" style="display: none;">
+        <div class="playlist-header">
+            <h2 id="playlistAlbumTitle">Плейлист</h2>
+            <button class="close-panel" id="closePlaylist">×</button>
+        </div>
+        <div id="playlist"></div>
+    </div>
+    <div class="overlay" id="overlay" style="display: none;"></div>
+
+    <script>
+        // Конфигурация Supabase
+        const SUPABASE_URL = 'https://nwdalhrbifkjyyhpstnt.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_wdNAcYa7Ua-bbC2jDiG-FQ_b0CAPg5l';
+        
+        // Шаг 1: Получаем список тегов с категориями и количеством треков
+        async function fetchTagsWithCategories() {
+            try {
+                console.log('📥 Fetching tags with categories from Supabase...');
+                const startTime = Date.now();
+                
+                // Используем VIEW tags_with_track_counts + join с категориями
+                // ⚠️ ВАЖНО: Загружаем ВСЕ теги (один запрос вместо 1922!)
+                const url = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?select=id,name,category_id,track_count,tag_categories(name,label,color)&order=category_id.asc,name.asc`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const tags = await response.json();
+                const endTime = Date.now();
+                
+                console.log(`✓ Loaded ${tags.length} tags in ${endTime - startTime}ms`);
+                console.log('⚡ This is MUCH faster than 1922 individual requests!');
+                
+                return tags;
+            } catch (error) {
+                console.error('❌ Error fetching tags:', error);
+                throw error;
+            }
+        }
+        
+        // Группируем теги по категориям
+        function groupTagsByCategory(tags) {
+            const grouped = {};
+            
+            tags.forEach(tag => {
+                const categoryName = tag.tag_categories?.name || 'other';
+                // 🔥 БЕРЁМ LABEL ПРЯМО ИЗ БД (там уже с эмодзи!)
+                const categoryLabel = tag.tag_categories?.label || categoryName;
+                const categoryColor = tag.tag_categories?.color || '#6b7280';
+                
+                if (!grouped[categoryName]) {
+                    grouped[categoryName] = {
+                        label: categoryLabel,  // ✅ Уже с эмодзи из БД
+                        color: categoryColor,
+                        tags: []
+                    };
+                }
+                
+                grouped[categoryName].tags.push({
+                    id: tag.id,
+                    name: tag.name,
+                    track_count: tag.track_count || 0
+                });
+            });
+            
+            // Сортируем категории по порядку
+            const categoryOrder = ['genre', 'mood', 'tempo', 'era', 'language', 'vibe', 'instrumentation', 'production', 'vocals', 'other'];
+            const sortedGrouped = {};
+            
+            categoryOrder.forEach(cat => {
+                if (grouped[cat]) {
+                    sortedGrouped[cat] = grouped[cat];
+                }
+            });
+            
+            // Добавляем остальные категории
+            Object.keys(grouped).forEach(cat => {
+                if (!categoryOrder.includes(cat)) {
+                    sortedGrouped[cat] = grouped[cat];
+                }
+            });
+            
+            // 🔥 ДОБАВЛЯЕМ СВЁРНУТЫЕ КАТЕГОРИИ (>30 тегов)
+            Object.entries(sortedGrouped).forEach(([key, category]) => {
+                if (category.tags.length > 30) {
+                    category.collapsed = true; // Сворачиваем большие категории
+                    console.log(`📦 Category "${category.label}" has ${category.tags.length} tags - collapsed by default`);
+                } else {
+                    category.collapsed = false;
+                }
+            });
+            
+            return sortedGrouped;
+        }
+        
+        // Шаг 2: Рендерим теги по категориям
+        function renderTagsByCategories(groupedTags) {
+            const container = document.getElementById('tagsList');
+            const loadingEl = document.getElementById('loading');
+            
+            let html = '';
+            
+            Object.entries(groupedTags).forEach(([categoryKey, category]) => {
+                const totalTags = category.tags.length;
+                const displayTags = category.collapsed ? category.tags.slice(0, 20) : category.tags;
+                const showMoreBtn = category.collapsed ? `
+                    <button class="show-more-btn" data-category="${categoryKey}" style="
+                        margin-top: 1rem;
+                        padding: 0.75rem 1.5rem;
+                        background: rgba(255, 255, 255, 0.1);
+                        border: 1px solid rgba(255, 255, 255, 0.3);
+                        border-radius: 8px;
+                        color: #fff;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                        Показать ещё (${totalTags - 20} тегов)
+                    </button>
+                ` : '';
+                
+                html += `
+                    <div class="category-section" data-category="${categoryKey}">
+                        <div class="category-header">
+                            <span class="category-title" style="color: ${category.color}">${category.label}</span>
+                            <span style="color: #aaa; font-size: 0.9rem; margin-left: auto;">${totalTags} tags</span>
+                        </div>
+                        <div class="tags-grid">
+                            ${displayTags.map(tag => `
+                                <div class="tag-item" data-tag-id="${tag.id}" data-tag-name="${tag.name}" style="cursor: pointer;">
+                                    <span class="tag-name">${tag.name}</span>
+                                    <span class="tag-count">${tag.track_count}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${showMoreBtn}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            loadingEl.style.display = 'none';
+            
+            // Добавляем обработчики кликов для кнопок "Показать ещё"
+            setTimeout(() => {
+                document.querySelectorAll('.show-more-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const categoryKey = btn.getAttribute('data-category');
+                        expandCategory(categoryKey, groupedTags);
+                    });
+                });
+                
+                // Добавляем обработчики кликов для тегов
+                document.querySelectorAll('.tag-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const tagId = item.getAttribute('data-tag-id');
+                        const tagName = item.getAttribute('data-tag-name');
+                        selectTag(tagId, tagName);
+                    });
+                });
+                
+                console.log('✅ Click handlers attached');
+            }, 100);
+        }
+        
+        // Разворачиваем категорию (показываем все теги)
+        function expandCategory(categoryKey, groupedTags) {
+            const category = groupedTags[categoryKey];
+            if (!category) return;
+            
+            category.collapsed = false;
+            console.log(`📂 Expanding category "${category.label}" to show all ${category.tags.length} tags`);
+            
+            // Перерисовываем только эту категорию
+            renderTagsByCategories(groupedTags);
+        }
+        
+        // Шаг 3: Клик по тегу → получаем track_ids
+        async function selectTag(tagId, tagName) {
+            console.log(`\n🏷️ Select tag: ${tagName} (${tagId})`);
+            
+            const tracksSection = document.getElementById('tracksSection');
+            const tracksList = document.getElementById('tracksList');
+            const tracksLoading = document.getElementById('tracksLoading');
+            const nameEl = document.getElementById('selectedTagName');
+            
+            // Показываем секцию треков
+            tracksSection.style.display = 'block';
+            nameEl.textContent = tagName;
+            tracksList.innerHTML = '';
+            tracksLoading.style.display = 'block';
+            
+            // Скроллим к трекам
+            setTimeout(() => {
+                tracksSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+            
+            try {
+                // Получаем track_ids из Supabase
+                const url = `${SUPABASE_URL}/rest/v1/track_tags?tag_id=eq.${tagId}&select=track_id`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const trackTags = await response.json();
+                const trackIds = trackTags.map(tt => tt.track_id);
+                
+                console.log(`✓ Found ${trackIds.length} tracks for tag "${tagName}"`);
+                
+                if (trackIds.length === 0) {
+                    tracksLoading.style.display = 'none';
+                    tracksList.innerHTML = '<div class="loading">Нет треков</div>';
+                    return;
+                }
+                
+                // 🔥 ОТПРАВЛЯЕМ В API ПО 10 ТРЕКОВ
+                await loadTracksFromAPI(trackIds);
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                tracksLoading.style.display = 'none';
+                tracksList.innerHTML = `<div class="error">${error.message}</div>`;
+            }
+        }
+        
+        // Шаг 4: Отправляем в API пагинацией по 10 треков
+        async function loadTracksFromAPI(trackIds) {
+            const tracksLoading = document.getElementById('tracksLoading');
+            const tracksList = document.getElementById('tracksList');
+            
+            const perPage = 10;
+            let page = 1;
+            let hasMore = true;
+            
+            while (hasMore) {
+                const start = (page - 1) * perPage;
+                const end = start + perPage;
+                const pageIds = trackIds.slice(start, end);
+                
+                console.log(`\n📄 Loading page ${page}: tracks ${start}-${end} of ${trackIds.length}`);
+                
+                try {
+                    // 📡 ОТПРАВЛЯЕМ ЗАПРОС В API
+                    // Согласно openapi.yaml: POST /api/tracks с body { ids: [...] }
+                    const response = await fetch('https://api.dj1.ru/api/tracks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ ids: pageIds })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API HTTP ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    console.log(`✓ Page ${page}: Got ${result.data?.length || 0} tracks`);
+                    
+                    // Рендерим треки
+                    if (result.data && result.data.length > 0) {
+                        renderTracks(result.data);
+                    }
+                    
+                    hasMore = end < trackIds.length;
+                    page++;
+                    
+                } catch (error) {
+                    console.error(`❌ Error loading page ${page}:`, error);
+                    break;
+                }
+            }
+            
+            tracksLoading.style.display = 'none';
+        }
+        
+        // Шаг 5: Рендерим треки с кликом для запуска
+        function renderTracks(tracks) {
+            const container = document.getElementById('tracksList');
+            
+            tracks.forEach((track, index) => {
+                const item = document.createElement('div');
+                item.className = 'track-item';
+                item.dataset.trackIndex = index;
+                
+                const coverUrl = track.image_url || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzMzMyIvPjwvc3ZnPg==';
+                
+                item.innerHTML = `
+                    <img src="${coverUrl}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                    <div style="flex: 1;">
+                        <div style="color: #fff; font-weight: bold;">${track.title || 'Untitled'}</div>
+                        <div style="color: #aaa; font-size: 0.9rem;">${track.author_name || 'Unknown'}</div>
+                    </div>
+                    <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #fff;">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                `;
+                
+                // 🔥 КЛИК → ЗАПУСК ТРЕКА
+                item.addEventListener('click', () => {
+                    playTrack(track, index, tracks);
+                });
+                
+                container.appendChild(item);
+            });
+        }
+        
+        // 🔥 ФУНКЦИИ ПЛЕЕРА
+        let currentPlaylist = [];
+        let currentTrackIndex = -1;
+        let isPlaying = false;
+        
+        function playTrack(track, index, playlist) {
+            console.log('🎵 Playing track:', track.title);
+            
+            currentPlaylist = playlist;
+            currentTrackIndex = index;
+            
+            const audioPlayer = document.getElementById('audioPlayer');
+            const currentTrackName = document.getElementById('currentTrackName');
+            const currentAlbumName = document.getElementById('currentAlbumName');
+            const currentTrackCover = document.getElementById('currentTrackCover');
+            const playerBar = document.getElementById('playerBar');
+            
+            // Показываем плеер
+            playerBar.style.display = 'block';
+            
+            // Обновляем информацию
+            currentTrackName.textContent = track.title || 'Untitled';
+            currentAlbumName.textContent = track.author_name || 'Unknown';
+            currentTrackCover.src = track.image_url || '';
+            
+            // Загружаем и играем аудио
+            if (track.audio_url) {
+                audioPlayer.src = track.audio_url;
+                audioPlayer.play();
+                isPlaying = true;
+                updatePlayPauseButton();
+                highlightCurrentTrack();
+            }
+        }
+        
+        function togglePlayPause() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            
+            if (isPlaying) {
+                audioPlayer.pause();
+                isPlaying = false;
+            } else {
+                audioPlayer.play();
+                isPlaying = true;
+            }
+            
+            updatePlayPauseButton();
+        }
+        
+        function updatePlayPauseButton() {
+            const playIcon = document.querySelector('.play-icon');
+            const pauseIcon = document.querySelector('.pause-icon');
+            
+            if (playIcon && pauseIcon) {
+                playIcon.style.display = isPlaying ? 'none' : 'block';
+                pauseIcon.style.display = isPlaying ? 'block' : 'none';
+            }
+        }
+        
+        function nextTrack() {
+            if (currentPlaylist.length === 0) return;
+            
+            currentTrackIndex = (currentTrackIndex + 1) % currentPlaylist.length;
+            playTrack(currentPlaylist[currentTrackIndex], currentTrackIndex, currentPlaylist);
+        }
+        
+        function prevTrack() {
+            if (currentPlaylist.length === 0) return;
+            
+            currentTrackIndex = (currentTrackIndex - 1 + currentPlaylist.length) % currentPlaylist.length;
+            playTrack(currentPlaylist[currentTrackIndex], currentTrackIndex, currentPlaylist);
+        }
+        
+        function highlightCurrentTrack() {
+            document.querySelectorAll('.track-item').forEach((item, index) => {
+                item.classList.toggle('active', index === currentTrackIndex);
+            });
+        }
+        
+        // 🔥 ОБРАБОТЧИКИ СОБЫТИЙ ПЛЕЕРА
+        document.addEventListener('DOMContentLoaded', () => {
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const prevBtn = document.getElementById('prevBtn');
+            const repeatBtn = document.getElementById('repeatBtn');
+            const togglePlaylist = document.getElementById('togglePlaylist');
+            const closePlaylist = document.getElementById('closePlaylist');
+            const playlistPanel = document.getElementById('playlistPanel');
+            const overlay = document.getElementById('overlay');
+            const audioPlayer = document.getElementById('audioPlayer');
+            const progressFill = document.getElementById('progressFill');
+            const currentTimeEl = document.getElementById('currentTime');
+            const durationEl = document.getElementById('duration');
+            
+            if (playPauseBtn) playPauseBtn.addEventListener('click', togglePlayPause);
+            if (nextBtn) nextBtn.addEventListener('click', nextTrack);
+            if (prevBtn) prevBtn.addEventListener('click', prevTrack);
+            
+            // Repeat button
+            let repeatMode = 0; // 0 = none, 1 = one, 2 = all
+            if (repeatBtn) {
+                repeatBtn.addEventListener('click', () => {
+                    repeatMode = (repeatMode + 1) % 3;
+                    repeatBtn.style.color = repeatMode > 0 ? '#4ade80' : '#fff';
+                    console.log('Repeat mode:', repeatMode);
+                });
+            }
+            
+            // Playlist toggle
+            if (togglePlaylist) {
+                togglePlaylist.addEventListener('click', () => {
+                    const isVisible = playlistPanel.style.display === 'block';
+                    playlistPanel.style.display = isVisible ? 'none' : 'block';
+                    overlay.style.display = isVisible ? 'none' : 'block';
+                });
+            }
+            
+            if (closePlaylist) {
+                closePlaylist.addEventListener('click', () => {
+                    playlistPanel.style.display = 'none';
+                    overlay.style.display = 'none';
+                });
+            }
+            
+            if (overlay) {
+                overlay.addEventListener('click', () => {
+                    playlistPanel.style.display = 'none';
+                    overlay.style.display = 'none';
+                });
+            }
+            
+            // Progress bar
+            if (audioPlayer) {
+                audioPlayer.addEventListener('timeupdate', () => {
+                    if (progressFill && audioPlayer.duration) {
+                        const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                        progressFill.style.width = progress + '%';
+                        
+                        if (currentTimeEl) {
+                            currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+                        }
+                    }
+                });
+                
+                audioPlayer.addEventListener('loadedmetadata', () => {
+                    if (durationEl) {
+                        durationEl.textContent = formatTime(audioPlayer.duration);
+                    }
+                });
+                
+                audioPlayer.addEventListener('ended', () => {
+                    if (repeatMode === 1) {
+                        // Repeat one
+                        audioPlayer.play();
+                    } else if (repeatMode === 2 || currentTrackIndex < currentPlaylist.length - 1) {
+                        // Repeat all or next track
+                        nextTrack();
+                    }
+                });
+            }
+        });
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // Запуск
+        async function init() {
+            try {
+                const tags = await fetchTagsWithCategories();
+                const groupedTags = groupTagsByCategory(tags);
+                renderTagsByCategories(groupedTags);
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').textContent = `Ошибка: ${error.message}`;
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+        
+        init();
+    </script>
+</body>
+</html>
