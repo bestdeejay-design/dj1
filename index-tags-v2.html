@@ -794,6 +794,60 @@
                 }));
                 console.log('✓ Updated player playlist:', currentAlbum.tracks.length, 'tracks');
             }
+            
+            // 🔥 РЕНДЕРИМ БОКОВУЮ ПАНЕЛЬ ПЛЕЙЛИСТА
+            const playlistEl = document.getElementById('playlist');
+            const playlistTitle = document.getElementById('playlistAlbumTitle');
+            
+            if (!playlistEl) return;
+            
+            // Обновляем заголовок
+            if (window.currentTagName) {
+                playlistTitle.textContent = `Тег: ${window.currentTagName} (${currentPlaylist.length})`;
+            } else {
+                playlistTitle.textContent = `Плейлист (${currentPlaylist.length})`;
+            }
+            
+            // 🔥 РЕНДЕРИМ ВСЕ ТРЕКИ ИЗ currentPlaylist
+            let html = '';
+            currentPlaylist.forEach((track, index) => {
+                const isActive = index === currentTrackIndex;
+                html += `
+                    <div class="track-item ${isActive ? 'active' : ''}" data-track-index="${index}" style="
+                        padding: 0.75rem;
+                        margin-bottom: 0.5rem;
+                        background: ${isActive ? 'rgba(30, 215, 96, 0.2)' : 'rgba(255,255,255,0.05)'};
+                        border-radius: 8px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.75rem;
+                        transition: all 0.2s;
+                    " onmouseover="this.style.background='${isActive ? 'rgba(30, 215, 96, 0.3)' : 'rgba(255,255,255,0.1)'}'" onmouseout="this.style.background='${isActive ? 'rgba(30, 215, 96, 0.2)' : 'rgba(255,255,255,0.05)'}'">
+                        <img src="${track.image_url || ''}" alt="" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">
+                        <div style="flex: 1; overflow: hidden;">
+                            <div style="color: #fff; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${track.title || 'Untitled'}</div>
+                            <div style="color: #aaa; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${track.author_name || ''}</div>
+                        </div>
+                        <div style="color: #aaa; font-size: 0.75rem;">${formatTime(track.duration_s || 0)}</div>
+                    </div>
+                `;
+            });
+            
+            playlistEl.innerHTML = html;
+            
+            // 🔥 ДОБАВЛЯЕМ КЛИК ПО ТРЕКАМ В ПЛЕЙЛИСТЕ
+            setTimeout(() => {
+                playlistEl.querySelectorAll('.track-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const index = parseInt(item.getAttribute('data-track-index'));
+                        console.log('🎵 Clicked playlist track:', index);
+                        playTrack(currentPlaylist[index], index, currentPlaylist);
+                    });
+                });
+            }, 100);
+            
+            console.log(`✓ Rendered sidebar playlist with ${currentPlaylist.length} tracks`);
         }
         
         // Шаг 5: Рендерим треки с кликом для запуска
