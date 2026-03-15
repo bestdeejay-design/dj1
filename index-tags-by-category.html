@@ -497,12 +497,18 @@
         
         // Рендерим СТРАНИЦУ треков (не все сразу)
         function renderTrackListPage(tracks) {
-            if (!tracks || tracks.length === 0) return;
+            console.log('renderTrackListPage called with:', tracks?.length, 'tracks');
+            if (!tracks || tracks.length === 0) {
+                console.warn('No tracks to render!');
+                return;
+            }
             
             const container = document.getElementById('tagTracksList');
+            console.log('Container found:', !!container);
             let html = '';
             
             tracks.forEach((track, index) => {
+                console.log(`Rendering track ${index}:`, track.title);
                 const hasAudio = track.audio_url && track.audio_url.trim() !== '';
                 const coverUrl = track.cover_url || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM2NjYiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBjb3ZlcjwvdGV4dD48L3N2Zz4=';
                 
@@ -529,7 +535,9 @@
                 `;
             });
             
+            console.log('Inserting HTML:', html.length, 'chars');
             container.insertAdjacentHTML('beforeend', html);
+            console.log('Render complete!');
         }
         
         async function fetchTrackById(trackId) {
