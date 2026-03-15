@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DJ1.RU / TAGS — Музыкальная библиотека</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    
+    <!-- 🔥 ПОДКЛЮЧАЕМ ШРИФТЫ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ============================================
+           🎨 DESIGN SYSTEM
+           ============================================ */
+        :root {
+            /* Colors */
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #121212;
+            --bg-tertiary: #1a1a1a;
+            --bg-elevated: rgba(30, 30, 30, 0.95);
+            
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-tertiary: #666666;
+            --text-accent: #1ed760;
+            
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-medium: rgba(255, 255, 255, 0.15);
+            
+            --accent-green: #1ed760;
+            --accent-green-dim: rgba(30, 215, 96, 0.15);
+            --accent-purple: #8b5cf6;
+            --accent-blue: #3b82f6;
+            
+            /* Typography */
+            --font-display: 'Playfair Display', serif;
+            --font-heading: 'Montserrat', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'Bebas Neue', sans-serif;
+            
+            /* Spacing */
+            --space-xs: 0.5rem;
+            --space-sm: 1rem;
+            --space-md: 1.5rem;
+            --space-lg: 2rem;
+            --space-xl: 3rem;
+            --space-2xl: 4rem;
+            
+            /* Border Radius */
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            
+            /* Shadows */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 40px rgba(30, 215, 96, 0.3);
+            
+            /* Transitions */
+            --transition-fast: 0.15s ease;
+            --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* ============================================
+           🌍 BASE STYLES
+           ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Background Effects */
+        .background-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        .gradient-orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--accent-purple);
+            top: -200px;
+            right: -100px;
+            animation-delay: 0s;
+        }
+        
+        .gradient-orb-2 {
+            width: 500px;
+            height: 500px;
+            background: var(--accent-blue);
+            bottom: -250px;
+            left: -150px;
+            animation-delay: -7s;
+        }
+        
+        .gradient-orb-3 {
+            width: 350px;
+            height: 350px;
+            background: var(--accent-green);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -14s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        
+        /* ============================================
+           📐 LAYOUT
+           ============================================ */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-lg);
+        }
+        
+        /* ============================================
+           🎯 HEADER
+           ============================================ */
+        .header {
+            position: relative;
+            z-index: 10;
+            padding: var(--space-xl) 0;
+            text-align: center;
+            border-bottom: 1px solid var(--border-subtle);
+            background: linear-gradient(180deg, rgba(10,10,10,0.8) 0%, rgba(10,10,10,0) 100%);
+            backdrop-filter: blur(10px);
+        }
+        
+        .brand {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+            margin-bottom: var(--space-xs);
+        }
+        
+        .subtitle {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        /* ============================================
+           🏷️ TAGS VIEW
+           ============================================ */
+        .tags-view {
+            position: relative;
+            z-index: 10;
+            padding: var(--space-2xl) 0;
+        }
+        
+        .section-header {
+            margin-bottom: var(--space-xl);
+            text-align: center;
+        }
+        
+        .section-title {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--space-sm);
+        }
+        
+        .section-description {
+            font-family: var(--font-body);
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Category Section */
+        .category-section {
+            margin-bottom: var(--space-2xl);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            backdrop-filter: blur(20px);
+            transition: all var(--transition-base);
+        }
+        
+        .category-section:hover {
+            border-color: var(--border-medium);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-md);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        .category-icon {
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+        
+        .category-title {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .category-count {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--text-tertiary);
+            margin-left: auto;
+        }
+        
+        /* Tags Grid */
+        .tags-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: var(--space-sm);
+        }
+        
+        .tag-item {
+            position: relative;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: var(--space-sm) var(--space-md);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .tag-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(30, 215, 96, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+        
+        .tag-item:hover::before {
+            opacity: 1;
+        }
+        
+        .tag-item:hover {
+            border-color: var(--accent-green);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-glow);
+        }
+        
+        .tag-name {
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .tag-count {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+            transition: all var(--transition-fast);
+        }
+        
+        .tag-item:hover .tag-count {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+        }
+        
+        /* ============================================
+           🎵 TRACKS SECTION
+           ============================================ */
+        .tracks-section {
+            position: relative;
+            z-index: 10;
+            margin-top: var(--space-2xl);
+            padding: var(--space-2xl);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            backdrop-filter: blur(20px);
+        }
+        
+        .tracks-header {
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-md);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        .tracks-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--space-xs);
+        }
+        
+        .tracks-count {
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+        
+        .track-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-md);
+            margin-bottom: var(--space-sm);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .track-item:hover {
+            background: rgba(30, 30, 30, 0.8);
+            border-color: var(--accent-green);
+            transform: translateX(8px);
+        }
+        
+        .track-item.active {
+            background: var(--accent-green-dim);
+            border-color: var(--accent-green);
+        }
+        
+        .track-cover {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--radius-md);
+            object-fit: cover;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .track-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .track-title {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0.25rem;
+        }
+        
+        .track-artist {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        /* ============================================
+           🎮 PLAYER BAR
+           ============================================ */
+        .player-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-elevated);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-medium);
+            padding: var(--space-md) var(--space-lg);
+            transform: translateY(100%);
+            transition: transform var(--transition-slow);
+            z-index: 100;
+            box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+        }
+        
+        .player-bar.active {
+            transform: translateY(0);
+        }
+        
+        .player-content {
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .player-track-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            min-width: 240px;
+        }
+        
+        .player-cover {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-md);
+            object-fit: cover;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .player-details {
+            overflow: hidden;
+        }
+        
+        .player-title {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .player-artist {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            flex: 1;
+            justify-content: center;
+        }
+        
+        .control-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
+        
+        .play-pause-btn {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-green);
+            color: var(--bg-primary);
+        }
+        
+        .play-pause-btn:hover {
+            background: #16c45a;
+            transform: scale(1.15);
+            box-shadow: var(--shadow-glow);
+        }
+        
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: var(--space-2xl);
+            font-family: var(--font-body);
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-subtle);
+            border-top-color: var(--accent-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto var(--space-md);
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Error State */
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: var(--space-md);
+            border-radius: var(--radius-md);
+            margin: var(--space-md);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .tags-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            }
+            
+            .player-content {
+                flex-wrap: wrap;
+                gap: var(--space-sm);
+            }
+            
+            .player-controls {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="background-effects">
+        <div class="gradient-orb gradient-orb-1"></div>
+        <div class="gradient-orb gradient-orb-2"></div>
+        <div class="gradient-orb gradient-orb-3"></div>
+    </div>
+    
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1 class="brand">DJ1.RU</h1>
+            <p class="subtitle">Музыкальная библиотека тегов</p>
+        </div>
+    </header>
+    
+    <!-- Tags View -->
+    <main class="tags-view">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Навигация по тегам</h2>
+                <p class="section-description">
+                    Исследуйте музыкальную коллекцию через систему умных тегов
+                </p>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                Загрузка тегов из Supabase...
+            </div>
+            
+            <div class="error" id="error" style="display: none;"></div>
+            
+            <div id="tagsList"></div>
+        </div>
+    </main>
+    
+    <!-- Tracks Section -->
+    <section id="tracksSection" class="tracks-section" style="display: none;">
+        <div class="container">
+            <div class="tracks-header">
+                <h3 class="tracks-title" id="selectedTagName"></h3>
+                <p class="tracks-count" id="tracksCount"></p>
+            </div>
+            <div id="tracksList"></div>
+            <div id="tracksLoading" class="loading">
+                <div class="spinner"></div>
+                Загрузка треков...
+            </div>
+        </div>
+    </section>
+    
+    <!-- Player Bar will be injected by script -->
+    
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://nwdalhrbifkjyyhpstnt.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_wdNAcYa7Ua-bbC2jDiG-FQ_b0CAPg5l';
+        const API_BASE = 'https://api.dj1.ru/api';
+        
+        // State
+        let currentPlaylist = [];
+        let currentTrackIndex = -1;
+        let isPlaying = false;
+        let tagTrackPlaylist = [];
+        let displayedTrackIds = new Set();
+        let isLoadingMore = false;
+        
+        // Fetch tags with categories
+        async function fetchTagsWithCategories() {
+            try {
+                console.log('📥 Fetching tags...');
+                const startTime = Date.now();
+                
+                const url = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?select=id,name,category_id,track_count,tag_categories(name,label,color)&order=category_id.asc,name.asc`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const tags = await response.json();
+                console.log(`✓ Loaded ${tags.length} tags in ${Date.now() - startTime}ms`);
+                
+                return tags;
+            } catch (error) {
+                console.error('❌ Error fetching tags:', error);
+                throw error;
+            }
+        }
+        
+        // Group tags by category
+        function groupTagsByCategory(tags) {
+            const grouped = {};
+            
+            tags.forEach(tag => {
+                const categoryName = tag.tag_categories?.name || 'other';
+                const categoryLabel = tag.tag_categories?.label || categoryName;
+                const categoryColor = tag.tag_categories?.color || '#6b7280';
+                
+                if (!grouped[categoryName]) {
+                    grouped[categoryName] = {
+                        label: categoryLabel,
+                        color: categoryColor,
+                        tags: []
+                    };
+                }
+                
+                grouped[categoryName].tags.push({
+                    id: tag.id,
+                    name: tag.name,
+                    track_count: tag.track_count || 0
+                });
+            });
+            
+            return grouped;
+        }
+        
+        // Render tags
+        function renderTags(groupedTags) {
+            const container = document.getElementById('tagsList');
+            const loadingEl = document.getElementById('loading');
+            
+            let html = '';
+            
+            Object.entries(groupedTags).forEach(([key, category]) => {
+                html += `
+                    <div class="category-section" data-category="${key}">
+                        <div class="category-header">
+                            <span class="category-icon">🎵</span>
+                            <h3 class="category-title" style="color: ${category.color}">${category.label}</h3>
+                            <span class="category-count">${category.tags.length} тегов</span>
+                        </div>
+                        <div class="tags-grid">
+                            ${category.tags.map(tag => `
+                                <div class="tag-item" data-tag-id="${tag.id}" data-tag-name="${tag.name}">
+                                    <span class="tag-name">${tag.name}</span>
+                                    <span class="tag-count">${tag.track_count}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            loadingEl.style.display = 'none';
+            
+            // Attach click handlers
+            setTimeout(() => {
+                document.querySelectorAll('.tag-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const tagId = parseInt(item.getAttribute('data-tag-id'));
+                        const tagName = item.getAttribute('data-tag-name');
+                        selectTag(tagId, tagName);
+                    });
+                });
+            }, 100);
+        }
+        
+        // Select tag
+        async function selectTag(tagId, tagName) {
+            console.log(`🏷️ Selecting tag: ${tagName} (${tagId})`);
+            
+            window.currentTagId = tagId;
+            window.currentTagName = tagName;
+            
+            const tracksSection = document.getElementById('tracksSection');
+            const nameEl = document.getElementById('selectedTagName');
+            const countEl = document.getElementById('tracksCount');
+            const tracksList = document.getElementById('tracksList');
+            const tracksLoading = document.getElementById('tracksLoading');
+            
+            tracksSection.style.display = 'block';
+            tracksList.innerHTML = '';
+            tracksLoading.style.display = 'block';
+            
+            // Get track count
+            try {
+                const countUrl = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?id=eq.${tagId}&select=track_count`;
+                const countResponse = await fetch(countUrl, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                let trackCount = 0;
+                if (countResponse.ok) {
+                    const countData = await countResponse.json();
+                    trackCount = countData[0]?.track_count || 0;
+                }
+                
+                nameEl.innerHTML = `<span style="color: ${getCategoryColor(tagId)}">${tagName}</span>`;
+                countEl.textContent = `${trackCount} треков`;
+            } catch (error) {
+                console.error('❌ Failed to get count:', error);
+                nameEl.textContent = tagName;
+            }
+            
+            // Get track IDs
+            try {
+                const url = `${SUPABASE_URL}/rest/v1/track_tags?tag_id=eq.${tagId}&select=track_id`;
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const trackTags = await response.json();
+                const trackIds = trackTags.map(tt => tt.track_id);
+                
+                console.log(`✓ Found ${trackIds.length} tracks`);
+                
+                if (trackIds.length === 0) {
+                    tracksLoading.style.display = 'none';
+                    tracksList.innerHTML = '<div class="loading">Нет треков</div>';
+                    return;
+                }
+                
+                await loadTracksBatch(trackIds, 10);
+                setupInfiniteScroll(trackIds);
+                
+                // Scroll to tracks
+                setTimeout(() => {
+                    tracksSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                tracksLoading.style.display = 'none';
+            }
+        }
+        
+        function getCategoryColor(tagId) {
+            // Placeholder - would need to lookup category
+            return 'var(--accent-green)';
+        }
+        
+        // Load tracks batch
+        async function loadTracksBatch(trackIds, count) {
+            const remaining = trackIds.filter(id => !displayedTrackIds.has(id));
+            const batchIds = remaining.slice(0, count);
+            
+            if (batchIds.length === 0) return;
+            
+            console.log(`📥 Loading ${batchIds.length} tracks...`);
+            
+            try {
+                const orCondition = batchIds.map(id => `id.eq.${id}`).join(',');
+                const url = `${API_BASE}/tracks?or=(${orCondition})`;
+                
+                const response = await fetch(url, { mode: 'cors' });
+                let tracks = [];
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (Array.isArray(data)) {
+                        tracks = data;
+                    } else if (data && Array.isArray(data.data)) {
+                        tracks = data.data;
+                    }
+                }
+                
+                if (tracks.length === 0) {
+                    console.warn('⚠️ No tracks loaded');
+                    return;
+                }
+                
+                tagTrackPlaylist.push(...tracks);
+                tracks.forEach(t => displayedTrackIds.add(t.id));
+                currentPlaylist = [...tagTrackPlaylist];
+                
+                renderTracks(tracks);
+                updatePlayerPlaylist();
+                
+            } catch (error) {
+                console.error('❌ Load error:', error);
+            }
+        }
+        
+        // Render tracks
+        function renderTracks(tracks) {
+            const container = document.getElementById('tracksList');
+            
+            tracks.forEach(track => {
+                const globalIndex = currentPlaylist.findIndex(t => t.id === track.id);
+                
+                const item = document.createElement('div');
+                item.className = 'track-item';
+                item.dataset.trackIndex = globalIndex;
+                
+                const coverUrl = track.image_url || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzMzMyIvPjwvc3ZnPg==';
+                
+                item.innerHTML = `
+                    <img src="${coverUrl}" class="track-cover" alt="Cover">
+                    <div class="track-info">
+                        <div class="track-title">${track.title || 'Untitled'}</div>
+                        <div class="track-artist">${track.author_name || 'Unknown'}</div>
+                    </div>
+                    <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #fff; flex-shrink: 0;">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                `;
+                
+                item.addEventListener('click', () => {
+                    playTrack(track, globalIndex, currentPlaylist);
+                });
+                
+                container.appendChild(item);
+            });
+        }
+        
+        // Infinite scroll
+        function setupInfiniteScroll(trackIds) {
+            const sentinel = document.createElement('div');
+            sentinel.style.height = '100px';
+            document.getElementById('tracksList').appendChild(sentinel);
+            
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && !isLoadingMore) {
+                    loadTracksBatch(trackIds, 10);
+                }
+            }, { rootMargin: '200px' });
+            
+            observer.observe(sentinel);
+        }
+        
+        // Update playlist
+        function updatePlayerPlaylist() {
+            // Implement sidebar playlist if needed
+        }
+        
+        // Play track
+        function playTrack(track, index, playlist) {
+            currentPlaylist = playlist;
+            currentTrackIndex = index;
+            
+            const playerBar = document.getElementById('playerBar');
+            if (!playerBar) {
+                createPlayerBar();
+            }
+            
+            setTimeout(() => {
+                const newPlayerBar = document.getElementById('playerBar');
+                newPlayerBar.classList.add('active');
+                
+                document.getElementById('playerTitle').textContent = track.title || 'Untitled';
+                document.getElementById('playerArtist').textContent = track.author_name || 'Unknown';
+                document.getElementById('playerCover').src = track.image_url || '';
+                
+                const audio = document.getElementById('audioPlayer');
+                audio.src = track.audio_url;
+                audio.play().then(() => {
+                    isPlaying = true;
+                    updatePlayPauseButton();
+                });
+            }, 100);
+        }
+        
+        function createPlayerBar() {
+            const playerHTML = `
+                <div class="player-bar" id="playerBar">
+                    <div class="player-content">
+                        <div class="player-track-info">
+                            <img class="player-cover" id="playerCover" alt="Cover">
+                            <div class="player-details">
+                                <div class="player-title" id="playerTitle">Выберите трек</div>
+                                <div class="player-artist" id="playerArtist"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="player-controls">
+                            <button class="control-btn" id="prevBtn">
+                                <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                            </button>
+                            <button class="control-btn play-pause-btn" id="playPauseBtn">
+                                <svg viewBox="0 0 24 24">
+                                    <path class="play-icon" d="M8 5v14l11-7z"/>
+                                    <path class="pause-icon" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" style="display: none;"/>
+                                </svg>
+                            </button>
+                            <button class="control-btn" id="nextBtn">
+                                <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                            </button>
+                        </div>
+                        
+                        <div style="width: 240px;"></div>
+                    </div>
+                    <audio id="audioPlayer"></audio>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', playerHTML);
+            
+            document.getElementById('playPauseBtn').addEventListener('click', togglePlayPause);
+        }
+        
+        function togglePlayPause() {
+            const audio = document.getElementById('audioPlayer');
+            if (isPlaying) {
+                audio.pause();
+                isPlaying = false;
+            } else {
+                audio.play();
+                isPlaying = true;
+            }
+            updatePlayPauseButton();
+        }
+        
+        function updatePlayPauseButton() {
+            const playIcon = document.querySelector('.play-icon');
+            const pauseIcon = document.querySelector('.pause-icon');
+            
+            if (playIcon && pauseIcon) {
+                playIcon.style.display = isPlaying ? 'none' : 'block';
+                pauseIcon.style.display = isPlaying ? 'block' : 'none';
+            }
+        }
+        
+        // Initialize
+        async function init() {
+            try {
+                const tags = await fetchTagsWithCategories();
+                const groupedTags = groupTagsByCategory(tags);
+                renderTags(groupedTags);
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').textContent = `Ошибка: ${error.message}`;
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+        
+        init();
+    </script>
+</body>
+</html>
