@@ -210,17 +210,19 @@
                 
                 while (hasMore) {
                     const offset = page * pageSize;
-                    const countUrl = `${SUPABASE_URL}/rest/v1/track_tags?select=tag_id&order=tag_id.asc&range=${offset}-${offset + pageSize - 1}`;
+                    // Используем правильный синтаксис Supabase для range
+                    const countUrl = `${SUPABASE_URL}/rest/v1/track_tags?select=tag_id`;
                     
                     const countResponse = await fetch(countUrl, {
                         headers: {
                             'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Range': `offset=${offset},limit=${pageSize}`
                         }
                     });
                     
                     if (!countResponse.ok) {
-                        console.error(`Failed to fetch page ${page}:`, countResponse.status);
+                        console.error(`Failed to fetch page ${page}:`, countResponse.status, await countResponse.text());
                         break;
                     }
                     
