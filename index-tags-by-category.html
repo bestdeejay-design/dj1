@@ -396,12 +396,22 @@
         
         async function fetchTrackById(trackId) {
             try {
-                const response = await fetch(`https://api.dj1.ru/api/tracks/${trackId}`);
-                if (!response.ok) return null;
+                const response = await fetch(`https://api.dj1.ru/api/tracks/${trackId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    mode: 'cors'
+                });
+                if (!response.ok) {
+                    console.warn(`Track ${trackId} returned ${response.status}`);
+                    return null;
+                }
                 const data = await response.json();
                 return data;
             } catch (error) {
-                console.error(`Error fetching track ${trackId}:`, error);
+                console.warn(`Failed to fetch track ${trackId}:`, error.message);
                 return null;
             }
         }
