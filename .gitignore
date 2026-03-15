@@ -33,11 +33,13 @@ tests/
 utils/
 scripts/
 configs/
+archive/
 *.json
 *.yaml
 *.md
 !README.md
 !PROJECT_STRUCTURE.md
+!FILES_STRUCTURE.md
 !docs/HOW_TO_EDIT_TRACK_TAGS.md
 !docs/SUPABASE_SETUP.md
 !docs/MIGRATION_STEPS.md
