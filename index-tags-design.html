@@ -745,6 +745,13 @@
             window.currentTagId = tagId;
             window.currentTagName = tagName;
             
+            // 🔥 СБРАСЫВАЕМ СОСТОЯНИЕ ПРИ ПЕРЕКЛЮЧЕНИИ ТЕГА
+            tagTrackPlaylist = [];
+            displayedTrackIds.clear();
+            currentPlaylist = [];
+            currentTrackIndex = -1;
+            isLoadingMore = false;
+            
             const tracksSection = document.getElementById('tracksSection');
             const nameEl = document.getElementById('selectedTagName');
             const countEl = document.getElementById('tracksCount');
@@ -752,7 +759,7 @@
             const tracksLoading = document.getElementById('tracksLoading');
             
             tracksSection.style.display = 'block';
-            tracksList.innerHTML = '';
+            tracksList.innerHTML = '';  // 🔥 Очищаем список треков
             tracksLoading.style.display = 'block';
             
             // Get track count
@@ -793,7 +800,8 @@
                 const trackTags = await response.json();
                 const trackIds = trackTags.map(tt => tt.track_id);
                 
-                console.log(`✓ Found ${trackIds.length} tracks`);
+                console.log(`✓ Found ${trackIds.length} tracks for tag "${tagName}"`);
+                console.log('📋 First 10 track IDs:', trackIds.slice(0, 10));
                 
                 if (trackIds.length === 0) {
                     tracksLoading.style.display = 'none';
