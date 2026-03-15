@@ -1280,6 +1280,7 @@
                                 .map(r => r[0]);
                             
                             console.log('✓ Got tag details:', tagsDetails);
+                            // 🔥 Присваиваем напрямую - это уже массив тегов
                             tagsData = tagsDetails;
                         }
                     } else {
@@ -1307,25 +1308,14 @@
                 // 🔥 ОБРАБАТЫВАЕМ данные
                 let trackTags = [];
                 if (Array.isArray(tagsData)) {
+                    // 🔥 tagsData - это уже массив [{id, name, track_count}, ...]
                     trackTags = tagsData.map(t => {
-                        console.log('Processing tag entry:', t);
-                        
-                        // Вариант 1: tags - вложенный объект
-                        if (t.tags && typeof t.tags === 'object') {
-                            return {
-                                id: t.tag_id || t.tags.id,
-                                name: t.tags.name || 'Unknown',
-                                count: t.tags.track_count || 0
-                            };
-                        }
-                        // Вариант 2: плоская структура
-                        else {
-                            return {
-                                id: t.tag_id,
-                                name: t.tag_name || t.name || 'Unknown',
-                                count: t.track_count || 0
-                            };
-                        }
+                        console.log('Processing tag:', t);
+                        return {
+                            id: t.id,
+                            name: t.name || 'Unknown',
+                            count: t.track_count || 0
+                        };
                     }).filter(tag => tag.name !== 'Unknown');
                     
                     console.log('✓ Processed tags:', trackTags);
