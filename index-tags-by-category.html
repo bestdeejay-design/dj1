@@ -260,7 +260,7 @@
                 grouped[categoryName].tags.push({
                     id: tag.id,
                     name: tag.name,
-                    count: tag.usage_count || 0
+                    track_count: tag.track_count || 0  // ✅ КОПИРУЕМ track_count!
                 });
             });
 
