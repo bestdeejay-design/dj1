@@ -498,7 +498,21 @@
                     "></p>
                 </div>
                 <div class="track-details-section" style="margin-bottom: 2rem;">
-                    <h3 style="color: #fff; margin-bottom: 1rem;">🏷️ Tags</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: #fff; margin: 0;">🏷️ Tags</h3>
+                        <button id="copyTagsBtn" style="
+                            background: rgba(255,255,255,0.1);
+                            border: none;
+                            color: #fff;
+                            padding: 0.5rem 1rem;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 0.85rem;
+                            transition: background 0.2s;
+                        " onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                            📋 Копировать теги
+                        </button>
+                    </div>
                     <div id="modalTrackTags" class="track-tags" style="
                         display: flex;
                         flex-wrap: wrap;
@@ -1570,6 +1584,30 @@
                         }, 2000);
                     } catch (error) {
                         console.error('❌ Failed to copy lyrics:', error);
+                    }
+                });
+            }
+            
+            // 🔥 КНОПКА КОПИРОВАНИЯ ТЕГОВ
+            const copyTagsBtn = document.getElementById('copyTagsBtn');
+            const modalTrackTags = document.getElementById('modalTrackTags');
+            
+            if (copyTagsBtn && modalTrackTags) {
+                copyTagsBtn.addEventListener('click', async () => {
+                    try {
+                        // Получаем все теги из span элементов
+                        const tagElements = modalTrackTags.querySelectorAll('.tag-chip');
+                        const tagNames = Array.from(tagElements).map(el => el.getAttribute('data-tag-name'));
+                        const tagsString = tagNames.join(', ');
+                        
+                        await navigator.clipboard.writeText(tagsString);
+                        const originalText = copyTagsBtn.textContent;
+                        copyTagsBtn.textContent = '✅ Скопировано: ' + tagNames.length + ' тегов!';
+                        setTimeout(() => {
+                            copyTagsBtn.textContent = originalText;
+                        }, 2000);
+                    } catch (error) {
+                        console.error('❌ Failed to copy tags:', error);
                     }
                 });
             }
