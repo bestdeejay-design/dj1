@@ -150,7 +150,8 @@
     </div>
 
     <!-- 🔥 ЗАГРУЖАЕМ script.js ЧТОБЫ ПОЛУЧИТЬ window.tagsData -->
-    <script src="script.js?v=4"></script>
+    <!-- Важно: загружаем СРАЗУ после body чтобы было время на загрузку -->
+    <script src="script.js?v=4" defer></script>
     
     <script>
         /*!
@@ -239,14 +240,18 @@
                 
                 // 🔁 ЖДЁМ ПОКА script.js ЗАГРУЗИТ window.tagsData
                 let attempts = 0;
-                const maxAttempts = 50; // Ждём до 5 секунд
+                const maxAttempts = 100; // Ждём до 10 секунд
                 
                 while (!window.tagsData || !window.tagsData.tracks) {
                     if (attempts >= maxAttempts) {
-                        console.error('Timeout waiting for window.tagsData');
+                        console.error('Timeout waiting for window.tagsData after', maxAttempts, 'attempts');
+                        console.log('window.tagsData:', window.tagsData);
                         return false;
                     }
-                    console.log(`Waiting for window.tagsData... attempt ${attempts + 1}/${maxAttempts}`);
+                    // Логируем только каждые 10 попыток чтобы не спамить
+                    if (attempts % 10 === 0) {
+                        console.log(`Waiting for window.tagsData... ${attempts/10}s`);
+                    }
                     await new Promise(resolve => setTimeout(resolve, 100));
                     attempts++;
                 }
