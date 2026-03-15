@@ -368,12 +368,7 @@
             const tagTracksList = document.getElementById('tagTracksList');
             const tagTracksLoading = document.getElementById('tagTracksLoading');
             
-            console.log('DOM elements:', {
-                tagTracksSection: !!tagTracksSection,
-                loadingEl: !!loadingEl,
-                tagTracksList: !!tagTracksList,
-                tagTracksLoading: !!tagTracksLoading
-            });
+            console.log('DOM elements:', { tagTracksSection: !!tagTracksSection, loadingEl: !!loadingEl, tagTracksList: !!tagTracksList, tagTracksLoading: !!tagTracksLoading });
             
             if (!loadingEl || !tagTracksSection || !tagTracksList) {
                 console.error('Required DOM elements not found!');
