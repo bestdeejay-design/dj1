@@ -700,19 +700,19 @@
             console.log(`📥 Loading next ${batchIds.length} tracks...`);
             
             try {
-                // 🔥 ЗАГРУЗКА ПО КОНКРЕТНЫМ ID (быстро через Promise.all)
-                // GET /tracks/{id} для каждого track_id параллельно
+                // 🔥 ОДИН БЫСТРЫЙ ЗАПРОС вместо 10 отдельных
+                // GET /tracks?page=1&limit=50 → фильтруем на клиенте
                 
-                const promises = batchIds.map(id => 
-                    fetch(`https://api.dj1.ru/api/tracks/${id}`)
-                        .then(r => r.ok ? r.json() : null)
-                        .catch(() => null)
-                );
+                const response = await fetch('https://api.dj1.ru/api/tracks?page=1&limit=50');
+                const result = await response.json();
                 
-                const results = await Promise.all(promises);
-                filteredTracks = results.filter(r => r !== null);
+                console.log(`✓ Got ${result.data?.length || 0} tracks from API in ${Date.now() % 10000}ms`);
                 
-                console.log(`✓ Loaded ${filteredTracks.length}/${batchIds.length} tracks in ${Date.now() % 10000}ms`);
+                // Фильтруем только нужные track_ids
+                const apiTracks = result.data || [];
+                filteredTracks = apiTracks.filter(track => batchIds.includes(track.id));
+                
+                console.log(`→ Filtered to ${filteredTracks.length}/${batchIds.length} tracks`);
                 
                 // Добавляем в плейлист
                 tagTrackPlaylist.push(...filteredTracks);
