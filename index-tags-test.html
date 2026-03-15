@@ -178,31 +178,18 @@
         
         // Группируем теги по категориям
         function groupTagsByCategory(tags) {
-            const CATEGORY_ICONS = {
-                'genre': '🎵',
-                'mood': '😊',
-                'tempo': '⚡',
-                'era': '📅',
-                'language': '🌐',
-                'vibe': '✨',
-                'instrumentation': '🎸',
-                'production': '🎛️',
-                'vocals': '🎤',
-                'other': '📦'
-            };
-            
             const grouped = {};
             
             tags.forEach(tag => {
                 const categoryName = tag.tag_categories?.name || 'other';
+                // 🔥 БЕРЁМ LABEL ПРЯМО ИЗ БД (там уже с эмодзи!)
                 const categoryLabel = tag.tag_categories?.label || categoryName;
                 const categoryColor = tag.tag_categories?.color || '#6b7280';
                 
                 if (!grouped[categoryName]) {
                     grouped[categoryName] = {
-                        label: categoryLabel,
+                        label: categoryLabel,  // ✅ Уже с эмодзи из БД
                         color: categoryColor,
-                        icon: CATEGORY_ICONS[categoryName] || '📁',
                         tags: []
                     };
                 }
@@ -273,7 +260,6 @@
                 html += `
                     <div class="category-section" data-category="${categoryKey}">
                         <div class="category-header">
-                            <span class="category-icon">${category.icon}</span>
                             <span class="category-title" style="color: ${category.color}">${category.label}</span>
                             <span style="color: #aaa; font-size: 0.9rem; margin-left: auto;">${totalTags} tags</span>
                         </div>
