@@ -1986,31 +1986,33 @@
     }
     
     // Сохраняем позицию при паузе/воспроизведении
-    audioPlayer.addEventListener('pause', () => {
-        if (currentAlbum && currentTrackIndex >= 0) {
-            savePlayerState(currentAlbum, currentTrackIndex);
-        }
-        // Возвращаем оригинальный title
-        document.title = 'DJ1.RU — Music Library';
-    });
-    
-    audioPlayer.addEventListener('play', () => {
-        if (currentAlbum && currentTrackIndex >= 0) {
-            savePlayerState(currentAlbum, currentTrackIndex);
-            // Восстанавливаем title с текущим треком
-            const track = currentAlbum.tracks[currentTrackIndex];
-            if (track) {
-                document.title = `${track.name} — ${currentAlbum.title}`;
+    if (audioPlayer) {
+        audioPlayer.addEventListener('pause', () => {
+            if (currentAlbum && currentTrackIndex >= 0) {
+                savePlayerState(currentAlbum, currentTrackIndex);
             }
-        }
-    });
-    
-    // Периодически сохраняем позицию во время воспроизведения
-    setInterval(() => {
-        if (currentAlbum && currentTrackIndex >= 0 && !audioPlayer.paused) {
-            savePlayerState(currentAlbum, currentTrackIndex);
-        }
-    }, 5000); // Каждые 5 секунд
+            // Возвращаем оригинальный title
+            document.title = 'DJ1.RU — Music Library';
+        });
+        
+        audioPlayer.addEventListener('play', () => {
+            if (currentAlbum && currentTrackIndex >= 0) {
+                savePlayerState(currentAlbum, currentTrackIndex);
+                // Восстанавливаем title с текущим треком
+                const track = currentAlbum.tracks[currentTrackIndex];
+                if (track) {
+                    document.title = `${track.name} — ${currentAlbum.title}`;
+                }
+            }
+        });
+        
+        // Периодически сохраняем позицию во время воспроизведения
+        setInterval(() => {
+            if (currentAlbum && currentTrackIndex >= 0 && !audioPlayer.paused) {
+                savePlayerState(currentAlbum, currentTrackIndex);
+            }
+        }, 5000); // Каждые 5 секунд
+    }
 
     // Бесконечный скролл для топа треков
     function setupTopTracksInfiniteScroll() {
