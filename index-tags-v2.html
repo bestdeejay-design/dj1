@@ -817,6 +817,9 @@
             
             playlistEl.innerHTML = html;
             
+            // 🔥 ОБНОВЛЯЕМ ПОДСВЕТКУ АКТИВНОГО ТРЕКА
+            highlightCurrentTrackInPlaylist();
+            
             // 🔥 ДОБАВЛЯЕМ КЛИК ПО ТРЕКАМ В ПЛЕЙЛИСТЕ
             setTimeout(() => {
                 playlistEl.querySelectorAll('.track-item').forEach(item => {
@@ -1013,8 +1016,28 @@
         }
         
         function highlightCurrentTrack() {
+            // Подсвечиваем треки в основном списке
             document.querySelectorAll('.track-item').forEach((item, index) => {
                 item.classList.toggle('active', index === currentTrackIndex);
+            });
+            
+            // 🔥 Подсвечиваем трек в панели плейлиста
+            highlightCurrentTrackInPlaylist();
+        }
+        
+        function highlightCurrentTrackInPlaylist() {
+            const playlistEl = document.getElementById('playlist');
+            if (!playlistEl) return;
+            
+            playlistEl.querySelectorAll('.track-item').forEach((item, index) => {
+                const isActive = index === currentTrackIndex;
+                item.style.background = isActive ? 'rgba(30, 215, 96, 0.2)' : 'rgba(255,255,255,0.05)';
+                
+                // Обновляем hover эффект
+                const hoverBg = isActive ? 'rgba(30, 215, 96, 0.3)' : 'rgba(255,255,255,0.1)';
+                const normalBg = isActive ? 'rgba(30, 215, 96, 0.2)' : 'rgba(255,255,255,0.05)';
+                item.setAttribute('onmouseover', `this.style.background='${hoverBg}'`);
+                item.setAttribute('onmouseout', `this.style.background='${normalBg}'`);
             });
         }
         
