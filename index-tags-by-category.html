@@ -181,8 +181,11 @@
 
         async function fetchTagsWithCategories() {
             try {
-                // 1. Получаем все теги с категориями
-                const url = `${SUPABASE_URL}/rest/v1/tags?select=id,name,category_id,tag_categories(name,label,color)&order=name.asc`;
+                console.log('Fetching tags with track counts from VIEW...');
+                const startTime = Date.now();
+                
+                // ОДИН ЗАПРОС к VIEW вместо 197 запросов с пагинацией!
+                const url = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?select=id,name,category_id,track_count,tag_categories(name,label,color)&order=name.asc`;
                 
                 const response = await fetch(url, {
                     headers: {
@@ -198,69 +201,8 @@
 
                 const tags = await response.json();
                 
-                // 2. ОДНИМ ЗАПРОСОМ получаем количество треков для ВСЕХ тегов!
-                console.log('Fetching track counts for', tags.length, 'tags...');
-                const countStart = Date.now();
-                
-                // Получаем ВСЕ track_tags с пагинацией (Supabase отдаёт по 1000)
-                let allTrackTags = [];
-                let page = 0;
-                const pageSize = 1000;
-                let hasMore = true;
-                
-                while (hasMore) {
-                    const start = page * pageSize;
-                    const end = start + pageSize - 1;
-                    
-                    const countUrl = `${SUPABASE_URL}/rest/v1/track_tags?select=tag_id`;
-                    
-                    const countResponse = await fetch(countUrl, {
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
-                            'Range': `${start}-${end}`
-                        }
-                    });
-                    
-                    if (!countResponse.ok) {
-                        console.error(`Failed to fetch page ${page}:`, countResponse.status, await countResponse.text());
-                        break;
-                    }
-                    
-                    const pageData = await countResponse.json();
-                    allTrackTags = allTrackTags.concat(pageData);
-                    
-                    console.log(`Fetched page ${page + 1}: ${pageData.length} records (total: ${allTrackTags.length})`);
-                    
-                    // Если получили меньше чем pageSize - значит это последняя страница
-                    if (pageData.length < pageSize) {
-                        hasMore = false;
-                    } else {
-                        page++;
-                    }
-                    
-                    // Небольшая задержка чтобы не блокировать API
-                    await new Promise(resolve => setTimeout(resolve, 50));
-                }
-                
-                console.log(`Total fetched: ${allTrackTags.length} track_tags records`);
-                
-                // Группируем по tag_id и считаем
-                let trackCounts = {};
-                allTrackTags.forEach(tt => {
-                    const tagId = tt.tag_id;
-                    trackCounts[tagId] = (trackCounts[tagId] || 0) + 1;
-                });
-                
-                console.log(`Counted ${Object.keys(trackCounts).length} unique tags with tracks`);
-                const countEnd = Date.now();
-                console.log(`✓ Track counts loaded in ${countEnd - countStart}ms`);
-                
-                // 3. Добавляем count к каждому тегу
-                tags.forEach(tag => {
-                    tag.track_count = trackCounts[tag.id] || 0;
-                    console.log(`Tag ${tag.name}: ${tag.track_count} tracks`);
-                });
+                const endTime = Date.now();
+                console.log(`✓ Loaded ${tags.length} tags with track counts in ${endTime - startTime}ms`);
                 
                 return tags;
             } catch (error) {
