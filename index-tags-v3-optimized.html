@@ -489,14 +489,20 @@
                     const data = await response.json();
                     console.log('📦 Raw API response:', data);
                     
-                    // Проверяем что это массив
+                    // 🔥 ИЗВЛЕКАЕМ МАССИВ ИЗ SUPABASE RESPONSE
+                    // Supabase REST возвращает {data: [...], meta: {...}}
+                    let tracksArray;
                     if (Array.isArray(data)) {
-                        tracks = data;
-                        console.log(`✓ OR query returned ${tracks.length} tracks`);
+                        tracksArray = data;
+                    } else if (data && Array.isArray(data.data)) {
+                        tracksArray = data.data;  // ← Извлекаем из data.data
                     } else {
-                        console.warn('⚠️ API returned non-array:', data);
-                        tracks = [];
+                        console.warn('⚠️ Unexpected API format:', data);
+                        tracksArray = [];
                     }
+                    
+                    tracks = tracksArray;
+                    console.log(`✓ OR query returned ${tracks.length} tracks`);
                 } else {
                     console.warn('⚠️ OR query failed with status:', response.status);
                 }
