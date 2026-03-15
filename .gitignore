@@ -47,6 +47,7 @@ docs/
 !docs/MIGRATION_STEPS.md
 !API_SUPABASE_GUIDE.md
 !openapi.yaml
+!SUPABASE_CREDENTIALS.md
 !utils/edit_track_tags.py
 !utils/migrate_to_supabase.py
 !utils/requirements.txt
