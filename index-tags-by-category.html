@@ -542,11 +542,13 @@
                     },
                     mode: 'cors'
                 });
+                console.log(`Track ${trackId}: status=${response.status}`);
                 if (!response.ok) {
                     console.warn(`Track ${trackId} returned ${response.status}`);
                     return null;
                 }
                 const data = await response.json();
+                console.log(`Track ${trackId}: loaded`, data.title);
                 return data;
             } catch (error) {
                 console.warn(`Failed to fetch track ${trackId}:`, error.message);
