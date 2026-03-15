@@ -64,45 +64,14 @@
     // Кэш загруженных треков альбомов
     const albumTracksCache = new Map();
 
-    // Элементы DOM
-    const gallery = document.getElementById('gallery');
-    const loadingEl = document.getElementById('loading');
-    const errorEl = document.getElementById('error');
-    const playerBar = document.getElementById('playerBar');
-    const audioPlayer = document.getElementById('audioPlayer');
-    const currentTrackCover = document.getElementById('currentTrackCover');
-    const currentTrackName = document.getElementById('currentTrackName');
-    const currentAlbumName = document.getElementById('currentAlbumName');
-    const togglePlaylist = document.getElementById('togglePlaylist');
-    const playlistPanel = document.getElementById('playlistPanel');
-    const closePlaylist = document.getElementById('closePlaylist');
-    const overlay = document.getElementById('overlay');
-    const playlistContainer = document.getElementById('playlist');
-    const playlistAlbumTitle = document.getElementById('playlistAlbumTitle');
-    
-    const prevBtn = document.getElementById('prevBtn');
-    const playPauseBtn = document.getElementById('playPauseBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const shuffleBtn = document.getElementById('shuffleBtn');
-    const repeatBtn = document.getElementById('repeatBtn');
-
-    const playIcon = document.querySelector('.play-icon');
-    const pauseIcon = document.querySelector('.pause-icon');
-
-    // Прогресс бар элементы
-    const progressBar = document.getElementById('progressBar');
-    const progressFill = document.getElementById('progressFill');
-    const currentTimeEl = document.getElementById('currentTime');
-    const durationEl = document.getElementById('duration');
-
-    // Топ треков элементы
-    const viewTabs = document.getElementById('viewTabs');
-    const topTracksView = document.getElementById('topTracksView');
-    
-    // By Tags элементы
-    const tagsView = document.getElementById('tagsView');
-    const tagsCloud = document.getElementById('tagsCloud');
-    const tagTracksList = document.getElementById('tagTracksList');
+    // Элементы DOM (инициализируются в DOMContentLoaded)
+    let gallery, loadingEl, errorEl, playerBar, audioPlayer;
+    let currentTrackCover, currentTrackName, currentAlbumName;
+    let togglePlaylist, playlistPanel, closePlaylist, overlay, playlistContainer, playlistAlbumTitle;
+    let prevBtn, playPauseBtn, nextBtn, shuffleBtn, repeatBtn;
+    let playIcon, pauseIcon;
+    let progressBar, progressFill, currentTimeEl, durationEl;
+    let viewTabs, topTracksView, tagsView, tagsCloud, tagTracksList;
 
     // ==================== ЗАГРУЗКА ДАННЫХ ====================
     async function loadLibrary() {
@@ -2736,12 +2705,55 @@
     });
 
     // ==================== СТАРТ ====================
-    initViewTabs();
-    setupTopTracksInfiniteScroll();
-    loadLibrary();
-    
-    // Восстанавливаем состояние плеера после загрузки страницы
-    window.addEventListener('load', () => {
+    // 🔥 ВАЖНО: Инициализируем всё ПОСЛЕ загрузки DOM
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM fully loaded - initializing elements...');
+        
+        // Инициализация DOM элементов
+        gallery = document.getElementById('gallery');
+        loadingEl = document.getElementById('loading');
+        errorEl = document.getElementById('error');
+        playerBar = document.getElementById('playerBar');
+        audioPlayer = document.getElementById('audioPlayer');
+        currentTrackCover = document.getElementById('currentTrackCover');
+        currentTrackName = document.getElementById('currentTrackName');
+        currentAlbumName = document.getElementById('currentAlbumName');
+        togglePlaylist = document.getElementById('togglePlaylist');
+        playlistPanel = document.getElementById('playlistPanel');
+        closePlaylist = document.getElementById('closePlaylist');
+        overlay = document.getElementById('overlay');
+        playlistContainer = document.getElementById('playlist');
+        playlistAlbumTitle = document.getElementById('playlistAlbumTitle');
+        
+        prevBtn = document.getElementById('prevBtn');
+        playPauseBtn = document.getElementById('playPauseBtn');
+        nextBtn = document.getElementById('nextBtn');
+        shuffleBtn = document.getElementById('shuffleBtn');
+        repeatBtn = document.getElementById('repeatBtn');
+
+        playIcon = document.querySelector('.play-icon');
+        pauseIcon = document.querySelector('.pause-icon');
+
+        progressBar = document.getElementById('progressBar');
+        progressFill = document.getElementById('progressFill');
+        currentTimeEl = document.getElementById('currentTime');
+        durationEl = document.getElementById('duration');
+
+        viewTabs = document.getElementById('viewTabs');
+        topTracksView = document.getElementById('topTracksView');
+        
+        tagsView = document.getElementById('tagsView');
+        tagsCloud = document.getElementById('tagsCloud');
+        tagTracksList = document.getElementById('tagTracksList');
+        
+        console.log('✓ All DOM elements initialized');
+        
+        // Теперь запускаем инициализацию
+        initViewTabs();
+        setupTopTracksInfiniteScroll();
+        loadLibrary();
+        
+        // Восстанавливаем состояние плеера после загрузки страницы
         setTimeout(() => restorePlayerState(), 1500);
     });
 })();
