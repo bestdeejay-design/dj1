@@ -1245,12 +1245,29 @@
                 let trackTags = [];
                 if (tagsResponse.ok) {
                     const tagsData = await tagsResponse.json();
-                    trackTags = tagsData.map(t => ({
-                        id: t.tag_id,
-                        name: t.tags?.name || 'Unknown',
-                        count: t.tags?.track_count || 0
-                    })).filter(tag => tag.name !== 'Unknown');
-                    console.log('✓ Got tags:', trackTags.length);
+                    console.log('📊 Tags raw data:', tagsData);
+                    
+                    // 🔥 ПРАВИЛЬНАЯ ОБРАБОТКА: Supabase может вернуть плоский массив
+                    trackTags = tagsData.map(t => {
+                        // Вариант 1: tags - вложенный объект
+                        if (t.tags && typeof t.tags === 'object') {
+                            return {
+                                id: t.tag_id,
+                                name: t.tags.name || 'Unknown',
+                                count: t.tags.track_count || 0
+                            };
+                        }
+                        // Вариант 2: плоская структура (tag_id, tag_name)
+                        else {
+                            return {
+                                id: t.tag_id,
+                                name: t.tag_name || t.name || 'Unknown',
+                                count: t.track_count || 0
+                            };
+                        }
+                    }).filter(tag => tag.name !== 'Unknown');
+                    
+                    console.log('✓ Got tags:', trackTags);
                 }
                 
                 // 3. Заполняем модальное окно
