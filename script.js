@@ -1257,118 +1257,74 @@
     }
 
     // ==================== СОБЫТИЯ ПЛЕЕРА ====================
-    audioPlayer.addEventListener('error', (e) => {
-        console.error('Audio error:', e);
-        const errorMsg = audioPlayer.error 
-            ? `Ошибка загрузки аудио (код: ${audioPlayer.error.code})`
-            : 'Ошибка загрузки аудио';
-        currentTrackName.textContent = errorMsg;
-        currentTrackName.style.color = '#f87171';
-        setTimeout(() => {
-            currentTrackName.style.color = '';
-        }, 3000);
-    });
+    if (audioPlayer) {
+        audioPlayer.addEventListener('error', (e) => {
+            console.error('Audio error:', e);
+            const errorMsg = audioPlayer.error 
+                ? `Ошибка загрузки аудио (код: ${audioPlayer.error.code})`
+                : 'Ошибка загрузки аудио';
+            if (currentTrackName) currentTrackName.textContent = errorMsg;
+            if (currentTrackName) currentTrackName.style.color = '#f87171';
+            setTimeout(() => {
+                if (currentTrackName) currentTrackName.style.color = '';
+            }, 3000);
+        });
 
-    // 🔥 NEW: Media Session Action Handlers - кнопки на экране блокировки
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.setActionHandler('play', () => {
-            playCurrent();
-            console.log('✓ Media Session: Play');
+        audioPlayer.addEventListener('loadstart', () => {
+            if (currentTrackName) currentTrackName.style.opacity = '0.7';
         });
-        
-        navigator.mediaSession.setActionHandler('pause', () => {
-            pauseCurrent();
-            console.log('✓ Media Session: Pause');
+
+        audioPlayer.addEventListener('canplay', () => {
+            if (currentTrackName) currentTrackName.style.opacity = '1';
         });
-        
-        navigator.mediaSession.setActionHandler('nexttrack', () => {
-            nextTrack();
-            console.log('✓ Media Session: Next Track');
-        });
-        
-        navigator.mediaSession.setActionHandler('previoustrack', () => {
-            prevTrack();
-            console.log('✓ Media Session: Previous Track');
-        });
-        
-        // 🔥 NEW: Перемотка вперед/назад (Android)
-        navigator.mediaSession.setActionHandler('seekforward', (details) => {
-            const seekTime = details.seekOffset || 10;
-            audioPlayer.currentTime = Math.min(audioPlayer.currentTime + seekTime, audioPlayer.duration);
-            console.log('✓ Media Session: Seek forward', seekTime, 's');
-        });
-        
-        navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-            const seekTime = details.seekOffset || 10;
-            audioPlayer.currentTime = Math.max(audioPlayer.currentTime - seekTime, 0);
-            console.log('✓ Media Session: Seek backward', seekTime, 's');
-        });
-        
-        // 🔥 NEW: Перемотка в начало (iOS)
-        navigator.mediaSession.setActionHandler('seekto', (details) => {
-            if (details.seekTime !== undefined) {
-                audioPlayer.currentTime = details.seekTime;
-                console.log('✓ Media Session: Seek to', details.seekTime, 's');
+
+        audioPlayer.addEventListener('ended', () => {
+            if (repeatMode === REPEAT_ONE) {
+                audioPlayer.currentTime = 0;
+                audioPlayer.play();
+            } else {
+                nextTrack();
             }
         });
-        
-        console.log('✓ Media Session handlers initialized with full controls');
-    }
 
-    audioPlayer.addEventListener('loadstart', () => {
-        currentTrackName.style.opacity = '0.7';
-    });
+        audioPlayer.addEventListener('play', () => {
+            if (playIcon) playIcon.style.display = 'none';
+            if (pauseIcon) pauseIcon.style.display = 'block';
+        });
 
-    audioPlayer.addEventListener('canplay', () => {
-        currentTrackName.style.opacity = '1';
-    });
+        audioPlayer.addEventListener('pause', () => {
+            if (playIcon) playIcon.style.display = 'block';
+            if (pauseIcon) pauseIcon.style.display = 'none';
+        });
 
-    audioPlayer.addEventListener('ended', () => {
-        if (repeatMode === REPEAT_ONE) {
-            audioPlayer.currentTime = 0;
-            audioPlayer.play();
-        } else {
-            nextTrack();
-        }
-    });
-
-    audioPlayer.addEventListener('play', () => {
-        playIcon.style.display = 'none';
-        pauseIcon.style.display = 'block';
-    });
-
-    audioPlayer.addEventListener('pause', () => {
-        playIcon.style.display = 'block';
-        pauseIcon.style.display = 'none';
-    });
-
-    // Обновление прогресс бара
-    audioPlayer.addEventListener('timeupdate', () => {
-        if (audioPlayer.duration && progressFill) {
-            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-            progressFill.style.width = progress + '%';
-        }
-        if (currentTimeEl) {
-            currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
-        }
-    });
-
-    audioPlayer.addEventListener('loadedmetadata', () => {
-        if (durationEl) {
-            durationEl.textContent = formatTime(audioPlayer.duration);
-        }
-    });
-
-    // Клик по прогресс бару для перемотки
-    if (progressBar) {
-        progressBar.addEventListener('click', (e) => {
-            if (audioPlayer.duration) {
-                const rect = progressBar.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const progress = clickX / rect.width;
-                audioPlayer.currentTime = progress * audioPlayer.duration;
+        // Обновление прогресс бара
+        audioPlayer.addEventListener('timeupdate', () => {
+            if (audioPlayer.duration && progressFill) {
+                const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                progressFill.style.width = progress + '%';
+            }
+            if (currentTimeEl) {
+                currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
             }
         });
+
+        audioPlayer.addEventListener('loadedmetadata', () => {
+            if (durationEl) {
+                durationEl.textContent = formatTime(audioPlayer.duration);
+            }
+        });
+
+        // Клик по прогресс бару для перемотки
+        if (progressBar) {
+            progressBar.addEventListener('click', (e) => {
+                if (audioPlayer.duration) {
+                    const rect = progressBar.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    const progress = clickX / rect.width;
+                    audioPlayer.currentTime = progress * audioPlayer.duration;
+                }
+            });
+        }
     }
 
     function formatTime(seconds) {
@@ -1378,15 +1334,16 @@
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
 
-    prevBtn.addEventListener('click', prevTrack);
-    nextBtn.addEventListener('click', nextTrack);
-    playPauseBtn.addEventListener('click', togglePlayPause);
-    shuffleBtn.addEventListener('click', toggleShuffle);
-    repeatBtn.addEventListener('click', toggleRepeat);
+    // Защитная проверка перед добавлением обработчиков
+    if (prevBtn) prevBtn.addEventListener('click', prevTrack);
+    if (nextBtn) nextBtn.addEventListener('click', nextTrack);
+    if (playPauseBtn) playPauseBtn.addEventListener('click', togglePlayPause);
+    if (shuffleBtn) shuffleBtn.addEventListener('click', toggleShuffle);
+    if (repeatBtn) repeatBtn.addEventListener('click', toggleRepeat);
 
-    togglePlaylist.addEventListener('click', togglePlaylistPanel);
-    closePlaylist.addEventListener('click', togglePlaylistPanel);
-    overlay.addEventListener('click', togglePlaylistPanel);
+    if (togglePlaylist) togglePlaylist.addEventListener('click', togglePlaylistPanel);
+    if (closePlaylist) closePlaylist.addEventListener('click', togglePlaylistPanel);
+    if (overlay) overlay.addEventListener('click', togglePlaylistPanel);
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && playlistVisible) {
