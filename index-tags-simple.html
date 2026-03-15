@@ -141,19 +141,25 @@
         
         let allTracksData = {};
         
-        // Ждём пока script.js загрузит window.tagsData
+        // Загружаем данные напрямую из JSON
         async function loadTracksData() {
-            for (let i = 0; i < 100; i++) {
-                if (window.tagsData && window.tagsData.tracks) {
-                    allTracksData = window.tagsData.tracks;
-                    console.log(`✓ Loaded ${Object.keys(allTracksData).length} tracks`);
-                    return true;
-                }
-                if (i === 0) console.log('Waiting for window.tagsData...');
-                await new Promise(r => setTimeout(r, 100));
+            try {
+                console.log('Loading tracks data from JSON...');
+                const response = await fetch('data/tags-data.json');
+                if (!response.ok) throw new Error('Failed to load JSON');
+                
+                const data = await response.json();
+                allTracksData = data.tracks || {};
+                
+                // Также сохраним для совместимости
+                window.tagsData = data;
+                
+                console.log(`✓ Loaded ${Object.keys(allTracksData).length} tracks`);
+                return true;
+            } catch (error) {
+                console.error('Error loading tracks:', error);
+                return false;
             }
-            console.error('Timeout! window.tagsData:', window.tagsData);
-            return false;
         }
         
         async function fetchTags() {
