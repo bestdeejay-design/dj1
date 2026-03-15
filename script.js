@@ -1282,7 +1282,10 @@
     setTheme(savedTheme);
 
     // ==================== УСТАНОВКА РЕЖИМА ПОВТОРА ПО УМОЛЧАНИЮ ====================
-    updateRepeatButton();
+    // Вызываем ТОЛЬКО после загрузки DOM
+    if (typeof repeatBtn !== 'undefined' && repeatBtn) {
+        updateRepeatButton();
+    }
 
     // ==================== СОБЫТИЯ ПЛЕЕРА ====================
     audioPlayer.addEventListener('error', (e) => {
