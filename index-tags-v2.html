@@ -413,6 +413,109 @@
         </div>
     </div>
 
+    <!-- 🔥 МОДАЛЬНОЕ ОКНО ИНФОРМАЦИИ О ТРЕКЕ -->
+    <div class="track-details-modal" id="trackDetailsModal" style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.9);
+        z-index: 200;
+        overflow-y: auto;
+    ">
+        <div class="track-details-content" style="
+            margin: 5% auto;
+            max-width: 900px;
+            background: rgba(20, 20, 20, 0.98);
+            padding: 2rem;
+            border-radius: 12px;
+            position: relative;
+        ">
+            <div class="track-details-header" style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 2rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            ">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="back-to-player-btn" id="backToPlayerBtn" title="Вернуться к плееру" style="
+                        background: none;
+                        border: none;
+                        color: #fff;
+                        cursor: pointer;
+                        width: 40px;
+                        height: 40px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 50%;
+                        transition: background 0.2s;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='none'">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                        </svg>
+                    </button>
+                    <h2 id="modalTrackTitle" style="color: #fff; margin: 0;">Track Details</h2>
+                </div>
+                <button class="close-modal" id="closeTrackDetails" style="
+                    background: none;
+                    border: none;
+                    color: #fff;
+                    font-size: 2rem;
+                    cursor: pointer;
+                    width: 40px;
+                    height: 40px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">×</button>
+            </div>
+            <div class="track-details-body">
+                <div class="track-details-section" style="margin-bottom: 2rem;">
+                    <h3 style="color: #fff; margin-bottom: 1rem;">🎵 Sound / Prompt</h3>
+                    <p id="modalTrackSound" class="track-sound-text" style="
+                        color: #aaa;
+                        line-height: 1.6;
+                        white-space: pre-wrap;
+                    "></p>
+                </div>
+                <div class="track-details-section" style="margin-bottom: 2rem;">
+                    <h3 style="color: #fff; margin-bottom: 1rem;">🏷️ Tags</h3>
+                    <div id="modalTrackTags" class="track-tags" style="
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 0.5rem;
+                    "></div>
+                </div>
+                <div class="track-details-section" style="display: flex; gap: 2rem;">
+                    <div style="flex: 1;">
+                        <h3 style="color: #fff; margin-bottom: 1rem;">📝 Lyrics</h3>
+                        <pre id="modalTrackLyrics" class="track-lyrics-text" style="
+                            color: #aaa;
+                            white-space: pre-wrap;
+                            font-family: inherit;
+                            line-height: 1.6;
+                            max-height: 400px;
+                            overflow-y: auto;
+                        "></pre>
+                    </div>
+                    <div style="width: 300px; flex-shrink: 0;">
+                        <h3 style="color: #fff; margin-bottom: 1rem;">📀 Cover</h3>
+                        <img id="modalTrackCover" src="" alt="Cover" style="
+                            width: 100%;
+                            border-radius: 8px;
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+                        ">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Панель плейлиста -->
     <div class="playlist-panel" id="playlistPanel" style="display: none;">
         <div class="playlist-header">
@@ -857,7 +960,25 @@
                         <div style="color: #fff; font-weight: bold;">${track.title || 'Untitled'}</div>
                         <div style="color: #aaa; font-size: 0.9rem;">${track.author_name || 'Unknown'}</div>
                     </div>
-                    <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #fff;">
+                    <button class="track-info-btn" data-track-id="${track.id}" title="Информация о треке" style="
+                        background: none;
+                        border: none;
+                        color: #fff;
+                        cursor: pointer;
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-right: 0.5rem;
+                        transition: background 0.2s;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='none'">
+                        <svg viewBox="0 0 24 24" width="18" height="18">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                        </svg>
+                    </button>
+                    <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #fff; cursor: pointer;" onclick="event.stopPropagation();">
                         <path d="M8 5v14l11-7z"/>
                     </svg>
                 `;
@@ -866,6 +987,15 @@
                 item.addEventListener('click', () => {
                     playTrack(track, index, tracks);
                 });
+                
+                // 🔥 КЛИК ПО КНОПКЕ "i" → ИНФОРМАЦИЯ
+                const infoBtn = item.querySelector('.track-info-btn');
+                if (infoBtn) {
+                    infoBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        showTrackInfo(track.id);
+                    });
+                }
                 
                 container.appendChild(item);
             });
@@ -1089,6 +1219,75 @@
             }
         }
         
+        // 🔥 ПОКАЗАТЬ ИНФОРМАЦИЮ О ТРЕКЕ
+        async function showTrackInfo(trackId) {
+            console.log('ℹ️ Showing info for track:', trackId);
+            
+            try {
+                // 1. Получаем данные трека из API
+                const trackResponse = await fetch(`https://api.dj1.ru/api/tracks/${trackId}`);
+                if (!trackResponse.ok) {
+                    throw new Error(`API HTTP ${trackResponse.status}`);
+                }
+                
+                const track = await trackResponse.json();
+                console.log('✓ Got track data:', track.title);
+                
+                // 2. Получаем теги из Supabase
+                const tagsUrl = `${SUPABASE_URL}/rest/v1/track_tags?track_id=eq.${trackId}&select=tag_id,tags(name)`;
+                const tagsResponse = await fetch(tagsUrl, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                let trackTags = [];
+                if (tagsResponse.ok) {
+                    const tagsData = await tagsResponse.json();
+                    trackTags = tagsData.map(t => t.tags?.name).filter(Boolean);
+                    console.log('✓ Got tags:', trackTags.length);
+                }
+                
+                // 3. Заполняем модальное окно
+                const modal = document.getElementById('trackDetailsModal');
+                const titleEl = document.getElementById('modalTrackTitle');
+                const soundEl = document.getElementById('modalTrackSound');
+                const tagsEl = document.getElementById('modalTrackTags');
+                const lyricsEl = document.getElementById('modalTrackLyrics');
+                const coverEl = document.getElementById('modalTrackCover');
+                
+                if (titleEl) titleEl.textContent = track.title || 'Untitled';
+                if (soundEl) soundEl.textContent = track.sound || 'No sound description';
+                if (lyricsEl) lyricsEl.textContent = track.lyrics || 'No lyrics';
+                if (coverEl) coverEl.src = track.image_url || '';
+                
+                // Рендерим теги
+                if (tagsEl) {
+                    tagsEl.innerHTML = trackTags.map(tagName => `
+                        <span style="
+                            background: rgba(255,255,255,0.1);
+                            padding: 0.5rem 1rem;
+                            border-radius: 16px;
+                            font-size: 0.85rem;
+                            color: #fff;
+                        ">${tagName}</span>
+                    `).join('');
+                }
+                
+                // Показываем модальное окно
+                if (modal) {
+                    modal.style.display = 'block';
+                    document.body.style.overflow = 'hidden'; // Блокируем прокрутку фона
+                }
+                
+                console.log('✅ Modal opened');
+                
+            } catch (error) {
+                console.error('❌ Failed to load track info:', error);
+            }
+        }
+        
         // 🔥 ОБРАБОТЧИКИ СОБЫТИЙ ПЛЕЕРА
         document.addEventListener('DOMContentLoaded', () => {
             const playPauseBtn = document.getElementById('playPauseBtn');
@@ -1147,6 +1346,35 @@
             }, 500);
             
             if (playPauseBtn) playPauseBtn.addEventListener('click', togglePlayPause);
+            
+            // 🔥 ОБРАБОТЧИКИ МОДАЛЬНОГО ОКНА
+            const closeTrackDetails = document.getElementById('closeTrackDetails');
+            const backToPlayerBtn = document.getElementById('backToPlayerBtn');
+            const trackDetailsModal = document.getElementById('trackDetailsModal');
+            
+            if (closeTrackDetails) {
+                closeTrackDetails.addEventListener('click', () => {
+                    trackDetailsModal.style.display = 'none';
+                    document.body.style.overflow = '';
+                });
+            }
+            
+            if (backToPlayerBtn) {
+                backToPlayerBtn.addEventListener('click', () => {
+                    trackDetailsModal.style.display = 'none';
+                    document.body.style.overflow = '';
+                });
+            }
+            
+            // Закрытие по клику вне окна
+            if (trackDetailsModal) {
+                trackDetailsModal.addEventListener('click', (e) => {
+                    if (e.target === trackDetailsModal) {
+                        trackDetailsModal.style.display = 'none';
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
             if (nextBtn) nextBtn.addEventListener('click', nextTrack);
             if (prevBtn) prevBtn.addEventListener('click', prevTrack);
             
