@@ -292,7 +292,7 @@
                         </div>
                         <div class="tags-grid">
                             ${category.tags.map(tag => `
-                                <div class="tag-item" data-tag-id="${tag.id}" data-tag-name="${tag.name}">
+                                <div class="tag-item" data-tag-id="${tag.id}" data-tag-name="${tag.name}" style="cursor: pointer;">
                                     <span class="tag-name">${tag.name}</span>
                                     <span class="tag-count">${tag.track_count || 0}</span>
                                 </div>
@@ -304,28 +304,46 @@
 
             container.innerHTML = html;
             
-            // Добавляем обработчики кликов
-            document.querySelectorAll('.tag-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const tagId = item.dataset.tagId;
-                    const tagName = item.dataset.tagName;
-                    selectTag(tagId, tagName);
+            // Добавляем обработчики кликов ПОВТОРНО после рендера
+            setTimeout(() => {
+                document.querySelectorAll('.tag-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const tagId = item.getAttribute('data-tag-id');
+                        const tagName = item.getAttribute('data-tag-name');
+                        console.log('Tag clicked:', { tagId, tagName });
+                        selectTag(tagId, tagName);
+                    });
                 });
-            });
+                console.log('Click handlers attached to', document.querySelectorAll('.tag-item').length, 'tags');
+            }, 100);
         }
 
         async function selectTag(tagId, tagName) {
+            console.log('selectTag called with:', { tagId, tagName });
+            
             const categoriesView = document.getElementById('tagsCategoriesView');
+            const loadingEl = categoriesView.querySelector('#loading');
+            const errorEl = categoriesView.querySelector('#error');
             const tagTracksSection = document.getElementById('tagTracksSection');
             const selectedTagName = document.getElementById('selectedTagName');
             const selectedTagCount = document.getElementById('selectedTagCount');
             const tagTracksList = document.getElementById('tagTracksList');
             
+            if (!loadingEl || !tagTracksSection) {
+                console.error('Required DOM elements not found!');
+                return;
+            }
+            
             // Показываем секцию треков
-            categoriesView.querySelector('#loading').style.display = 'none';
+            loadingEl.style.display = 'none';
+            if (errorEl) errorEl.style.display = 'none';
             tagTracksSection.style.display = 'block';
             selectedTagName.textContent = tagName;
             tagTracksList.innerHTML = '<div class="loading">Загрузка треков...</div>';
+            
+            console.log('Fetching track_tags for tag_id:', tagId);
             
             try {
                 // Получаем связи track_id для этого тега из Supabase
