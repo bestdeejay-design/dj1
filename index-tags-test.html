@@ -145,9 +145,11 @@
         async function fetchTagsWithCategories() {
             try {
                 console.log('📥 Fetching tags with categories from Supabase...');
+                const startTime = Date.now();
                 
                 // Используем VIEW tags_with_track_counts + join с категориями
-                const url = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?select=id,name,category_id,track_count,tag_categories(name,label,color)&order=name.asc`;
+                // ⚠️ ВАЖНО: Загружаем ВСЕ теги (один запрос вместо 1922!)
+                const url = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?select=id,name,category_id,track_count,tag_categories(name,label,color)&order=category_id.asc,name.asc`;
                 
                 const response = await fetch(url, {
                     headers: {
@@ -162,7 +164,10 @@
                 }
                 
                 const tags = await response.json();
-                console.log(`✓ Loaded ${tags.length} tags with categories`);
+                const endTime = Date.now();
+                
+                console.log(`✓ Loaded ${tags.length} tags in ${endTime - startTime}ms`);
+                console.log('⚡ This is MUCH faster than 1922 individual requests!');
                 
                 return tags;
             } catch (error) {
@@ -226,6 +231,16 @@
                 }
             });
             
+            // 🔥 ДОБАВЛЯЕМ СВЁРНУТЫЕ КАТЕГОРИИ (>30 тегов)
+            Object.entries(sortedGrouped).forEach(([key, category]) => {
+                if (category.tags.length > 30) {
+                    category.collapsed = true; // Сворачиваем большие категории
+                    console.log(`📦 Category "${category.label}" has ${category.tags.length} tags - collapsed by default`);
+                } else {
+                    category.collapsed = false;
+                }
+            });
+            
             return sortedGrouped;
         }
         
@@ -237,20 +252,40 @@
             let html = '';
             
             Object.entries(groupedTags).forEach(([categoryKey, category]) => {
+                const totalTags = category.tags.length;
+                const displayTags = category.collapsed ? category.tags.slice(0, 20) : category.tags;
+                const showMoreBtn = category.collapsed ? `
+                    <button class="show-more-btn" data-category="${categoryKey}" style="
+                        margin-top: 1rem;
+                        padding: 0.75rem 1.5rem;
+                        background: rgba(255, 255, 255, 0.1);
+                        border: 1px solid rgba(255, 255, 255, 0.3);
+                        border-radius: 8px;
+                        color: #fff;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                        Показать ещё (${totalTags - 20} тегов)
+                    </button>
+                ` : '';
+                
                 html += `
-                    <div class="category-section">
+                    <div class="category-section" data-category="${categoryKey}">
                         <div class="category-header">
                             <span class="category-icon">${category.icon}</span>
                             <span class="category-title" style="color: ${category.color}">${category.label}</span>
+                            <span style="color: #aaa; font-size: 0.9rem; margin-left: auto;">${totalTags} tags</span>
                         </div>
                         <div class="tags-grid">
-                            ${category.tags.map(tag => `
+                            ${displayTags.map(tag => `
                                 <div class="tag-item" data-tag-id="${tag.id}" data-tag-name="${tag.name}" style="cursor: pointer;">
                                     <span class="tag-name">${tag.name}</span>
                                     <span class="tag-count">${tag.track_count}</span>
                                 </div>
                             `).join('')}
                         </div>
+                        ${showMoreBtn}
                     </div>
                 `;
             });
@@ -258,8 +293,16 @@
             container.innerHTML = html;
             loadingEl.style.display = 'none';
             
-            // Добавляем обработчики кликов
+            // Добавляем обработчики кликов для кнопок "Показать ещё"
             setTimeout(() => {
+                document.querySelectorAll('.show-more-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const categoryKey = btn.getAttribute('data-category');
+                        expandCategory(categoryKey, groupedTags);
+                    });
+                });
+                
+                // Добавляем обработчики кликов для тегов
                 document.querySelectorAll('.tag-item').forEach(item => {
                     item.addEventListener('click', () => {
                         const tagId = item.getAttribute('data-tag-id');
@@ -267,8 +310,21 @@
                         selectTag(tagId, tagName);
                     });
                 });
-                console.log('✅ Click handlers attached to', document.querySelectorAll('.tag-item').length, 'tags');
+                
+                console.log('✅ Click handlers attached');
             }, 100);
+        }
+        
+        // Разворачиваем категорию (показываем все теги)
+        function expandCategory(categoryKey, groupedTags) {
+            const category = groupedTags[categoryKey];
+            if (!category) return;
+            
+            category.collapsed = false;
+            console.log(`📂 Expanding category "${category.label}" to show all ${category.tags.length} tags`);
+            
+            // Перерисовываем только эту категорию
+            renderTagsByCategories(groupedTags);
         }
         
         // Шаг 3: Клик по тегу → получаем track_ids
