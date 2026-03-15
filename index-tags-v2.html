@@ -476,7 +476,21 @@
             </div>
             <div class="track-details-body">
                 <div class="track-details-section" style="margin-bottom: 2rem;">
-                    <h3 style="color: #fff; margin-bottom: 1rem;">🎵 Sound / Prompt</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: #fff; margin: 0;">🎵 Sound / Prompt</h3>
+                        <button id="copySoundBtn" style="
+                            background: rgba(255,255,255,0.1);
+                            border: none;
+                            color: #fff;
+                            padding: 0.5rem 1rem;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 0.85rem;
+                            transition: background 0.2s;
+                        " onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                            📋 Копировать
+                        </button>
+                    </div>
                     <p id="modalTrackSound" class="track-sound-text" style="
                         color: #aaa;
                         line-height: 1.6;
@@ -493,7 +507,21 @@
                 </div>
                 <div class="track-details-section" style="display: flex; gap: 2rem;">
                     <div style="flex: 1;">
-                        <h3 style="color: #fff; margin-bottom: 1rem;">📝 Lyrics</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="color: #fff; margin: 0;">📝 Lyrics</h3>
+                            <button id="copyLyricsBtn" style="
+                                background: rgba(255,255,255,0.1);
+                                border: none;
+                                color: #fff;
+                                padding: 0.5rem 1rem;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 0.85rem;
+                                transition: background 0.2s;
+                            " onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                                📋 Копировать
+                            </button>
+                        </div>
                         <pre id="modalTrackLyrics" class="track-lyrics-text" style="
                             color: #aaa;
                             white-space: pre-wrap;
@@ -1504,6 +1532,44 @@
                     if (e.target === trackDetailsModal) {
                         trackDetailsModal.style.display = 'none';
                         document.body.style.overflow = '';
+                    }
+                });
+            }
+            
+            // 🔥 КНОПКА КОПИРОВАНИЯ SOUND
+            const copySoundBtn = document.getElementById('copySoundBtn');
+            const modalTrackSound = document.getElementById('modalTrackSound');
+            
+            if (copySoundBtn && modalTrackSound) {
+                copySoundBtn.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(modalTrackSound.textContent);
+                        const originalText = copySoundBtn.textContent;
+                        copySoundBtn.textContent = '✅ Скопировано!';
+                        setTimeout(() => {
+                            copySoundBtn.textContent = originalText;
+                        }, 2000);
+                    } catch (error) {
+                        console.error('❌ Failed to copy sound:', error);
+                    }
+                });
+            }
+            
+            // 🔥 КНОПКА КОПИРОВАНИЯ LYRICS
+            const copyLyricsBtn = document.getElementById('copyLyricsBtn');
+            const modalTrackLyrics = document.getElementById('modalTrackLyrics');
+            
+            if (copyLyricsBtn && modalTrackLyrics) {
+                copyLyricsBtn.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(modalTrackLyrics.textContent);
+                        const originalText = copyLyricsBtn.textContent;
+                        copyLyricsBtn.textContent = '✅ Скопировано!';
+                        setTimeout(() => {
+                            copyLyricsBtn.textContent = originalText;
+                        }, 2000);
+                    } catch (error) {
+                        console.error('❌ Failed to copy lyrics:', error);
                     }
                 });
             }
