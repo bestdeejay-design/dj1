@@ -582,29 +582,56 @@
         }
         
         async function getTagsForTrack(trackId) {
-            // Шаг 1: Получаем tag_ids
-            const url1 = `${SUPABASE_URL}/rest/v1/track_tags?track_id=eq.${trackId}&select=tag_id`;
-            const resp1 = await fetch(url1, {
-                headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}
-            });
+            console.log('🏷️ Getting tags for track:', trackId);
             
-            if (!resp1.ok) return [];
-            const data1 = await resp1.json();
-            
-            if (data1.length === 0) return [];
-            
-            const tagIds = data1.map(t => t.tag_id);
-            
-            // Шаг 2: ОДИН ЗАПРОС вместо Promise.all × N
-            const orCondition = tagIds.map(id => `id.eq.${id}`).join(',');
-            const url2 = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?or=(${orCondition})&select=id,name,track_count`;
-            
-            const resp2 = await fetch(url2, {
-                headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}
-            });
-            
-            if (!resp2.ok) return [];
-            return await resp2.json();
+            try {
+                // Шаг 1: Получаем tag_ids
+                const url1 = `${SUPABASE_URL}/rest/v1/track_tags?track_id=eq.${trackId}&select=tag_id`;
+                const resp1 = await fetch(url1, {
+                    headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}
+                });
+                
+                if (!resp1.ok) {
+                    console.warn('No tags found');
+                    return [];
+                }
+                
+                const data1 = await resp1.json();
+                console.log('✓ Got tag_ids:', data1);
+                
+                if (data1.length === 0) return [];
+                
+                const tagIds = data1.map(t => t.tag_id);
+                console.log('📦 Tag IDs:', tagIds);
+                
+                // Шаг 2: ОДИН ЗАПРОС вместо Promise.all × N
+                const orCondition = tagIds.map(id => `id.eq.${id}`).join(',');
+                const url2 = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?or=(${orCondition})&select=id,name,track_count`;
+                
+                console.log('🔍 Fetching tags:', url2);
+                const resp2 = await fetch(url2, {
+                    headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}
+                });
+                
+                if (!resp2.ok) {
+                    console.error('Failed to fetch tag details');
+                    return [];
+                }
+                
+                const tags = await resp2.json();
+                console.log('✅ Got tag details:', tags);
+                
+                // Возвращаем в формате {id, name, count}
+                return tags.map(tag => ({
+                    id: tag.id,
+                    name: tag.name,
+                    count: tag.track_count || 0
+                }));
+                
+            } catch (error) {
+                console.error('❌ Error getting tags:', error);
+                return [];
+            }
         }
         
         // ============================================
