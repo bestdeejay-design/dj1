@@ -64,14 +64,45 @@
     // Кэш загруженных треков альбомов
     const albumTracksCache = new Map();
 
-    // Элементы DOM (инициализируются в DOMContentLoaded)
-    let gallery, loadingEl, errorEl, playerBar, audioPlayer;
-    let currentTrackCover, currentTrackName, currentAlbumName;
-    let togglePlaylist, playlistPanel, closePlaylist, overlay, playlistContainer, playlistAlbumTitle;
-    let prevBtn, playPauseBtn, nextBtn, shuffleBtn, repeatBtn;
-    let playIcon, pauseIcon;
-    let progressBar, progressFill, currentTimeEl, durationEl;
-    let viewTabs, topTracksView, tagsView, tagsCloud, tagTracksList;
+    // Элементы DOM
+    const gallery = document.getElementById('gallery');
+    const loadingEl = document.getElementById('loading');
+    const errorEl = document.getElementById('error');
+    const playerBar = document.getElementById('playerBar');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const currentTrackCover = document.getElementById('currentTrackCover');
+    const currentTrackName = document.getElementById('currentTrackName');
+    const currentAlbumName = document.getElementById('currentAlbumName');
+    const togglePlaylist = document.getElementById('togglePlaylist');
+    const playlistPanel = document.getElementById('playlistPanel');
+    const closePlaylist = document.getElementById('closePlaylist');
+    const overlay = document.getElementById('overlay');
+    const playlistContainer = document.getElementById('playlist');
+    const playlistAlbumTitle = document.getElementById('playlistAlbumTitle');
+    
+    const prevBtn = document.getElementById('prevBtn');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+    const repeatBtn = document.getElementById('repeatBtn');
+
+    const playIcon = document.querySelector('.play-icon');
+    const pauseIcon = document.querySelector('.pause-icon');
+
+    // Прогресс бар элементы
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+
+    // Топ треков элементы
+    const viewTabs = document.getElementById('viewTabs');
+    const topTracksView = document.getElementById('topTracksView');
+    
+    // By Tags элементы
+    const tagsView = document.getElementById('tagsView');
+    const tagsCloud = document.getElementById('tagsCloud');
+    const tagTracksList = document.getElementById('tagTracksList');
 
     // ==================== ЗАГРУЗКА ДАННЫХ ====================
     async function loadLibrary() {
@@ -1251,80 +1282,121 @@
     setTheme(savedTheme);
 
     // ==================== УСТАНОВКА РЕЖИМА ПОВТОРА ПО УМОЛЧАНИЮ ====================
-    // Вызываем ТОЛЬКО после загрузки DOM
-    if (typeof repeatBtn !== 'undefined' && repeatBtn) {
-        updateRepeatButton();
-    }
+    updateRepeatButton();
 
     // ==================== СОБЫТИЯ ПЛЕЕРА ====================
-    if (audioPlayer) {
-        audioPlayer.addEventListener('error', (e) => {
-            console.error('Audio error:', e);
-            const errorMsg = audioPlayer.error 
-                ? `Ошибка загрузки аудио (код: ${audioPlayer.error.code})`
-                : 'Ошибка загрузки аудио';
-            if (currentTrackName) currentTrackName.textContent = errorMsg;
-            if (currentTrackName) currentTrackName.style.color = '#f87171';
-            setTimeout(() => {
-                if (currentTrackName) currentTrackName.style.color = '';
-            }, 3000);
-        });
+    audioPlayer.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+        const errorMsg = audioPlayer.error 
+            ? `Ошибка загрузки аудио (код: ${audioPlayer.error.code})`
+            : 'Ошибка загрузки аудио';
+        currentTrackName.textContent = errorMsg;
+        currentTrackName.style.color = '#f87171';
+        setTimeout(() => {
+            currentTrackName.style.color = '';
+        }, 3000);
+    });
 
-        audioPlayer.addEventListener('loadstart', () => {
-            if (currentTrackName) currentTrackName.style.opacity = '0.7';
+    // 🔥 NEW: Media Session Action Handlers - кнопки на экране блокировки
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('play', () => {
+            playCurrent();
+            console.log('✓ Media Session: Play');
         });
-
-        audioPlayer.addEventListener('canplay', () => {
-            if (currentTrackName) currentTrackName.style.opacity = '1';
+        
+        navigator.mediaSession.setActionHandler('pause', () => {
+            pauseCurrent();
+            console.log('✓ Media Session: Pause');
         });
-
-        audioPlayer.addEventListener('ended', () => {
-            if (repeatMode === REPEAT_ONE) {
-                audioPlayer.currentTime = 0;
-                audioPlayer.play();
-            } else {
-                nextTrack();
+        
+        navigator.mediaSession.setActionHandler('nexttrack', () => {
+            nextTrack();
+            console.log('✓ Media Session: Next Track');
+        });
+        
+        navigator.mediaSession.setActionHandler('previoustrack', () => {
+            prevTrack();
+            console.log('✓ Media Session: Previous Track');
+        });
+        
+        // 🔥 NEW: Перемотка вперед/назад (Android)
+        navigator.mediaSession.setActionHandler('seekforward', (details) => {
+            const seekTime = details.seekOffset || 10;
+            audioPlayer.currentTime = Math.min(audioPlayer.currentTime + seekTime, audioPlayer.duration);
+            console.log('✓ Media Session: Seek forward', seekTime, 's');
+        });
+        
+        navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+            const seekTime = details.seekOffset || 10;
+            audioPlayer.currentTime = Math.max(audioPlayer.currentTime - seekTime, 0);
+            console.log('✓ Media Session: Seek backward', seekTime, 's');
+        });
+        
+        // 🔥 NEW: Перемотка в начало (iOS)
+        navigator.mediaSession.setActionHandler('seekto', (details) => {
+            if (details.seekTime !== undefined) {
+                audioPlayer.currentTime = details.seekTime;
+                console.log('✓ Media Session: Seek to', details.seekTime, 's');
             }
         });
+        
+        console.log('✓ Media Session handlers initialized with full controls');
+    }
 
-        audioPlayer.addEventListener('play', () => {
-            if (playIcon) playIcon.style.display = 'none';
-            if (pauseIcon) pauseIcon.style.display = 'block';
-        });
+    audioPlayer.addEventListener('loadstart', () => {
+        currentTrackName.style.opacity = '0.7';
+    });
 
-        audioPlayer.addEventListener('pause', () => {
-            if (playIcon) playIcon.style.display = 'block';
-            if (pauseIcon) pauseIcon.style.display = 'none';
-        });
+    audioPlayer.addEventListener('canplay', () => {
+        currentTrackName.style.opacity = '1';
+    });
 
-        // Обновление прогресс бара
-        audioPlayer.addEventListener('timeupdate', () => {
-            if (audioPlayer.duration && progressFill) {
-                const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-                progressFill.style.width = progress + '%';
-            }
-            if (currentTimeEl) {
-                currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
-            }
-        });
-
-        audioPlayer.addEventListener('loadedmetadata', () => {
-            if (durationEl) {
-                durationEl.textContent = formatTime(audioPlayer.duration);
-            }
-        });
-
-        // Клик по прогресс бару для перемотки
-        if (progressBar) {
-            progressBar.addEventListener('click', (e) => {
-                if (audioPlayer.duration) {
-                    const rect = progressBar.getBoundingClientRect();
-                    const clickX = e.clientX - rect.left;
-                    const progress = clickX / rect.width;
-                    audioPlayer.currentTime = progress * audioPlayer.duration;
-                }
-            });
+    audioPlayer.addEventListener('ended', () => {
+        if (repeatMode === REPEAT_ONE) {
+            audioPlayer.currentTime = 0;
+            audioPlayer.play();
+        } else {
+            nextTrack();
         }
+    });
+
+    audioPlayer.addEventListener('play', () => {
+        playIcon.style.display = 'none';
+        pauseIcon.style.display = 'block';
+    });
+
+    audioPlayer.addEventListener('pause', () => {
+        playIcon.style.display = 'block';
+        pauseIcon.style.display = 'none';
+    });
+
+    // Обновление прогресс бара
+    audioPlayer.addEventListener('timeupdate', () => {
+        if (audioPlayer.duration && progressFill) {
+            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            progressFill.style.width = progress + '%';
+        }
+        if (currentTimeEl) {
+            currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+        }
+    });
+
+    audioPlayer.addEventListener('loadedmetadata', () => {
+        if (durationEl) {
+            durationEl.textContent = formatTime(audioPlayer.duration);
+        }
+    });
+
+    // Клик по прогресс бару для перемотки
+    if (progressBar) {
+        progressBar.addEventListener('click', (e) => {
+            if (audioPlayer.duration) {
+                const rect = progressBar.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const progress = clickX / rect.width;
+                audioPlayer.currentTime = progress * audioPlayer.duration;
+            }
+        });
     }
 
     function formatTime(seconds) {
@@ -1334,16 +1406,15 @@
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
 
-    // Защитная проверка перед добавлением обработчиков
-    if (prevBtn) prevBtn.addEventListener('click', prevTrack);
-    if (nextBtn) nextBtn.addEventListener('click', nextTrack);
-    if (playPauseBtn) playPauseBtn.addEventListener('click', togglePlayPause);
-    if (shuffleBtn) shuffleBtn.addEventListener('click', toggleShuffle);
-    if (repeatBtn) repeatBtn.addEventListener('click', toggleRepeat);
+    prevBtn.addEventListener('click', prevTrack);
+    nextBtn.addEventListener('click', nextTrack);
+    playPauseBtn.addEventListener('click', togglePlayPause);
+    shuffleBtn.addEventListener('click', toggleShuffle);
+    repeatBtn.addEventListener('click', toggleRepeat);
 
-    if (togglePlaylist) togglePlaylist.addEventListener('click', togglePlaylistPanel);
-    if (closePlaylist) closePlaylist.addEventListener('click', togglePlaylistPanel);
-    if (overlay) overlay.addEventListener('click', togglePlaylistPanel);
+    togglePlaylist.addEventListener('click', togglePlaylistPanel);
+    closePlaylist.addEventListener('click', togglePlaylistPanel);
+    overlay.addEventListener('click', togglePlaylistPanel);
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && playlistVisible) {
@@ -1351,8 +1422,7 @@
         }
     });
 
-    // Защитная проверка перед установкой display
-    if (pauseIcon) pauseIcon.style.display = 'none';
+    pauseIcon.style.display = 'none';
 
     // ==================== ТОП ТРЕКОВ ====================
     // Функция переключения вида (albums / top-tracks)
@@ -2663,55 +2733,12 @@
     });
 
     // ==================== СТАРТ ====================
-    // 🔥 ВАЖНО: Инициализируем всё ПОСЛЕ загрузки DOM
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('DOM fully loaded - initializing elements...');
-        
-        // Инициализация DOM элементов
-        gallery = document.getElementById('gallery');
-        loadingEl = document.getElementById('loading');
-        errorEl = document.getElementById('error');
-        playerBar = document.getElementById('playerBar');
-        audioPlayer = document.getElementById('audioPlayer');
-        currentTrackCover = document.getElementById('currentTrackCover');
-        currentTrackName = document.getElementById('currentTrackName');
-        currentAlbumName = document.getElementById('currentAlbumName');
-        togglePlaylist = document.getElementById('togglePlaylist');
-        playlistPanel = document.getElementById('playlistPanel');
-        closePlaylist = document.getElementById('closePlaylist');
-        overlay = document.getElementById('overlay');
-        playlistContainer = document.getElementById('playlist');
-        playlistAlbumTitle = document.getElementById('playlistAlbumTitle');
-        
-        prevBtn = document.getElementById('prevBtn');
-        playPauseBtn = document.getElementById('playPauseBtn');
-        nextBtn = document.getElementById('nextBtn');
-        shuffleBtn = document.getElementById('shuffleBtn');
-        repeatBtn = document.getElementById('repeatBtn');
-
-        playIcon = document.querySelector('.play-icon');
-        pauseIcon = document.querySelector('.pause-icon');
-
-        progressBar = document.getElementById('progressBar');
-        progressFill = document.getElementById('progressFill');
-        currentTimeEl = document.getElementById('currentTime');
-        durationEl = document.getElementById('duration');
-
-        viewTabs = document.getElementById('viewTabs');
-        topTracksView = document.getElementById('topTracksView');
-        
-        tagsView = document.getElementById('tagsView');
-        tagsCloud = document.getElementById('tagsCloud');
-        tagTracksList = document.getElementById('tagTracksList');
-        
-        console.log('✓ All DOM elements initialized');
-        
-        // Теперь запускаем инициализацию
-        initViewTabs();
-        setupTopTracksInfiniteScroll();
-        loadLibrary();
-        
-        // Восстанавливаем состояние плеера после загрузки страницы
+    initViewTabs();
+    setupTopTracksInfiniteScroll();
+    loadLibrary();
+    
+    // Восстанавливаем состояние плеера после загрузки страницы
+    window.addEventListener('load', () => {
         setTimeout(() => restorePlayerState(), 1500);
     });
 })();
