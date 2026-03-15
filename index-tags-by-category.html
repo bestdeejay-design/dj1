@@ -202,7 +202,7 @@
                 console.log('Fetching track counts for', tags.length, 'tags...');
                 const countStart = Date.now();
                 
-                const countUrl = `${SUPABASE_URL}/rest/v1/track_tags?select=tag_id,count()`;
+                const countUrl = `${SUPABASE_URL}/rest/v1/track_tags?select=tag_id`;
                 const countResponse = await fetch(countUrl, {
                     headers: {
                         'apikey': SUPABASE_KEY,
@@ -213,12 +213,17 @@
                 let trackCounts = {};
                 if (countResponse.ok) {
                     const allTrackTags = await countResponse.json();
+                    console.log(`Received ${allTrackTags.length} track_tags records`);
                     
                     // Группируем по tag_id и считаем
                     allTrackTags.forEach(tt => {
                         const tagId = tt.tag_id;
                         trackCounts[tagId] = (trackCounts[tagId] || 0) + 1;
                     });
+                    
+                    console.log(`Counted ${Object.keys(trackCounts).length} unique tags with tracks`);
+                } else {
+                    console.error('Failed to fetch track counts:', countResponse.status);
                 }
                 
                 const countEnd = Date.now();
@@ -227,6 +232,7 @@
                 // 3. Добавляем count к каждому тегу
                 tags.forEach(tag => {
                     tag.track_count = trackCounts[tag.id] || 0;
+                    console.log(`Tag ${tag.name}: ${tag.track_count} tracks`);
                 });
                 
                 return tags;
@@ -330,16 +336,29 @@
         async function selectTag(tagId, tagName) {
             console.log('selectTag called with:', { tagId, tagName });
             
+            // Проверяем что DOM существует
+            const tagTracksSection = document.getElementById('tagTracksSection');
+            if (!tagTracksSection) {
+                console.error('ERROR: #tagTracksSection not found in DOM!');
+                console.log('Available elements:', document.querySelectorAll('*').length);
+                return;
+            }
+            
             const categoriesView = document.getElementById('tagsCategoriesView');
             const loadingEl = categoriesView.querySelector('#loading');
             const errorEl = categoriesView.querySelector('#error');
-            const tagTracksSection = document.getElementById('tagTracksSection');
             const selectedTagName = document.getElementById('selectedTagName');
             const selectedTagCount = document.getElementById('selectedTagCount');
             const tagTracksList = document.getElementById('tagTracksList');
             
             if (!loadingEl || !tagTracksSection) {
-                console.error('Required DOM elements not found!');
+                console.error('Required DOM elements not found!', {
+                    loadingEl: !!loadingEl,
+                    tagTracksSection: !!tagTracksSection,
+                    selectedTagName: !!selectedTagName,
+                    selectedTagCount: !!selectedTagCount,
+                    tagTracksList: !!tagTracksList
+                });
                 return;
             }
             
