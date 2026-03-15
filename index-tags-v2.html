@@ -1234,30 +1234,50 @@
                 console.log('✓ Got track data:', track.title);
                 
                 // 2. Получаем теги из Supabase (с ID и track_count)
-                const tagsUrl = `${SUPABASE_URL}/rest/v1/track_tags?track_id=eq.${trackId}&select=tag_id,tags(id,name,track_count)`;
-                const tagsResponse = await fetch(tagsUrl, {
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    }
-                });
+                console.log('🔍 Fetching tags for track:', trackId);
                 
-                let trackTags = [];
-                if (tagsResponse.ok) {
-                    const tagsData = await tagsResponse.json();
-                    console.log('📊 Tags raw data:', tagsData);
+                // 🔥 ПРОБУЕМ два варианта запроса
+                let tagsData = [];
+                
+                // Вариант 1: Через track_tags с join
+                try {
+                    const tagsUrl = `${SUPABASE_URL}/rest/v1/track_tags?track_id=eq.${trackId}&select=tag_id,tags(id,name,track_count)`;
+                    console.log('📡 Request URL:', tagsUrl);
                     
-                    // 🔥 ПРАВИЛЬНАЯ ОБРАБОТКА: Supabase может вернуть плоский массив
+                    const tagsResponse = await fetch(tagsUrl, {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    });
+                    
+                    console.log('📊 Response status:', tagsResponse.status);
+                    
+                    if (tagsResponse.ok) {
+                        tagsData = await tagsResponse.json();
+                        console.log('📊 Tags raw data:', tagsData);
+                    } else {
+                        console.error('❌ Tags API error:', tagsResponse.status, tagsResponse.statusText);
+                    }
+                } catch (error) {
+                    console.error('❌ Tags fetch error:', error);
+                }
+                
+                // 🔥 ОБРАБАТЫВАЕМ данные
+                let trackTags = [];
+                if (Array.isArray(tagsData)) {
                     trackTags = tagsData.map(t => {
+                        console.log('Processing tag entry:', t);
+                        
                         // Вариант 1: tags - вложенный объект
                         if (t.tags && typeof t.tags === 'object') {
                             return {
-                                id: t.tag_id,
+                                id: t.tag_id || t.tags.id,
                                 name: t.tags.name || 'Unknown',
                                 count: t.tags.track_count || 0
                             };
                         }
-                        // Вариант 2: плоская структура (tag_id, tag_name)
+                        // Вариант 2: плоская структура
                         else {
                             return {
                                 id: t.tag_id,
@@ -1267,7 +1287,9 @@
                         }
                     }).filter(tag => tag.name !== 'Unknown');
                     
-                    console.log('✓ Got tags:', trackTags);
+                    console.log('✓ Processed tags:', trackTags);
+                } else {
+                    console.error('❌ tagsData is not an array:', tagsData);
                 }
                 
                 // 3. Заполняем модальное окно
