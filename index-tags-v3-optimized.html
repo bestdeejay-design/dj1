@@ -554,6 +554,7 @@
                 
                 // 2. Теги - ОДИН ЗАПРОС вместо 44!
                 const tagsData = await getTagsForTrack(trackId);
+                console.log('🏷️ Tags data:', tagsData);
                 
                 // 3. Заполняем модалку
                 document.getElementById('modalTrackTitle').textContent = track.title || 'Untitled';
@@ -561,14 +562,34 @@
                 document.getElementById('modalTrackLyrics').textContent = track.lyrics || 'No lyrics';
                 document.getElementById('modalTrackCover').src = track.image_url || '';
                 
-                // 4. Рендерим теги
+                // 4. Рендерим теги С КЛИКАБЕЛЬНЫМИ CHIP
                 const tagsEl = document.getElementById('modalTrackTags');
                 tagsEl.innerHTML = tagsData.map(tag => `
-                    <span class="tag-chip" data-tag-id="${tag.id}" data-tag-name="${tag.name}">
+                    <span class="tag-chip" data-tag-id="${tag.id}" data-tag-name="${tag.name}" style="cursor: pointer;">
                         ${tag.name}
                         <span style="background: rgba(255,255,255,0.2); padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.75rem;">${tag.count}</span>
                     </span>
                 `).join('');
+                
+                // 🔥 ДОБАВЛЯЕМ ОБРАБОТЧИКИ КЛИКОВ ДЛЯ ТЕГОВ
+                setTimeout(() => {
+                    tagsEl.querySelectorAll('.tag-chip').forEach(chip => {
+                        chip.addEventListener('click', (e) => {
+                            e.stopPropagation(); // Чтобы не закрывалась модалка
+                            const tagId = parseInt(chip.getAttribute('data-tag-id'));
+                            const tagName = chip.getAttribute('data-tag-name');
+                            console.log('🏷️ Tag clicked in modal:', tagName, tagId);
+                            
+                            // Закрываем модалку
+                            document.getElementById('trackDetailsModal').style.display = 'none';
+                            document.body.style.overflow = '';
+                            
+                            // Открываем тег
+                            selectTag(tagId, tagName);
+                        });
+                    });
+                    console.log('✅ Tag click handlers attached');
+                }, 100);
                 
                 // 5. Показываем
                 document.getElementById('trackDetailsModal').style.display = 'block';
