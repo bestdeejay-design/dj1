@@ -1370,6 +1370,9 @@
                                 const tagName = chip.getAttribute('data-tag-name');
                                 console.log('🏷️ Navigate to tag:', tagName, tagId);
                                 
+                                // 🔥 СОХРАНЯЕМ НОВЫЙ TAG ID ПЕРЕД ПЕРЕХОДОМ
+                                window.currentTagId = tagId;
+                                
                                 // Сохраняем состояние плеера перед переходом
                                 savePlayerState();
                                 
