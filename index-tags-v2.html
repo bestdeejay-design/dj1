@@ -438,32 +438,26 @@
             }
         }
         
-        // Шаг 4: Отправляем в API пагинацией по 10 треков
+        // Шаг 4: Загружаем треки из API пагинацией по 10
         async function loadTracksFromAPI(trackIds) {
             const tracksLoading = document.getElementById('tracksLoading');
             const tracksList = document.getElementById('tracksList');
             
-            const perPage = 10;
+            console.log(`📦 Loading ${trackIds.length} tracks from API...`);
+            
+            // 🔥 ЗАГРУЖАЕМ ВСЕ ТРЕКИ СРАЗУ (не пагинацией!)
+            // API limitation: нет endpoint для получения по IDs
+            // Используем GET /tracks с большим limit
+            
+            const allTracks = [];
+            const perPage = 100; // Максимальный limit
             let page = 1;
             let hasMore = true;
             
             while (hasMore) {
-                const start = (page - 1) * perPage;
-                const end = start + perPage;
-                const pageIds = trackIds.slice(start, end);
-                
-                console.log(`\n📄 Loading page ${page}: tracks ${start}-${end} of ${trackIds.length}`);
-                
                 try {
                     // 📡 ОТПРАВЛЯЕМ ЗАПРОС В API
-                    // Согласно openapi.yaml: POST /api/tracks с body { ids: [...] }
-                    const response = await fetch('https://api.dj1.ru/api/tracks', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ ids: pageIds })
-                    });
+                    const response = await fetch(`https://api.dj1.ru/api/tracks?page=${page}&limit=${perPage}`);
                     
                     if (!response.ok) {
                         throw new Error(`API HTTP ${response.status}`);
@@ -472,18 +466,29 @@
                     const result = await response.json();
                     console.log(`✓ Page ${page}: Got ${result.data?.length || 0} tracks`);
                     
-                    // Рендерим треки
                     if (result.data && result.data.length > 0) {
-                        renderTracks(result.data);
+                        // Фильтруем только нужные track_ids
+                        const filteredTracks = result.data.filter(track => trackIds.includes(track.id));
+                        allTracks.push(...filteredTracks);
+                        console.log(`  → Filtered to ${filteredTracks.length} matching tracks (total: ${allTracks.length}/${trackIds.length})`);
                     }
                     
-                    hasMore = end < trackIds.length;
+                    hasMore = result.data && result.data.length === perPage && allTracks.length < trackIds.length;
                     page++;
                     
                 } catch (error) {
                     console.error(`❌ Error loading page ${page}:`, error);
                     break;
                 }
+            }
+            
+            console.log(`✅ Total loaded: ${allTracks.length} tracks`);
+            
+            // Рендерим все треки
+            if (allTracks.length > 0) {
+                renderTracks(allTracks);
+            } else {
+                tracksList.innerHTML = '<div class="loading">Треки не найдены</div>';
             }
             
             tracksLoading.style.display = 'none';
