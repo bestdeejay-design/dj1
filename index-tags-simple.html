@@ -387,6 +387,11 @@
         
         function renderTracks(tracks) {
             const container = document.getElementById('tagTracksList');
+            if (!container) {
+                console.error('tagTracksList not found!');
+                return;
+            }
+            
             let html = '';
             
             tracks.forEach(track => {
