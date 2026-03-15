@@ -1233,8 +1233,8 @@
                 const track = await trackResponse.json();
                 console.log('✓ Got track data:', track.title);
                 
-                // 2. Получаем теги из Supabase
-                const tagsUrl = `${SUPABASE_URL}/rest/v1/track_tags?track_id=eq.${trackId}&select=tag_id,tags(name)`;
+                // 2. Получаем теги из Supabase (с ID и track_count)
+                const tagsUrl = `${SUPABASE_URL}/rest/v1/track_tags?track_id=eq.${trackId}&select=tag_id,tags(id,name,track_count)`;
                 const tagsResponse = await fetch(tagsUrl, {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
@@ -1245,7 +1245,11 @@
                 let trackTags = [];
                 if (tagsResponse.ok) {
                     const tagsData = await tagsResponse.json();
-                    trackTags = tagsData.map(t => t.tags?.name).filter(Boolean);
+                    trackTags = tagsData.map(t => ({
+                        id: t.tag_id,
+                        name: t.tags?.name || 'Unknown',
+                        count: t.tags?.track_count || 0
+                    })).filter(tag => tag.name !== 'Unknown');
                     console.log('✓ Got tags:', trackTags.length);
                 }
                 
@@ -1262,17 +1266,48 @@
                 if (lyricsEl) lyricsEl.textContent = track.lyrics || 'No lyrics';
                 if (coverEl) coverEl.src = track.image_url || '';
                 
-                // Рендерим теги
+                // Рендерим теги с кликом и счетчиком
                 if (tagsEl) {
-                    tagsEl.innerHTML = trackTags.map(tagName => `
-                        <span style="
+                    tagsEl.innerHTML = trackTags.map(tag => `
+                        <span class="tag-chip" data-tag-id="${tag.id}" data-tag-name="${tag.name}" style="
                             background: rgba(255,255,255,0.1);
                             padding: 0.5rem 1rem;
                             border-radius: 16px;
                             font-size: 0.85rem;
                             color: #fff;
-                        ">${tagName}</span>
+                            cursor: pointer;
+                            transition: background 0.2s;
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        " onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                            ${tag.name}
+                            <span style="
+                                background: rgba(255,255,255,0.2);
+                                padding: 0.15rem 0.5rem;
+                                border-radius: 10px;
+                                font-size: 0.75rem;
+                            ">${tag.count}</span>
+                        </span>
                     `).join('');
+                    
+                    // 🔥 ДОБАВЛЯЕМ КЛИК ПО ТЕГАМ → ПЕРЕХОД НА СТРАНИЦУ С ТЕГАМИ
+                    setTimeout(() => {
+                        tagsEl.querySelectorAll('.tag-chip').forEach(chip => {
+                            chip.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const tagId = parseInt(chip.getAttribute('data-tag-id'));
+                                const tagName = chip.getAttribute('data-tag-name');
+                                console.log('🏷️ Navigate to tag:', tagName, tagId);
+                                
+                                // Сохраняем состояние плеера перед переходом
+                                savePlayerState();
+                                
+                                // Переходим на страницу с тегами и открываем этот тег
+                                window.location.href = `index-tags-v2.html?tag=${tagId}`;
+                            });
+                        });
+                    }, 100);
                 }
                 
                 // Показываем модальное окно
@@ -1459,6 +1494,30 @@
                 const tags = await fetchTagsWithCategories();
                 const groupedTags = groupTagsByCategory(tags);
                 renderTagsByCategories(groupedTags);
+                
+                // 🔥 ПРОВЕРЯЕМ URL НА НАЛИЧИЕ ?tag=ID
+                const urlParams = new URLSearchParams(window.location.search);
+                const tagIdFromUrl = urlParams.get('tag');
+                
+                if (tagIdFromUrl) {
+                    console.log('🔗 Opening tag from URL:', tagIdFromUrl);
+                    
+                    // Ждём немного пока отрисуется страница тегов
+                    setTimeout(async () => {
+                        // Находим тег по ID
+                        const tagElement = document.querySelector(`.tag-item[data-tag-id="${tagIdFromUrl}"]`);
+                        if (tagElement) {
+                            // Скроллим к тегу и кликаем
+                            tagElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            tagElement.click();
+                            
+                            // Очищаем URL чтобы не было ?tag=
+                            window.history.replaceState({}, '', window.location.pathname);
+                        } else {
+                            console.error('❌ Tag not found in DOM:', tagIdFromUrl);
+                        }
+                    }, 500);
+                }
             } catch (error) {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('error').textContent = `Ошибка: ${error.message}`;
