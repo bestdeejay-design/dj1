@@ -823,7 +823,13 @@
                     item.addEventListener('click', () => {
                         const index = parseInt(item.getAttribute('data-track-index'));
                         console.log('🎵 Clicked playlist track:', index);
-                        playTrack(currentPlaylist[index], index, currentPlaylist);
+                        
+                        // 🔥 БЕРЁМ ИЗ tagTrackPlaylist, а не currentPlaylist!
+                        if (tagTrackPlaylist[index]) {
+                            playTrack(tagTrackPlaylist[index], index, tagTrackPlaylist);
+                        } else {
+                            console.error('❌ Track not found at index:', index);
+                        }
                     });
                 });
             }, 100);
