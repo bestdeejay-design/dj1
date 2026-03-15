@@ -1236,12 +1236,12 @@
                 // 2. Получаем теги из Supabase (с ID и track_count)
                 console.log('🔍 Fetching tags for track:', trackId);
                 
-                // 🔥 ПРОБУЕМ два варианта запроса
+                // 🔥 ПРОБУЕМ БЕЗ JOIN - просто получаем tag_id из track_tags
                 let tagsData = [];
                 
-                // Вариант 1: Через track_tags с join
                 try {
-                    const tagsUrl = `${SUPABASE_URL}/rest/v1/track_tags?track_id=eq.${trackId}&select=tag_id,tags(id,name,track_count)`;
+                    // Сначала получаем только tag_id
+                    const tagsUrl = `${SUPABASE_URL}/rest/v1/track_tags?track_id=eq.${trackId}&select=tag_id`;
                     console.log('📡 Request URL:', tagsUrl);
                     
                     const tagsResponse = await fetch(tagsUrl, {
@@ -1255,9 +1255,47 @@
                     
                     if (tagsResponse.ok) {
                         tagsData = await tagsResponse.json();
-                        console.log('📊 Tags raw data:', tagsData);
+                        console.log('📊 Tag IDs from track_tags:', tagsData);
+                        
+                        // 🔥 Теперь для каждого tag_id получаем данные из tags
+                        if (tagsData.length > 0) {
+                            const tagIds = tagsData.map(t => t.tag_id);
+                            console.log('🏷️ Tag IDs to fetch:', tagIds);
+                            
+                            // Получаем все теги по их ID
+                            const tagsDetailsUrl = `${SUPABASE_URL}/rest/v1/tags?id=in.(${tagIds.join(',')})&select=id,name,track_count`;
+                            const tagsDetailsResponse = await fetch(tagsDetailsUrl, {
+                                headers: {
+                                    'apikey': SUPABASE_ANON_KEY,
+                                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                                }
+                            });
+                            
+                            if (tagsDetailsResponse.ok) {
+                                const tagsDetails = await tagsDetailsResponse.json();
+                                console.log('✓ Got tag details:', tagsDetails);
+                                tagsData = tagsDetails;
+                            } else {
+                                console.error('❌ Failed to fetch tag details:', tagsDetailsResponse.status);
+                            }
+                        }
                     } else {
                         console.error('❌ Tags API error:', tagsResponse.status, tagsResponse.statusText);
+                        
+                        // Пробуем альтернативный вариант
+                        console.log('🔄 Trying alternative query...');
+                        const altTagsUrl = `${SUPABASE_URL}/rest/v1/track_tags?track_id=eq.${trackId}`;
+                        const altResponse = await fetch(altTagsUrl, {
+                            headers: {
+                                'apikey': SUPABASE_ANON_KEY,
+                                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                            }
+                        });
+                        
+                        if (altResponse.ok) {
+                            tagsData = await altResponse.json();
+                            console.log('✓ Alternative response:', tagsData);
+                        }
                     }
                 } catch (error) {
                     console.error('❌ Tags fetch error:', error);
