@@ -746,11 +746,6 @@
             tracksList.innerHTML = '';
             tracksLoading.style.display = 'block';
             
-            // Скроллим к трекам
-            setTimeout(() => {
-                tracksSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-            
             try {
                 // Получаем track_ids из Supabase
                 const url = `${SUPABASE_URL}/rest/v1/track_tags?tag_id=eq.${tagId}&select=track_id`;
@@ -779,6 +774,12 @@
                 
                 // 🔥 ОТПРАВЛЯЕМ В API ПО 10 ТРЕКОВ
                 await loadTracksFromAPI(trackIds);
+                
+                // 🔥 СКРОЛЛИМ ПОСЛЕ ЗАГРУЗКИ ПЕРВЫХ ТРЕКОВ
+                setTimeout(() => {
+                    tracksSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    console.log('📍 Scrolled to tracks section after load');
+                }, 500);
                 
             } catch (error) {
                 console.error('❌ Error:', error);
