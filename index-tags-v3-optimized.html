@@ -761,8 +761,14 @@
                     console.log('✅ Playing');
                     isPlaying = true;
                     updatePlayPauseButton();
-                    highlightCurrentTrack(); // 🔥 Подсветка трека
-                    setTimeout(savePlayerState, 1000);
+                    highlightCurrentTrack();
+                    
+                    // 🔥 СОХРАНЯЕМ СРАЗУ И КАЖДЫЕ 5 СЕКУНД
+                    savePlayerState();
+                    const saveInterval = setInterval(savePlayerState, 5000);
+                    
+                    // Сохраняем ID интервала для очистки
+                    window.playerSaveInterval = saveInterval;
                 }).catch(e => console.error('Play error:', e));
             }
         }
@@ -772,11 +778,20 @@
             if (isPlaying) {
                 audio.pause();
                 isPlaying = false;
-                savePlayerState();
+                savePlayerState(); // Сохраняем при паузе
+                
+                // Очищаем интервал
+                if (window.playerSaveInterval) {
+                    clearInterval(window.playerSaveInterval);
+                    window.playerSaveInterval = null;
+                }
             } else {
                 audio.play();
                 isPlaying = true;
-                setTimeout(savePlayerState, 1000);
+                savePlayerState(); // Сохраняем сразу
+                
+                // Запускаем интервал снова
+                window.playerSaveInterval = setInterval(savePlayerState, 5000);
             }
             updatePlayPauseButton();
         }
@@ -879,8 +894,15 @@
                 };
                 
                 localStorage.setItem('playerState', JSON.stringify(state));
+                console.log('💾 Player state saved @', Math.floor(audio.currentTime), 's');
             }
         }
+        
+        // 🔥 СОХРАНЯЕМ ПЕРЕД F5/ПЕРЕЗАГРУЗКОЙ
+        window.addEventListener('beforeunload', () => {
+            savePlayerState();
+            console.log('💾 Auto-saved before unload');
+        });
         
         function restorePlayerState() {
             try {
