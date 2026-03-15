@@ -142,6 +142,12 @@
             </div>
             <div class="track-details-body">
                 <div class="track-details-section" style="margin-bottom: 2rem;">
+                    <h3 style="color: #fff; margin-bottom: 1rem;">📅 Release Info</h3>
+                    <div id="modalTrackReleaseInfo" style="color: #aaa; font-size: 0.85rem; line-height: 1.8;">
+                        <!-- Будет заполнено JS -->
+                    </div>
+                </div>
+                <div class="track-details-section" style="margin-bottom: 2rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <h3 style="color: #fff; margin: 0;">🎵 Sound / Prompt</h3>
                         <button id="copySoundBtn" style="background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">📋 Копировать</button>
@@ -209,6 +215,27 @@
             const mins = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
             return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function formatDate(isoString) {
+            if (!isoString) return '';
+            
+            const date = new Date(isoString);
+            const now = new Date();
+            const diff = now - date;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            if (days === 0) return 'Сегодня';
+            if (days === 1) return 'Вчера';
+            if (days < 7) return `${days} дн. назад`;
+            if (days < 30) return `${Math.floor(days/7)} нед. назад`;
+            if (days < 365) return `${Math.floor(days/30)} мес. назад`;
+            
+            return date.toLocaleDateString('ru-RU', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
         }
         
         async function fetchWithCache(url, cache, key) {
@@ -556,11 +583,34 @@
                 const tagsData = await getTagsForTrack(trackId);
                 console.log('🏷️ Tags data:', tagsData);
                 
+                // 🔥 ФОРМАТИРУЕМ ДАТУ
+                const createdDate = formatDate(track.created_at);
+                console.log('📅 Created:', createdDate);
+                
                 // 3. Заполняем модалку
                 document.getElementById('modalTrackTitle').textContent = track.title || 'Untitled';
                 document.getElementById('modalTrackSound').textContent = track.sound || 'No sound';
                 document.getElementById('modalTrackLyrics').textContent = track.lyrics || 'No lyrics';
                 document.getElementById('modalTrackCover').src = track.image_url || '';
+                
+                // 🔥 ЗАПОЛНЯЕМ RELEASE INFO
+                const releaseInfoEl = document.getElementById('modalTrackReleaseInfo');
+                const durationFormatted = formatTime(track.duration_s || 0);
+                releaseInfoEl.innerHTML = `
+                    <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; align-items: center;">
+                        <span style="color: #fff;">🕓 Добавлен:</span>
+                        <span>${createdDate || 'Неизвестно'}</span>
+                        
+                        <span style="color: #fff;">⏱️ Длительность:</span>
+                        <span>${durationFormatted}</span>
+                        
+                        <span style="color: #fff;">▶️ Прослушиваний:</span>
+                        <span>${track.play_count || 0}</span>
+                        
+                        <span style="color: #fff;">❤️ В избранном:</span>
+                        <span>${track.favorite_count || 0}</span>
+                    </div>
+                `;
                 
                 // 4. Рендерим теги С КЛИКАБЕЛЬНЫМИ CHIP
                 const tagsEl = document.getElementById('modalTrackTags');
