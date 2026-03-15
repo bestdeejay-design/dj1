@@ -474,55 +474,78 @@
                 const orCondition = batchIds.map(id => `id.eq.${id}`).join(',');
                 const url = `${API_BASE}/tracks?or=(${orCondition})`;
                 
-                const response = await fetch(url);
-                if (!response.ok) {
-                    // Fallback к Promise.all если OR не работает
-                    throw new Error('OR query failed');
-                }
+                console.log('🔍 Fetching tracks:', url);
+                const response = await fetch(url, {
+                    mode: 'cors',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
                 
-                let tracks = await response.json();
+                let tracks = [];
+                
+                if (response.ok) {
+                    tracks = await response.json();
+                    console.log(`✓ OR query returned ${tracks.length} tracks`);
+                } else {
+                    console.warn('⚠️ OR query failed with status:', response.status);
+                }
                 
                 // Если API не поддерживает OR, используем Promise.all
                 if (!tracks || tracks.length === 0) {
                     console.log('⚠️ OR failed, using Promise.all fallback');
                     const promises = batchIds.map(id => 
-                        fetch(`${API_BASE}/tracks/${id}`)
+                        fetch(`${API_BASE}/tracks/${id}`, { mode: 'cors' })
                             .then(r => r.ok ? r.json() : null)
                             .catch(() => null)
                     );
                     const results = await Promise.all(promises);
                     tracks = results.filter(r => r !== null);
+                    console.log(`✓ Promise.all fallback returned ${tracks.length} tracks`);
                 }
                 
                 console.log(`✓ Loaded ${tracks.length}/${batchIds.length} tracks`);
                 
-                // Добавляем в плейлист
+                if (tracks.length === 0) {
+                    console.warn('⚠️ No tracks loaded from this batch');
+                    isLoadingMore = false;
+                    return;
+                }
+                
+                // 🔥 ДОБАВЛЯЕМ В ПЛЕЙЛИСТ
                 tagTrackPlaylist.push(...tracks);
                 tracks.forEach(t => displayedTrackIds.add(t.id));
                 currentPlaylist = [...tagTrackPlaylist];
                 
-                // Рендерим
+                console.log(`📦 Playlist now has ${currentPlaylist.length} tracks total`);
+                
+                // Рендерим новые треки
                 renderTracks(tracks);
                 updatePlayerPlaylist();
                 
             } catch (error) {
                 console.error('❌ Load error:', error);
                 // Fallback к индивидуальному запросу
+                console.log('⚠️ Using individual track fetch fallback');
                 for (const id of batchIds) {
                     try {
-                        const resp = await fetch(`${API_BASE}/tracks/${id}`);
+                        const resp = await fetch(`${API_BASE}/tracks/${id}`, { mode: 'cors' });
                         if (resp.ok) {
                             const track = await resp.json();
                             tagTrackPlaylist.push(track);
                             displayedTrackIds.add(id);
-                            renderTracks([track]);
+                            currentPlaylist = [...tagTrackPlaylist];
                         }
                     } catch (e) {
                         console.error(`Failed to load ${id}:`, e);
                     }
                 }
-                currentPlaylist = [...tagTrackPlaylist];
-                updatePlayerPlaylist();
+                
+                if (tagTrackPlaylist.length > 0) {
+                    renderTracks(tagTrackPlaylist.slice(-batchIds.length));
+                    updatePlayerPlaylist();
+                }
             }
             
             isLoadingMore = false;
