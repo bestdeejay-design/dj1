@@ -938,6 +938,21 @@
             if (currentPlaylist.length === 0) return;
             
             currentTrackIndex = (currentTrackIndex + 1) % currentPlaylist.length;
+            
+            // 🔥 ЕСЛИ ТРЕКА НЕТ В ПЛЕЙЛИСТЕ - ЗАГРУЖАЕМ
+            if (!currentPlaylist[currentTrackIndex]) {
+                console.log('⚠️ Track not loaded, loading next batch...');
+                // Возвращаем индекс назад, загрузчик сам переключит
+                currentTrackIndex = (currentTrackIndex - 1 + currentPlaylist.length) % currentPlaylist.length;
+                
+                // Триггерим загрузку следующей пачки
+                const sentinel = document.getElementById('tag-tracks-sentinel');
+                if (sentinel) {
+                    sentinel.scrollIntoView({ behavior: 'smooth' });
+                }
+                return;
+            }
+            
             playTrack(currentPlaylist[currentTrackIndex], currentTrackIndex, currentPlaylist);
         }
         
@@ -945,6 +960,14 @@
             if (currentPlaylist.length === 0) return;
             
             currentTrackIndex = (currentTrackIndex - 1 + currentPlaylist.length) % currentPlaylist.length;
+            
+            // 🔥 ЕСЛИ ТРЕКА НЕТ В ПЛЕЙЛИСТЕ - ЗАГРУЖАЕМ
+            if (!currentPlaylist[currentTrackIndex]) {
+                console.log('⚠️ Previous track not loaded, loading previous batch...');
+                // TODO: Загрузка предыдущей пачки (сложнее)
+                return;
+            }
+            
             playTrack(currentPlaylist[currentTrackIndex], currentTrackIndex, currentPlaylist);
         }
         
