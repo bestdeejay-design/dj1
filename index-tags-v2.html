@@ -745,6 +745,10 @@
                 // Отмечаем как отображённые
                 filteredTracks.forEach(track => displayedTrackIds.add(track.id));
                 
+                // 🔥 СИНХРОНИЗИРУЕМ currentPlaylist для боковой панели
+                currentPlaylist = [...tagTrackPlaylist];
+                console.log(`📦 currentPlaylist now has ${currentPlaylist.length} tracks`);
+                
                 // Рендерим новые треки
                 renderTracks(filteredTracks);
                 
