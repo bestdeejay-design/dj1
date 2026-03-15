@@ -443,7 +443,10 @@
         
         // 🔥 ЗАГРУЗКА СЛЕДУЮЩЕЙ СТРАНИЦЫ ТРЕКОВ
         async function loadMoreTagTracks() {
-            if (window.currentTagLoading || !window.currentTagHasMore) return;
+            if (window.currentTagLoading || !window.currentTagHasMore) {
+                console.log('Skipping load:', { loading: window.currentTagLoading, hasMore: window.currentTagHasMore });
+                return;
+            }
             
             window.currentTagLoading = true;
             const page = window.currentTagPage;
@@ -453,11 +456,14 @@
             const pageIds = window.currentTagTrackIds.slice(start, end);
             
             console.log(`Loading page ${page}: tracks ${start}-${end} of ${window.currentTagTrackIds.length}`);
+            console.log('Track IDs to fetch:', pageIds);
             
             // Загружаем треки параллельно по 20
             const batchPromises = pageIds.map(id => fetchTrackById(id));
             const batchResults = await Promise.all(batchPromises);
+            console.log('Batch results:', batchResults);
             const tracks = batchResults.filter(t => t !== null);
+            console.log('Filtered tracks:', tracks.length);
             
             // Рендерим страницу
             renderTrackListPage(tracks);
@@ -468,6 +474,7 @@
             window.currentTagLoading = false;
             
             document.getElementById('tagTracksLoading').style.display = window.currentTagHasMore ? 'block' : 'none';
+            console.log('Page loaded. Has more:', window.currentTagHasMore);
         }
         
         // 🔥 INFINITE SCROLL OBSERVER
