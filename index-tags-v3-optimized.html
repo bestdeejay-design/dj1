@@ -381,6 +381,13 @@
         async function selectTag(tagId, tagName) {
             console.log(`\n🏷️ Selecting tag: ${tagName} (${tagId})`);
             
+            // 🔥 СБРОС СОСТОЯНИЯ ПРИ ПЕРЕКЛЮЧЕНИИ ТЕГА
+            tagTrackPlaylist = [];
+            displayedTrackIds.clear();
+            currentPlaylist = [];
+            currentTrackIndex = -1;
+            isLoadingMore = false;
+            
             // Сохраняем состояние
             window.currentTagId = tagId;
             window.currentTagName = tagName;
@@ -393,7 +400,7 @@
             const tracksLoading = document.getElementById('tracksLoading');
             
             tracksSection.style.display = 'block';
-            tracksList.innerHTML = '';
+            tracksList.innerHTML = '';  // 🔥 Очищаем DOM
             tracksLoading.style.display = 'block';
             
             // Получаем track_count для заголовка
@@ -428,6 +435,7 @@
                 const trackIds = data.map(t => t.track_id);
                 
                 console.log(`✓ Found ${trackIds.length} tracks for "${tagName}"`);
+                console.log('📋 First 10 track IDs:', trackIds.slice(0, 10));
                 
                 if (trackIds.length === 0) {
                     tracksLoading.style.display = 'none';
