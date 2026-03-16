@@ -481,56 +481,16 @@
             console.log(`📥 Loading ${batchIds.length} tracks...`);
             
             try {
-                // 🔥 ОДИН ЗАПРОС ВМЕСТО Promise.all × 10
-                // Используем OR для получения всех треков сразу
-                const orCondition = batchIds.map(id => `id.eq.${id}`).join(',');
-                const url = `${API_BASE}/tracks?or=(${orCondition})`;
-                
-                console.log('🔍 Fetching tracks:', url);
-                const response = await fetch(url, {
-                    mode: 'cors',
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    }
-                });
-                
-                let tracks = [];
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('📦 Raw API response:', data);
-                    
-                    // 🔥 ИЗВЛЕКАЕМ МАССИВ ИЗ SUPABASE RESPONSE
-                    // Supabase REST возвращает {data: [...], meta: {...}}
-                    let tracksArray;
-                    if (Array.isArray(data)) {
-                        tracksArray = data;
-                    } else if (data && Array.isArray(data.data)) {
-                        tracksArray = data.data;  // ← Извлекаем из data.data
-                    } else {
-                        console.warn('⚠️ Unexpected API format:', data);
-                        tracksArray = [];
-                    }
-                    
-                    tracks = tracksArray;
-                    console.log(`✓ OR query returned ${tracks.length} tracks`);
-                } else {
-                    console.warn('⚠️ OR query failed with status:', response.status);
-                }
-                
-                // Если API не поддерживает OR, используем Promise.all
-                if (!tracks || tracks.length === 0) {
-                    console.log('⚠️ OR failed, using Promise.all fallback');
-                    const promises = batchIds.map(id => 
-                        fetch(`${API_BASE}/tracks/${id}`, { mode: 'cors' })
-                            .then(r => r.ok ? r.json() : null)
-                            .catch(() => null)
-                    );
-                    const results = await Promise.all(promises);
-                    tracks = results.filter(r => r !== null);
-                    console.log(`✓ Promise.all fallback returned ${tracks.length} tracks`);
-                }
+                // 🔥 API /api/tracks?or=() НЕ РАБОТАЕТ - игнорирует фильтр и возвращает первые 20 треков из БД
+                // Используем Promise.all для получения треков по ID
+                console.log('🔍 Using Promise.all for batch fetch (OR query broken)');
+                const promises = batchIds.map(id => 
+                    fetch(`${API_BASE}/tracks/${id}`, { mode: 'cors' })
+                        .then(r => r.ok ? r.json() : null)
+                        .catch(() => null)
+                );
+                const results = await Promise.all(promises);
+                let tracks = results.filter(r => r !== null);
                 
                 console.log(`✓ Loaded ${tracks.length}/${batchIds.length} tracks`);
                 
@@ -553,26 +513,6 @@
                 
             } catch (error) {
                 console.error('❌ Load error:', error);
-                // Fallback к индивидуальному запросу
-                console.log('⚠️ Using individual track fetch fallback');
-                for (const id of batchIds) {
-                    try {
-                        const resp = await fetch(`${API_BASE}/tracks/${id}`, { mode: 'cors' });
-                        if (resp.ok) {
-                            const track = await resp.json();
-                            tagTrackPlaylist.push(track);
-                            displayedTrackIds.add(id);
-                            currentPlaylist = [...tagTrackPlaylist];
-                        }
-                    } catch (e) {
-                        console.error(`Failed to load ${id}:`, e);
-                    }
-                }
-                
-                if (tagTrackPlaylist.length > 0) {
-                    renderTracks(tagTrackPlaylist.slice(-batchIds.length));
-                    updatePlayerPlaylist();
-                }
             }
             
             isLoadingMore = false;
