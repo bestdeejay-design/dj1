@@ -462,6 +462,10 @@
         // ============================================
         // 🎵 ЗАГРУЗКА ТРЕКОВ (OPTIMIZED)
         // ============================================
+        
+        // 🔥 ХРАНИМ trackIds В ОБЪЕКТЕ ЧТОБЫ OBSERVER ВИДЕЛ АКТУАЛЬНЫЕ
+        let currentTrackIdsRef = { ids: [] };
+        
         async function loadTracksBatch(trackIds, count) {
             if (isLoadingMore) return;
             isLoadingMore = true;
@@ -590,7 +594,12 @@
                 oldSentinel.remove();
             }
             
-            // Создаём новый sentinel элемент
+            // 🔥 ОБНОВЛЯЕМ REF - ЭТО КЛЮЧЕВОЙ МОМЕНТ!
+            currentTrackIdsRef.ids = trackIds;
+            console.log('💾 Updated trackIdsRef with', trackIds.length, 'IDs');
+            console.log('📋 First 5 IDs:', trackIds.slice(0, 5));
+            
+            // Создаём новый sentinel
             const sentinel = document.createElement('div');
             sentinel.id = 'tag-tracks-sentinel';
             sentinel.style.height = '100px';
@@ -600,8 +609,10 @@
             const observer = new IntersectionObserver((entries) => {
                 if (entries[0].isIntersecting && !isLoadingMore) {
                     console.log('👁️ Sentinel visible - loading more tracks...');
-                    console.log('📋 Current trackIds:', trackIds.slice(0, 5), '...');
-                    loadTracksBatch(trackIds, 10); // Загружаем ещё 10
+                    console.log('🔗 Using trackIds from ref:', currentTrackIdsRef.ids === trackIds ? '✅ CURRENT' : '❌ STALE');
+                    console.log('📋 Current ref IDs:', currentTrackIdsRef.ids.slice(0, 5), '...');
+                    // 🔥 БЕРЁМ ИЗ REF А НЕ ИЗ ЗАМКНУТОЙ ПЕРЕМЕННОЙ
+                    loadTracksBatch(currentTrackIdsRef.ids, 10);
                 }
             }, { rootMargin: '200px' });
             
