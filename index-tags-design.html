@@ -511,6 +511,28 @@
             to { transform: rotate(360deg); }
         }
         
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+        
         /* Status Text */
         .player-status {
             font-size: 0.75rem;
@@ -653,6 +675,18 @@
             position: relative;
         }
         
+        /* Buffered progress (серая полоса впереди) */
+        .progress-bar-buffered {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            width: 0%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
         .progress-bar-fill::after {
             content: '';
             position: absolute;
@@ -666,6 +700,7 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             opacity: 0;
             transition: opacity var(--transition-fast);
+            z-index: 2;
         }
         
         .progress-bar-wrapper:hover .progress-bar-fill::after {
@@ -919,7 +954,9 @@
                     }
                 });
                 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`Supabase HTTP ${response.status}: ${response.statusText}`);
+                }
                 
                 const tags = await response.json();
                 console.log(`✓ Loaded ${tags.length} tags in ${Date.now() - startTime}ms`);
@@ -927,6 +964,7 @@
                 return tags;
             } catch (error) {
                 console.error('❌ Error fetching tags:', error);
+                showError(`Не удалось загрузить теги: ${error.message}`);
                 throw error;
             }
         }
@@ -1112,13 +1150,28 @@
                 console.log('🔍 Using Promise.all for batch fetch (OR query broken)');
                 const promises = batchIds.map(id => 
                     fetch(`${API_BASE}/tracks/${id}`, { mode: 'cors' })
-                        .then(r => r.ok ? r.json() : null)
-                        .catch(() => null)
+                        .then(r => {
+                            if (!r.ok) {
+                                console.warn(`⚠️ Track ${id} returned ${r.status}`);
+                                return null;
+                            }
+                            return r.json();
+                        })
+                        .catch(err => {
+                            console.error(`❌ Fetch error for ${id}:`, err.message);
+                            return null;
+                        })
                 );
                 const results = await Promise.all(promises);
                 let tracks = results.filter(r => r !== null);
                 
                 console.log(`✓ Loaded ${tracks.length}/${batchIds.length} tracks`);
+                
+                if (tracks.length === 0) {
+                    console.warn('⚠️ No tracks loaded! Check network/API');
+                    showError('Не удалось загрузить треки. Проверьте соединение.');
+                    return;
+                }
                 
                 tagTrackPlaylist.push(...tracks);
                 tracks.forEach(t => displayedTrackIds.add(t.id));
@@ -1129,6 +1182,7 @@
                 
             } catch (error) {
                 console.error('❌ Load error:', error);
+                showError(`Ошибка загрузки: ${error.message}`);
             }
         }
         
@@ -1249,7 +1303,9 @@
                             <div class="player-progress-container">
                                 <span class="progress-time" id="currentTime">0:00</span>
                                 <div class="progress-bar-wrapper" id="progressBarWrapper">
-                                    <div class="progress-bar-fill" id="progressBarFill"></div>
+                                    <div class="progress-bar-fill" id="progressBarFill">
+                                        <div class="progress-bar-buffered" id="progressBarBuffered"></div>
+                                    </div>
                                 </div>
                                 <span class="progress-time" id="totalDuration">0:00</span>
                             </div>
@@ -1461,9 +1517,26 @@
         }
         
         function updateProgress() {
-            const percentage = (audio.currentTime / audio.duration) * 100;
-            document.getElementById('progressBarFill').style.width = `${percentage}%`;
+            if (!audio.duration) return;
+            
+            const currentPercent = (audio.currentTime / audio.duration) * 100;
+            const bufferedPercent = getBufferedPercent();
+            
+            document.getElementById('progressBarFill').style.width = `${currentPercent}%`;
+            document.getElementById('progressBarBuffered').style.width = `${bufferedPercent}%`;
             document.getElementById('currentTime').textContent = formatTime(audio.currentTime);
+            
+            // Debug every 5 seconds
+            if (Math.floor(audio.currentTime) % 5 === 0) {
+                console.log(`📊 Progress: ${Math.floor(currentPercent)}% | Buffered: ${Math.floor(bufferedPercent)}%`);
+            }
+        }
+        
+        function getBufferedPercent() {
+            if (!audio.buffered || audio.buffered.length === 0) return 0;
+            
+            const end = audio.buffered.end(audio.buffered.length - 1);
+            return (end / audio.duration) * 100;
         }
         
         function handleTrackEnded() {
@@ -1499,8 +1572,42 @@
         function hideLoadingIndicator() {
             const overlay = document.getElementById('playerLoadingOverlay');
             const status = document.getElementById('playerStatus');
-            if (overlay) overlay.style.display = 'none';
+            if (overlay) overlay.style.display = 'flex';
             if (status) status.textContent = '';
+        }
+        
+        function showError(message, duration = 5000) {
+            console.error('❌ Error:', message);
+            
+            // Create error notification
+            const errorEl = document.createElement('div');
+            errorEl.className = 'error-notification';
+            errorEl.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>${message}</span>
+            `;
+            errorEl.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(239, 68, 68, 0.95);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: var(--radius-md);
+                box-shadow: var(--shadow-lg);
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                z-index: 10000;
+                animation: slideInRight 0.3s ease;
+            `;
+            
+            document.body.appendChild(errorEl);
+            
+            setTimeout(() => {
+                errorEl.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => errorEl.remove(), 300);
+            }, duration);
         }
         
         // Play track
