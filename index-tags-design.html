@@ -2195,6 +2195,9 @@
                         });
                 }
                 
+                // 🔥 ПРОВЕРКА ПОДДЕРЖКИ MATERIALIZED VIEWS
+                checkDatabaseOptimizations();
+                
                 const tags = await fetchTagsWithCategories();
                 const groupedTags = groupTagsByCategory(tags);
                 renderTags(groupedTags);
@@ -2232,6 +2235,32 @@
                 
                 console.log('⌨️ Keyboard shortcut:', e.key);
             });
+        }
+        
+        // 🔥 DATABASE OPTIMIZATION CHECK
+        async function checkDatabaseOptimizations() {
+            try {
+                const startTime = Date.now();
+                
+                // Check if popular_tags_cache exists
+                const url = `${SUPABASE_URL}/rest/v1/popular_tags_cache?select=id&limit=1`;
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (response.ok) {
+                    console.log('✅ Materialized view popular_tags_cache detected');
+                    console.log(`⚡ Query time: ${Date.now() - startTime}ms`);
+                } else {
+                    console.warn('⚠️ Materialized view not found. Run DATABASE_OPTIMIZATION.sql');
+                    console.log('📄 See file: DATABASE_OPTIMIZATION.sql');
+                }
+            } catch (error) {
+                console.log('ℹ️ Database optimizations check failed:', error.message);
+            }
         }
         
         init();
