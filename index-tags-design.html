@@ -1411,6 +1411,9 @@
         
         // Play track
         function playTrack(track, index, playlist) {
+            console.log('🎵 Playing track:', track.title);
+            console.log('🔊 Audio URL:', track.audio_url);
+            
             currentPlaylist = playlist;
             currentTrackIndex = index;
             
@@ -1427,8 +1430,17 @@
                 document.getElementById('playerArtist').textContent = track.author_name || 'Unknown';
                 document.getElementById('playerCover').src = track.image_url || '';
                 
+                if (!audio) {
+                    console.error('❌ Audio element not initialized!');
+                    audio = document.getElementById('audioPlayer');
+                }
+                
+                console.log('🔊 Setting audio source...');
                 audio.src = track.audio_url;
+                audio.load(); // 🔥 Важно!
+                
                 audio.play().then(() => {
+                    console.log('✅ Playback started');
                     isPlaying = true;
                     updatePlayPauseButton();
                 }).catch(error => {
