@@ -1933,6 +1933,83 @@
             }
         }
         
+        // 🔥 ФУНКЦИИ ПЛЕЕРА
+        function togglePlayPause() {
+            if (!audio) return;
+            
+            if (isPlaying) {
+                audio.pause();
+                isPlaying = false;
+            } else {
+                audio.play().then(() => {
+                    isPlaying = true;
+                }).catch(error => {
+                    console.error('❌ Playback error:', error);
+                });
+            }
+            updatePlayPauseButton();
+        }
+        
+        function updatePlayPauseButton(playing = null) {
+            const playIcon = document.querySelector('.play-icon');
+            const pauseIcon = document.querySelector('.pause-icon');
+            const cover = document.getElementById('playerCover');
+            
+            if (playIcon && pauseIcon) {
+                const state = playing !== null ? playing : isPlaying;
+                playIcon.style.display = state ? 'none' : 'block';
+                pauseIcon.style.display = state ? 'block' : 'none';
+            }
+            
+            if (cover) {
+                cover.classList.toggle('playing', isPlaying);
+            }
+        }
+        
+        function playNextTrack() {
+            if (currentPlaylist.length === 0) return;
+            
+            let nextIndex;
+            if (isShuffleOn) {
+                // Random track excluding current
+                do {
+                    nextIndex = Math.floor(Math.random() * currentPlaylist.length);
+                } while (nextIndex === currentTrackIndex && currentPlaylist.length > 1);
+            } else {
+                nextIndex = currentTrackIndex + 1;
+                if (nextIndex >= currentPlaylist.length) {
+                    if (repeatMode === 'all') {
+                        nextIndex = 0;
+                    } else {
+                        return; // End of playlist
+                    }
+                }
+            }
+            
+            playTrack(currentPlaylist[nextIndex], nextIndex, currentPlaylist);
+        }
+        
+        function playPreviousTrack() {
+            if (currentPlaylist.length === 0) return;
+            
+            // If more than 3 seconds in, restart current track
+            if (audio.currentTime > 3) {
+                audio.currentTime = 0;
+                return;
+            }
+            
+            let prevIndex = currentTrackIndex - 1;
+            if (prevIndex < 0) {
+                if (repeatMode === 'all') {
+                    prevIndex = currentPlaylist.length - 1;
+                } else {
+                    prevIndex = 0;
+                }
+            }
+            
+            playTrack(currentPlaylist[prevIndex], prevIndex, currentPlaylist);
+        }
+        
         function showLoadingIndicator() {
             const overlay = document.getElementById('playerLoadingOverlay');
             const status = document.getElementById('playerStatus');
