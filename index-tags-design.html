@@ -1960,6 +1960,14 @@
             
             // Setup playlist toggle
             setupPlaylistToggle();
+            
+            // 🔥 СРАЗУ ИНИЦИАЛИЗИРУЕМ AUDIO
+            audio = document.getElementById('audioPlayer');
+            console.log('✅ Audio element initialized:', audio);
+            
+            if (!audio) {
+                console.error('❌ CRITICAL: audio element is null after createPlayerBar!');
+            }
             audio = document.getElementById('audioPlayer');
             console.log('✅ Audio element initialized:', audio);
             
@@ -2333,75 +2341,91 @@
             if (!playerBar) {
                 console.log('🔧 Creating player bar...');
                 createPlayerBar();
+                // 🔥 ЖДЁМ ПОЯВЛЕНИЯ AUDIO ЭЛЕМЕНТА
+                setTimeout(() => ensureAudioAndPlay(track), 200);
+            } else {
+                ensureAudioAndPlay(track);
+            }
+        }
+        
+        function ensureAudioAndPlay(track) {
+            const playerBar = document.getElementById('playerBar');
+            if (!playerBar) {
+                console.error('❌ Player bar still not created!');
+                return;
             }
             
-            setTimeout(() => {
-                const newPlayerBar = document.getElementById('playerBar');
-                newPlayerBar.classList.add('active');
-                
-                // Update UI
-                document.getElementById('playerTitle').textContent = track.title || 'Untitled';
-                document.getElementById('playerTitle').style.color = 'var(--text-primary)';
-                document.getElementById('playerArtist').textContent = track.author_name || 'Unknown';
-                document.getElementById('playerCover').src = track.image_url || '';
-                
-                // 🔥 ПРОВЕРЯЕМ AUDIO ЭЛЕМЕНТ
-                if (!audio) {
-                    console.error('❌ CRITICAL: Audio element is null! Re-initializing...');
-                    audio = document.getElementById('audioPlayer');
-                }
-                
-                console.log('🔊 Current audio element:', audio);
-                console.log('🔊 Audio state before load:');
-                console.log('   - readyState:', audio.readyState);
-                console.log('   - networkState:', audio.networkState);
-                console.log('   - paused:', audio.paused);
-                
-                // Set new source
-                audio.src = track.audio_url;
-                audio.preload = 'metadata';
-                
-                console.log('🔊 Loading track...');
-                audio.load();
-                
-                // 🔥 ПОКАЗЫВАЕМ ИНДИКАТОР ЗАГРУЗКИ
-                showLoadingIndicator();
-                
-                // Try to play
-                const playPromise = audio.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        console.log('✅ Playback started successfully!');
-                        console.log('🔊 Audio state after play:');
-                        console.log('   - currentTime:', audio.currentTime);
-                        console.log('   - duration:', audio.duration);
-                        console.log('   - paused:', audio.paused);
-                        
-                        isPlaying = true;
-                        updatePlayPauseButton();
-                        
-                        // 🔥 ЗАПУСКАЕМ VISUALIZER
-                        initAudioVisualizer();
-                        
-                        // 🔥 ОБНОВЛЯЕМ PLAYLIST
-                        if (isPlaylistOpen) {
-                            highlightCurrentTrackInPlaylist();
-                        }
-                    }).catch(error => {
-                        console.error('❌ Playback failed:', error);
-                        console.error('Error name:', error.name);
-                        console.error('Error message:', error.message);
-                        
-                        // Show error to user
-                        document.getElementById('playerTitle').textContent = `Ошибка: ${track.title}`;
-                        document.getElementById('playerTitle').style.color = '#ef4444';
-                        
-                        isPlaying = false;
-                        updatePlayPauseButton();
-                    });
-                }
-            }, 100);
+            playerBar.classList.add('active');
+            
+            // Update UI
+            document.getElementById('playerTitle').textContent = track.title || 'Untitled';
+            document.getElementById('playerTitle').style.color = 'var(--text-primary)';
+            document.getElementById('playerArtist').textContent = track.author_name || 'Unknown';
+            document.getElementById('playerCover').src = track.image_url || '';
+            
+            // 🔥 ПРОВЕРЯЕМ AUDIO ЭЛЕМЕНТ
+            if (!audio) {
+                console.error('❌ CRITICAL: Audio element is null! Re-initializing...');
+                audio = document.getElementById('audioPlayer');
+            }
+            
+            if (!audio) {
+                console.error('❌ FATAL: Could not get audio element!');
+                showError('Ошибка плеера: аудио элемент не найден');
+                return;
+            }
+            
+            console.log('🔊 Current audio element:', audio);
+            console.log('🔊 Audio state before load:');
+            console.log('   - readyState:', audio.readyState);
+            console.log('   - networkState:', audio.networkState);
+            console.log('   - paused:', audio.paused);
+            
+            // Set new source
+            audio.src = track.audio_url;
+            audio.preload = 'auto'; // 🔥 ИЗМЕНИЛИ НА 'auto' для лучшей загрузки
+            audio.crossOrigin = 'anonymous'; // 🔥 ДОБАВИЛИ CORS
+            
+            console.log('🔊 Loading track...');
+            audio.load();
+            
+            // 🔥 ПОКАЗЫВАЕМ ИНДИКАТОР ЗАГРУЗКИ
+            showLoadingIndicator();
+            
+            // Try to play
+            const playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log('✅ Playback started successfully!');
+                    console.log('🔊 Audio state after play:');
+                    console.log('   - currentTime:', audio.currentTime);
+                    console.log('   - duration:', audio.duration);
+                    console.log('   - paused:', audio.paused);
+                    
+                    isPlaying = true;
+                    updatePlayPauseButton();
+                    
+                    // 🔥 ЗАПУСКАЕМ VISUALIZER
+                    initAudioVisualizer();
+                    
+                    // 🔥 ОБНОВЛЯЕМ PLAYLIST
+                    if (isPlaylistOpen) {
+                        highlightCurrentTrackInPlaylist();
+                    }
+                }).catch(error => {
+                    console.error('❌ Playback failed:', error);
+                    console.error('Error name:', error.name);
+                    console.error('Error message:', error.message);
+                    
+                    // Show error to user
+                    document.getElementById('playerTitle').textContent = `Ошибка: ${track.title}`;
+                    document.getElementById('playerTitle').style.color = '#ef4444';
+                    
+                    isPlaying = false;
+                    updatePlayPauseButton();
+                });
+            }
         }
         
         // Initialize
