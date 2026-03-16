@@ -964,6 +964,15 @@
             }
         }
         
+        // 🔥 DEBOUNCE ДЛЯ SELECT TAG
+        let selectTagTimeout;
+        function selectTagDebounced(tagId, tagName) {
+            clearTimeout(selectTagTimeout);
+            selectTagTimeout = setTimeout(() => {
+                selectTag(tagId, tagName);
+            }, 300); // 300ms debounce
+        }
+        
         // State
         let currentPlaylist = [];
         let currentTrackIndex = -1;
@@ -1073,7 +1082,7 @@
                     item.addEventListener('click', () => {
                         const tagId = parseInt(item.getAttribute('data-tag-id'));
                         const tagName = item.getAttribute('data-tag-name');
-                        selectTag(tagId, tagName);
+                        selectTagDebounced(tagId, tagName); // 🔥 DEBOUNCE
                     });
                 });
             }, 100);
