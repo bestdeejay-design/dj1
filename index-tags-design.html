@@ -189,6 +189,80 @@
             letter-spacing: 0.1em;
         }
         
+        /* 🔥 TAG SEARCH */
+        .tag-search-container {
+            max-width: 600px;
+            margin: var(--space-md) auto 0;
+        }
+        
+        .search-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: var(--space-md);
+            color: var(--text-tertiary);
+            pointer-events: none;
+            font-size: 1.1rem;
+        }
+        
+        .tag-search-input {
+            width: 100%;
+            padding: var(--space-sm) var(--space-lg);
+            padding-left: calc(var(--space-md) + 1.1rem + var(--space-xs));
+            padding-right: var(--space-lg);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            transition: all var(--transition-fast);
+        }
+        
+        .tag-search-input:focus {
+            outline: none;
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 3px var(--accent-green-dim);
+            background: var(--bg-elevated);
+        }
+        
+        .tag-search-input::placeholder {
+            color: var(--text-tertiary);
+        }
+        
+        .clear-search {
+            position: absolute;
+            right: var(--space-sm);
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+        
+        .clear-search:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--text-primary);
+            transform: scale(1.1);
+        }
+        
+        .search-stats {
+            margin-top: var(--space-xs);
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
         /* ============================================
            🏷️ TAGS VIEW
            ============================================ */
@@ -890,6 +964,24 @@
                 <p class="section-description">
                     Исследуйте музыкальную коллекцию через систему умных тегов
                 </p>
+                
+                <!-- 🔥 ПОИСК ТЕГОВ -->
+                <div class="tag-search-container" style="margin-top: var(--space-md);">
+                    <div class="search-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input 
+                            type="text" 
+                            id="tagSearchInput" 
+                            class="tag-search-input"
+                            placeholder="Поиск тегов..."
+                            aria-label="Поиск тегов"
+                        >
+                        <button class="clear-search" id="clearSearchBtn" style="display: none;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="search-stats" id="searchStats" style="display: none;"></div>
+                </div>
             </div>
             
             <div class="loading" id="loading">
@@ -971,6 +1063,87 @@
             selectTagTimeout = setTimeout(() => {
                 selectTag(tagId, tagName);
             }, 300); // 300ms debounce
+        }
+        
+        // 🔥 ПОИСК ТЕГОВ
+        let allTagsFlat = []; // Плоский массив всех тегов
+        
+        function initTagSearch() {
+            const searchInput = document.getElementById('tagSearchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            const statsEl = document.getElementById('searchStats');
+            
+            // Search as user types (debounced)
+            let searchTimeout;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                const query = e.target.value.trim().toLowerCase();
+                
+                // Show/hide clear button
+                clearBtn.style.display = query ? 'flex' : 'none';
+                
+                searchTimeout = setTimeout(() => {
+                    filterTags(query);
+                    
+                    // Update stats
+                    if (query) {
+                        const visibleCount = document.querySelectorAll('.tag-item:not([style*="display: none"])').length;
+                        statsEl.textContent = `Найдено ${visibleCount} из ${allTagsFlat.length}`;
+                        statsEl.style.display = 'block';
+                    } else {
+                        statsEl.style.display = 'none';
+                    }
+                }, 200);
+            });
+            
+            // Clear search
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                searchInput.focus();
+                filterTags('');
+                document.querySelectorAll('.tag-item').forEach(item => {
+                    item.style.display = 'flex';
+                });
+                statsEl.style.display = 'none';
+            });
+            
+            // Keyboard shortcuts
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    searchInput.value = '';
+                    filterTags('');
+                    searchInput.blur();
+                }
+            });
+        }
+        
+        function filterTags(query) {
+            if (!query) {
+                document.querySelectorAll('.tag-item').forEach(item => {
+                    item.style.display = 'flex';
+                });
+                return;
+            }
+            
+            document.querySelectorAll('.tag-item').forEach(item => {
+                const tagName = item.getAttribute('data-tag-name').toLowerCase();
+                const match = tagName.includes(query);
+                item.style.display = match ? 'flex' : 'none';
+            });
+            
+            // Hide empty categories
+            document.querySelectorAll('.category-section').forEach(category => {
+                const visibleTags = category.querySelectorAll('.tag-item:not([style*="display: none"])').length;
+                category.style.display = visibleTags > 0 ? 'block' : 'none';
+            });
+        }
+        
+        function collectAllTags(groupedTags) {
+            allTagsFlat = [];
+            Object.values(groupedTags).forEach(category => {
+                allTagsFlat.push(...category.tags);
+            });
+            console.log(`📋 Collected ${allTagsFlat.length} tags for search`);
         }
         
         // State
@@ -1075,6 +1248,10 @@
             
             container.innerHTML = html;
             loadingEl.style.display = 'none';
+            
+            // 🔥 ИНИЦИАЛИЗАЦИЯ ПОИСКА
+            initTagSearch();
+            collectAllTags(groupedTags);
             
             // Attach click handlers
             setTimeout(() => {
