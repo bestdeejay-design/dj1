@@ -1697,13 +1697,18 @@
         
         async function init() {
             try {
+                console.log('🚀 Initializing application...');
                 const tags = await fetchTagsWithCategories();
                 const groupedTags = groupTagsByCategory(tags);
                 renderTags(groupedTags);
+                console.log('✅ Application initialized successfully');
             } catch (error) {
+                console.error('❌ Initialization error:', error);
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('error').textContent = `Ошибка: ${error.message}`;
+                const errorMsg = `Критическая ошибка: ${error.message}. Пожалуйста, обновите страницу.`;
+                document.getElementById('error').textContent = errorMsg;
                 document.getElementById('error').style.display = 'block';
+                showError(errorMsg, 10000);
             }
         }
         
