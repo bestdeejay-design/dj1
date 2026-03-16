@@ -9,6 +9,9 @@
     <!-- 🔥 FONT AWESOME -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <!-- 🔥 PLAYER STYLES -->
+    <link rel="stylesheet" href="player-styles.css">
+    
     <!-- 🔥 ПОДКЛЮЧАЕМ ШРИФТЫ -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -923,6 +926,44 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_wdNAcYa7Ua-bbC2jDiG-FQ_b0CAPg5l';
         const API_BASE = 'https://api.dj1.ru/api';
         
+        // 🔥 КЭШИРОВАНИЕ
+        const tracksCache = new Map();
+        const CACHE_TTL = 5 * 60 * 1000; // 5 минут
+        
+        // Fetch track with caching
+        async function fetchTrackWithCache(id) {
+            const cached = tracksCache.get(id);
+            
+            if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+                console.log(`✅ Cache hit: ${id}`);
+                return cached.data;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/tracks/${id}`, { mode: 'cors' });
+                
+                if (!response.ok) {
+                    console.warn(`⚠️ Track ${id} returned ${response.status}`);
+                    return null;
+                }
+                
+                const data = await response.json();
+                
+                // Save to cache
+                tracksCache.set(id, {
+                    data,
+                    timestamp: Date.now()
+                });
+                
+                console.log(`📥 Fetched and cached: ${id}`);
+                return data;
+                
+            } catch (error) {
+                console.error(`❌ Fetch error for ${id}:`, error.message);
+                return null;
+            }
+        }
+        
         // State
         let currentPlaylist = [];
         let currentTrackIndex = -1;
@@ -1143,25 +1184,11 @@
             if (batchIds.length === 0) return;
             
             console.log(`📥 Loading ${batchIds.length} tracks...`);
+            console.log(`💾 Cache size: ${tracksCache.size} tracks`);
             
             try {
-                // 🔥 API /api/tracks?or=() НЕ РАБОТАЕТ - игнорирует фильтр и возвращает первые 20 треков из БД
-                // Используем Promise.all для получения треков по ID
-                console.log('🔍 Using Promise.all for batch fetch (OR query broken)');
-                const promises = batchIds.map(id => 
-                    fetch(`${API_BASE}/tracks/${id}`, { mode: 'cors' })
-                        .then(r => {
-                            if (!r.ok) {
-                                console.warn(`⚠️ Track ${id} returned ${r.status}`);
-                                return null;
-                            }
-                            return r.json();
-                        })
-                        .catch(err => {
-                            console.error(`❌ Fetch error for ${id}:`, err.message);
-                            return null;
-                        })
-                );
+                // 🔥 ИСПОЛЬЗУЕМ КЭШИРОВАНИЕ
+                const promises = batchIds.map(id => fetchTrackWithCache(id));
                 const results = await Promise.all(promises);
                 let tracks = results.filter(r => r !== null);
                 
