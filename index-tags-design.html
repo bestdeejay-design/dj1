@@ -2387,6 +2387,32 @@
             audio.crossOrigin = 'anonymous'; // 🔥 ДОБАВИЛИ CORS
             
             console.log('🔊 Loading track...');
+            console.log('🔗 Audio URL:', track.audio_url);
+            console.log('📁 Audio format detected:', track.audio_url.split('.').pop()?.split('?')[0]);
+            
+            // 🔥 ДОБАВЛЯЕМ ОБРАБОТЧИК ОШИБОК ПЕРЕД load()
+            audio.addEventListener('error', (e) => {
+                console.error('❌ Audio error event:', e);
+                console.error('❌ Audio error code:', audio.error?.code);
+                console.error('❌ Audio error message:', audio.error?.message);
+                
+                let errorMsg = '';
+                if (audio.error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
+                    errorMsg = 'Формат файла не поддерживается';
+                    console.error('⚠️ Попробуйте другой формат (mp3/webm)');
+                } else if (audio.error?.code === MediaError.MEDIA_ERR_NETWORK) {
+                    errorMsg = 'Ошибка сети при загрузке';
+                } else if (audio.error?.code === MediaError.MEDIA_ERR_DECODE) {
+                    errorMsg = 'Ошибка декодирования аудио';
+                } else {
+                    errorMsg = `Ошибка аудио: ${audio.error?.message || 'Unknown'}`;
+                }
+                
+                showError(errorMsg);
+                document.getElementById('playerTitle').textContent = `❌ ${errorMsg}`;
+                document.getElementById('playerTitle').style.color = '#ef4444';
+            }, { once: true });
+            
             audio.load();
             
             // 🔥 ПОКАЗЫВАЕМ ИНДИКАТОР ЗАГРУЗКИ
