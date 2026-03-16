@@ -583,7 +583,14 @@
         function setupInfiniteScroll(trackIds) {
             const tracksList = document.getElementById('tracksList');
             
-            // Создаём sentinel элемент
+            // 🔥 УДАЛЯЕМ СТАРЫЙ SENTINEL И OBSERVER
+            const oldSentinel = document.getElementById('tag-tracks-sentinel');
+            if (oldSentinel) {
+                console.log('🗑️ Removing old sentinel');
+                oldSentinel.remove();
+            }
+            
+            // Создаём новый sentinel элемент
             const sentinel = document.createElement('div');
             sentinel.id = 'tag-tracks-sentinel';
             sentinel.style.height = '100px';
@@ -593,12 +600,13 @@
             const observer = new IntersectionObserver((entries) => {
                 if (entries[0].isIntersecting && !isLoadingMore) {
                     console.log('👁️ Sentinel visible - loading more tracks...');
+                    console.log('📋 Current trackIds:', trackIds.slice(0, 5), '...');
                     loadTracksBatch(trackIds, 10); // Загружаем ещё 10
                 }
             }, { rootMargin: '200px' });
             
             observer.observe(sentinel);
-            console.log('✅ Infinite scroll setup complete');
+            console.log('✅ New infinite scroll setup complete');
         }
         
         function renderTracks(tracks) {
