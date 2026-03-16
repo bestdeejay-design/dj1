@@ -1258,8 +1258,7 @@
                 
                 try {
                     const response = await fetch(url, options);
-                    const data = await response.json();
-                    return data;
+                    return response; // 🔥 ВОЗВРАЩАЕМ RESPONSE, НЕ ДАННЫЕ
                 } finally {
                     // Удаляем из pending после завершения
                     pendingRequests.delete(url);
@@ -1677,14 +1676,17 @@
             // Get track IDs
             try {
                 const url = `${SUPABASE_URL}/rest/v1/track_tags?tag_id=eq.${tagId}&select=track_id`;
-                const response = await fetchWithDebounce(url, {
+                const response = await fetch(url, {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
                         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
                     }
-                }, 50); // 50ms debounce
+                });
                 
-                const trackTags = Array.isArray(response) ? response : response.data || [];
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const responseData = await response.json();
+                const trackTags = Array.isArray(responseData) ? responseData : responseData.data || [];
                 const trackIds = trackTags.map(tt => tt.track_id);
                 
                 console.log(`✓ Found ${trackIds.length} tracks for tag "${tagName}"`);
