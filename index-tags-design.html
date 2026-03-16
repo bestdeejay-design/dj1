@@ -828,6 +828,13 @@
             return 'var(--accent-green)';
         }
         
+        // ============================================
+        // 🎵 ЗАГРУЗКА ТРЕКОВ
+        // ============================================
+        
+        // 🔥 ХРАНИМ trackIds В ОБЪЕКТЕ ЧТОБЫ OBSERVER ВИДЕЛ АКТУАЛЬНЫЕ
+        let currentTrackIdsRef = { ids: [] };
+        
         // Load tracks batch
         async function loadTracksBatch(trackIds, count) {
             const remaining = trackIds.filter(id => !displayedTrackIds.has(id));
@@ -911,6 +918,11 @@
                 oldSentinel.remove();
             }
             
+            // 🔥 ОБНОВЛЯЕМ REF - ЭТО КЛЮЧЕВОЙ МОМЕНТ!
+            currentTrackIdsRef.ids = trackIds;
+            console.log('💾 Updated trackIdsRef with', trackIds.length, 'IDs');
+            console.log('📋 First 5 IDs:', trackIds.slice(0, 5));
+            
             const sentinel = document.createElement('div');
             sentinel.style.height = '100px';
             document.getElementById('tracksList').appendChild(sentinel);
@@ -918,8 +930,10 @@
             const observer = new IntersectionObserver((entries) => {
                 if (entries[0].isIntersecting && !isLoadingMore) {
                     console.log('👁️ Sentinel visible - loading more tracks...');
-                    console.log('📋 Current trackIds:', trackIds.slice(0, 5), '...');
-                    loadTracksBatch(trackIds, 10);
+                    console.log('🔗 Using trackIds from ref:', currentTrackIdsRef.ids === trackIds ? '✅ CURRENT' : '❌ STALE');
+                    console.log('📋 Current ref IDs:', currentTrackIdsRef.ids.slice(0, 5), '...');
+                    // 🔥 БЕРЁМ ИЗ REF А НЕ ИЗ ЗАМКНУТОЙ ПЕРЕМЕННОЙ
+                    loadTracksBatch(currentTrackIdsRef.ids, 10);
                 }
             }, { rootMargin: '200px' });
             
