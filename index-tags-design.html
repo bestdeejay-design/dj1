@@ -1130,6 +1130,14 @@
         <div class="container">
             <h1 class="brand">DJ1.RU</h1>
             <p class="subtitle">Музыкальная библиотека тегов</p>
+            
+            <!-- 🔥 ALBUM NAVIGATION -->
+            <div style="margin-top: var(--space-md); display: flex; gap: var(--space-sm); justify-content: center;">
+                <button class="quick-nav-btn" id="albumsNavBtn" title="Albums">
+                    <i class="fas fa-compact-disc"></i>
+                    <span style="font-size: 0.75rem; margin-left: 4px;">Альбомы</span>
+                </button>
+            </div>
         </div>
     </header>
     
@@ -1317,6 +1325,10 @@
         
         // 🔥 RECENT TAGS HISTORY
         const MAX_RECENT = 10;
+        
+        // 🔥 ALBUM VIEW
+        let currentAlbumId = null;
+        let currentAlbumName = null;
         function addTagToRecent(tagId, tagName) {
             let recent = storage.get('recentTags', []);
             
@@ -2386,6 +2398,9 @@
                 const groupedTags = groupTagsByCategory(tags);
                 renderTags(groupedTags);
                 
+                // 🔥 ALBUM NAVIGATION
+                setupAlbumNav();
+                
                 // 🔥 KEYBOARD SHORTCUTS
                 setupKeyboardShortcuts();
                 
@@ -2587,6 +2602,129 @@
                     item.querySelector('.playlist-track-indicator').innerHTML = '';
                 }
             });
+        }
+        
+        // 🔥 ALBUM VIEW FUNCTIONS
+        function setupAlbumNav() {
+            const btn = document.getElementById('albumsNavBtn');
+            if (btn) {
+                btn.addEventListener('click', loadAlbumsView);
+            }
+        }
+        
+        async function loadAlbumsView() {
+            console.log('💿 Loading albums view...');
+            
+            try {
+                const url = `${SUPABASE_URL}/rest/v1/albums?select=id,name,year,cover_url&order=name.asc`;
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const albums = await response.json();
+                console.log(`✓ Loaded ${albums.length} albums`);
+                
+                showAlbumsList(albums);
+                
+            } catch (error) {
+                console.error('❌ Albums error:', error);
+                showError(`Не удалось загрузить альбомы: ${error.message}`);
+            }
+        }
+        
+        function showAlbumsList(albums) {
+            const tagsList = document.getElementById('tagsList');
+            const loading = document.getElementById('loading');
+            
+            let html = `
+                <div class="category-section">
+                    <div class="category-header">
+                        <span class="category-icon">💿</span>
+                        <h3 class="category-title">Альбомы</h3>
+                        <span class="category-count">${albums.length} альбомов</span>
+                    </div>
+                    <div class="albums-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-md);">
+            `;
+            
+            albums.forEach(album => {
+                html += `
+                    <div class="album-card" style="background: var(--bg-tertiary); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: var(--space-md); cursor: pointer; transition: all var(--transition-base);" data-album-id="${album.id}">
+                        <img src="${album.cover_url || ''}" alt="${album.name}" style="width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-md); margin-bottom: var(--space-sm);">
+                        <div class="album-name" style="font-family: var(--font-heading); font-size: 1rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${album.name}</div>
+                        <div class="album-year" style="font-size: 0.875rem; color: var(--text-secondary);">${album.year || '?'}</div>
+                    </div>
+                `;
+            });
+            
+            html += `</div></div>`;
+            
+            tagsList.innerHTML = html;
+            loading.style.display = 'none';
+            
+            // Attach click handlers
+            setTimeout(() => {
+                document.querySelectorAll('.album-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const albumId = parseInt(card.getAttribute('data-album-id'));
+                        loadAlbumTracks(albumId);
+                    });
+                });
+            }, 100);
+            
+            console.log('📀 Albums view displayed');
+        }
+        
+        async function loadAlbumTracks(albumId) {
+            console.log('📀 Loading album tracks:', albumId);
+            
+            try {
+                const url = `${SUPABASE_URL}/rest/v1/tracks?album_id=eq.${albumId}&select=id,title,author_name,image_url,audio_url&order=title.asc`;
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const tracks = await response.json();
+                console.log(`✓ Found ${tracks.length} tracks in album`);
+                
+                // Use existing tracks display logic
+                currentPlaylist = tracks;
+                currentTrackIndex = -1;
+                
+                const tracksSection = document.getElementById('tracksSection');
+                const nameEl = document.getElementById('selectedTagName');
+                const countEl = document.getElementById('tracksCount');
+                const tracksList = document.getElementById('tracksList');
+                
+                tracksSection.style.display = 'block';
+                nameEl.textContent = `Альбом #${albumId}`;
+                countEl.textContent = `${tracks.length} треков`;
+                tracksList.innerHTML = '';
+                
+                renderTracks(tracks);
+                
+                // Scroll to tracks
+                setTimeout(() => {
+                    tracksSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+                
+            } catch (error) {
+                console.error('❌ Album tracks error:', error);
+                showError(`Не удалось загрузить треки альбома: ${error.message}`);
+            }
         }
         
         function setupKeyboardShortcuts() {
