@@ -1516,6 +1516,10 @@
         // 🔥 PLAYLIST SIDEBAR
         let isPlaylistOpen = false;
         
+        // 🔥 WEBSOCKET FOR REAL-TIME UPDATES
+        let websocket = null;
+        let wsReconnectTimer = null;
+        
         // Fetch tags with categories
         async function fetchTagsWithCategories() {
             try {
@@ -2401,6 +2405,9 @@
                 // 🔥 ALBUM NAVIGATION
                 setupAlbumNav();
                 
+                // 🔥 WEBSOCKET CONNECTION
+                connectWebSocket();
+                
                 // 🔥 KEYBOARD SHORTCUTS
                 setupKeyboardShortcuts();
                 
@@ -2724,6 +2731,105 @@
             } catch (error) {
                 console.error('❌ Album tracks error:', error);
                 showError(`Не удалось загрузить треки альбома: ${error.message}`);
+            }
+        }
+        
+        // 🔥 WEBSOCKET FUNCTIONS
+        function connectWebSocket() {
+            try {
+                // Используем Supabase Realtime или свой WebSocket сервер
+                const wsUrl = 'wss://nwdalhrbifkjyyhpstnt.supabase.co/realtime/v1';
+                
+                console.log('🔌 Connecting to WebSocket:', wsUrl);
+                websocket = new WebSocket(wsUrl);
+                
+                websocket.onopen = () => {
+                    console.log('✅ WebSocket connected');
+                    
+                    // Subscribe to channels (если используется Supabase Realtime)
+                    subscribeToChannels();
+                };
+                
+                websocket.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleRealtimeUpdate(data);
+                    } catch (error) {
+                        console.error('❌ WebSocket message parse error:', error);
+                    }
+                };
+                
+                websocket.onerror = (error) => {
+                    console.error('❌ WebSocket error:', error);
+                };
+                
+                websocket.onclose = (event) => {
+                    console.log('🔌 WebSocket closed:', event.code, event.reason);
+                    
+                    // Auto-reconnect через 5 секунд
+                    wsReconnectTimer = setTimeout(() => {
+                        console.log('🔄 Reconnecting WebSocket...');
+                        connectWebSocket();
+                    }, 5000);
+                };
+                
+            } catch (error) {
+                console.error('❌ WebSocket connection failed:', error);
+            }
+        }
+        
+        function subscribeToChannels() {
+            // Пример подписки на изменения в таблицах (Supabase Realtime)
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                // Подписка на изменения track_tags
+                websocket.send(JSON.stringify({
+                    type: 'subscribe',
+                    topic: 'realtime:track_tags',
+                    query: '*'
+                }));
+                
+                // Подписка на изменения tags
+                websocket.send(JSON.stringify({
+                    type: 'subscribe',
+                    topic: 'realtime:tags',
+                    query: '*'
+                }));
+                
+                console.log('📡 Subscribed to realtime channels');
+            }
+        }
+        
+        function handleRealtimeUpdate(data) {
+            console.log('📨 Realtime update received:', data);
+            
+            // Обработка различных типов обновлений
+            if (data.type === 'UPDATE' || data.type === 'INSERT' || data.type === 'DELETE') {
+                const table = data.table;
+                
+                if (table === 'track_tags') {
+                    console.log('🏷️ Track tags changed - refreshing current tag...');
+                    // Можно обновить текущий тег если он открыт
+                    if (window.currentTagId) {
+                        selectTagDebounced(window.currentTagId, window.currentTagName);
+                    }
+                } else if (table === 'tags') {
+                    console.log('📑 Tags changed - reloading all tags...');
+                    // Перезагрузить все теги
+                    init();
+                }
+            }
+        }
+        
+        function disconnectWebSocket() {
+            if (wsReconnectTimer) {
+                clearTimeout(wsReconnectTimer);
+                wsReconnectTimer = null;
+            }
+            
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+                console.log('🔌 WebSocket disconnected');
             }
         }
         
