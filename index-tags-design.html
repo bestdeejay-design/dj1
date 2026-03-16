@@ -292,6 +292,14 @@
             color: var(--bg-primary);
         }
         
+        /* ♿ ACCESSIBILITY - FOCUS VISIBLE */
+        .quick-nav-btn:focus-visible,
+        .tag-search-input:focus-visible,
+        .control-btn:focus-visible {
+            outline: 2px solid var(--accent-green);
+            outline-offset: 2px;
+        }
+        
         /* ============================================
            🏷️ TAGS VIEW
            ============================================ */
@@ -2042,6 +2050,10 @@
                 const tags = await fetchTagsWithCategories();
                 const groupedTags = groupTagsByCategory(tags);
                 renderTags(groupedTags);
+                
+                // 🔥 KEYBOARD SHORTCUTS
+                setupKeyboardShortcuts();
+                
                 console.log('✅ Application initialized successfully');
             } catch (error) {
                 console.error('❌ Initialization error:', error);
@@ -2051,6 +2063,27 @@
                 document.getElementById('error').style.display = 'block';
                 showError(errorMsg, 10000);
             }
+        }
+        
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // Ignore if typing in input
+                if (e.target.tagName === 'INPUT') return;
+                
+                // Ctrl/Cmd + F - focus search
+                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                    e.preventDefault();
+                    document.getElementById('tagSearchInput').focus();
+                }
+                
+                // / - focus search
+                if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+                    e.preventDefault();
+                    document.getElementById('tagSearchInput').focus();
+                }
+                
+                console.log('⌨️ Keyboard shortcut:', e.key);
+            });
         }
         
         init();
