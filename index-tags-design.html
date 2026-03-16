@@ -845,25 +845,18 @@
             console.log(`📥 Loading ${batchIds.length} tracks...`);
             
             try {
-                const orCondition = batchIds.map(id => `id.eq.${id}`).join(',');
-                const url = `${API_BASE}/tracks?or=(${orCondition})`;
+                // 🔥 API /api/tracks?or=() НЕ РАБОТАЕТ - игнорирует фильтр и возвращает первые 20 треков из БД
+                // Используем Promise.all для получения треков по ID
+                console.log('🔍 Using Promise.all for batch fetch (OR query broken)');
+                const promises = batchIds.map(id => 
+                    fetch(`${API_BASE}/tracks/${id}`, { mode: 'cors' })
+                        .then(r => r.ok ? r.json() : null)
+                        .catch(() => null)
+                );
+                const results = await Promise.all(promises);
+                let tracks = results.filter(r => r !== null);
                 
-                const response = await fetch(url, { mode: 'cors' });
-                let tracks = [];
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (Array.isArray(data)) {
-                        tracks = data;
-                    } else if (data && Array.isArray(data.data)) {
-                        tracks = data.data;
-                    }
-                }
-                
-                if (tracks.length === 0) {
-                    console.warn('⚠️ No tracks loaded');
-                    return;
-                }
+                console.log(`✓ Loaded ${tracks.length}/${batchIds.length} tracks`);
                 
                 tagTrackPlaylist.push(...tracks);
                 tracks.forEach(t => displayedTrackIds.add(t.id));
