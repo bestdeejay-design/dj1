@@ -917,6 +917,146 @@
             color: var(--text-secondary);
         }
         
+        /* 🔥 PLAYLIST SIDEBAR STYLES */
+        .playlist-sidebar {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: rgba(18, 18, 18, 0.98);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid var(--border-medium);
+            box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            transition: right var(--transition-slow);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .playlist-sidebar.open {
+            right: 0;
+        }
+        
+        .playlist-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-lg);
+            border-bottom: 1px solid var(--border-subtle);
+            background: rgba(30, 30, 30, 0.5);
+        }
+        
+        .playlist-title {
+            font-family: var(--font-heading);
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        
+        .playlist-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-md);
+        }
+        
+        .playlist-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .playlist-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .playlist-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        
+        .playlist-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .playlist-track-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm);
+            margin-bottom: var(--space-xs);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .playlist-track-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent-green);
+            transform: translateX(-4px);
+        }
+        
+        .playlist-track-item.active {
+            background: var(--accent-green-dim);
+            border-color: var(--accent-green);
+        }
+        
+        .playlist-track-number {
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+            width: 24px;
+            text-align: center;
+        }
+        
+        .playlist-track-cover {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            object-fit: cover;
+        }
+        
+        .playlist-track-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .playlist-track-title {
+            font-family: var(--font-heading);
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0.25rem;
+        }
+        
+        .playlist-track-artist {
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .playlist-track-indicator {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-green);
+        }
+        
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: var(--space-2xl);
+            font-family: var(--font-body);
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+        
         .spinner {
             width: 40px;
             height: 40px;
@@ -1361,6 +1501,9 @@
         let source = null;
         let animationId = null;
         
+        // 🔥 PLAYLIST SIDEBAR
+        let isPlaylistOpen = false;
+        
         // Fetch tags with categories
         async function fetchTagsWithCategories() {
             try {
@@ -1737,6 +1880,11 @@
                                 </button>
                                 <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="70" aria-label="Volume">
                             </div>
+                            
+                            <!-- 🔥 PLAYLIST TOGGLE BUTTON -->
+                            <button class="control-btn" id="playlistToggleBtn" aria-label="Playlist" title="Playlist" style="margin-left: 12px;">
+                                <i class="fas fa-list-ul"></i>
+                            </button>
                         </div>
                     </div>
                     <audio id="audioPlayer" preload="metadata" crossorigin="anonymous"></audio>
@@ -1745,7 +1893,25 @@
             
             document.body.insertAdjacentHTML('beforeend', playerHTML);
             
-            // 🔥 СРАЗУ ИНИЦИАЛИЗИРУЕМ AUDIO
+            // 🔥 ДОБАВЛЯЕМ PLAYLIST SIDEBAR
+            const playlistHTML = `
+                <div class="playlist-sidebar" id="playlistSidebar">
+                    <div class="playlist-header">
+                        <h3 class="playlist-title">🎵 Плейлист тега "${window.currentTagName || '...'}"</h3>
+                        <button class="control-btn" id="closePlaylistBtn" aria-label="Close playlist">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="playlist-content" id="playlistContent">
+                        <!-- Tracks will be populated here -->
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', playlistHTML);
+            
+            // Setup playlist toggle
+            setupPlaylistToggle();
             audio = document.getElementById('audioPlayer');
             console.log('✅ Audio element initialized:', audio);
             
@@ -2169,6 +2335,11 @@
                         
                         // 🔥 ЗАПУСКАЕМ VISUALIZER
                         initAudioVisualizer();
+                        
+                        // 🔥 ОБНОВЛЯЕМ PLAYLIST
+                        if (isPlaylistOpen) {
+                            highlightCurrentTrackInPlaylist();
+                        }
                     }).catch(error => {
                         console.error('❌ Playback failed:', error);
                         console.error('Error name:', error.name);
@@ -2317,6 +2488,105 @@
                 const ctx = canvas.getContext('2d');
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
+        }
+        
+        // 🔥 PLAYLIST SIDEBAR FUNCTIONS
+        function setupPlaylistToggle() {
+            const toggleBtn = document.getElementById('playlistToggleBtn');
+            const closeBtn = document.getElementById('closePlaylistBtn');
+            const sidebar = document.getElementById('playlistSidebar');
+            
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', togglePlaylist);
+            }
+            
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closePlaylist);
+            }
+        }
+        
+        function togglePlaylist() {
+            isPlaylistOpen = !isPlaylistOpen;
+            const sidebar = document.getElementById('playlistSidebar');
+            
+            if (isPlaylistOpen) {
+                sidebar.classList.add('open');
+                updatePlaylistContent();
+                console.log('📋 Playlist opened');
+            } else {
+                sidebar.classList.remove('open');
+                console.log('📋 Playlist closed');
+            }
+        }
+        
+        function openPlaylist() {
+            isPlaylistOpen = true;
+            const sidebar = document.getElementById('playlistSidebar');
+            sidebar.classList.add('open');
+            updatePlaylistContent();
+        }
+        
+        function closePlaylist() {
+            isPlaylistOpen = false;
+            const sidebar = document.getElementById('playlistSidebar');
+            sidebar.classList.remove('open');
+        }
+        
+        function updatePlaylistContent() {
+            const content = document.getElementById('playlistContent');
+            const title = document.querySelector('.playlist-title');
+            
+            if (!content) return;
+            
+            // Update title with current tag name
+            if (title && window.currentTagName) {
+                title.textContent = `🎵 Плейлист тега "${window.currentTagName}"`;
+            }
+            
+            // Render playlist tracks
+            if (currentPlaylist.length === 0) {
+                content.innerHTML = '<div class="loading">Нет треков в плейлисте</div>';
+                return;
+            }
+            
+            const html = currentPlaylist.map((track, index) => `
+                <div class="playlist-track-item ${index === currentTrackIndex ? 'active' : ''}" data-index="${index}">
+                    <div class="playlist-track-number">${index + 1}</div>
+                    <img src="${track.image_url || ''}" class="playlist-track-cover" alt="Cover">
+                    <div class="playlist-track-info">
+                        <div class="playlist-track-title">${track.title || 'Untitled'}</div>
+                        <div class="playlist-track-artist">${track.author_name || 'Unknown'}</div>
+                    </div>
+                    <div class="playlist-track-indicator">
+                        ${index === currentTrackIndex && isPlaying ? '<i class="fas fa-volume-high"></i>' : ''}
+                    </div>
+                </div>
+            `).join('');
+            
+            content.innerHTML = html;
+            
+            // Attach click handlers
+            content.querySelectorAll('.playlist-track-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const index = parseInt(item.getAttribute('data-index'));
+                    playTrack(currentPlaylist[index], index, currentPlaylist);
+                });
+            });
+            
+            console.log(`📋 Playlist updated: ${currentPlaylist.length} tracks`);
+        }
+        
+        function highlightCurrentTrackInPlaylist() {
+            const items = document.querySelectorAll('.playlist-track-item');
+            items.forEach((item, idx) => {
+                if (idx === currentTrackIndex) {
+                    item.classList.add('active');
+                    item.querySelector('.playlist-track-indicator').innerHTML = isPlaying ? '<i class="fas fa-volume-high"></i>' : '';
+                } else {
+                    item.classList.remove('active');
+                    item.querySelector('.playlist-track-indicator').innerHTML = '';
+                }
+            });
         }
         
         function setupKeyboardShortcuts() {
