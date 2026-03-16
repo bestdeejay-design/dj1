@@ -1072,6 +1072,28 @@
         const tracksCache = new Map();
         const CACHE_TTL = 5 * 60 * 1000; // 5 минут
         
+        // 🔥 STORAGE HELPER
+        const storage = {
+            get(key, defaultValue = null) {
+                try {
+                    const item = localStorage.getItem(key);
+                    return item ? JSON.parse(item) : defaultValue;
+                } catch (error) {
+                    console.warn(`LocalStorage get error: ${key}`, error);
+                    return defaultValue;
+                }
+            },
+            set(key, value) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return true;
+                } catch (error) {
+                    console.warn(`LocalStorage set error: ${key}`, error);
+                    return false;
+                }
+            }
+        };
+        
         // Fetch track with caching
         async function fetchTrackWithCache(id) {
             const cached = tracksCache.get(id);
