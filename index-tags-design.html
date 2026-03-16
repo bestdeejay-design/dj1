@@ -1527,6 +1527,8 @@
                 
                 const url = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?select=id,name,category_id,track_count,tag_categories(name,label,color)&order=category_id.asc,name.asc`;
                 
+                console.log('🔗 URL:', url);
+                
                 const response = await fetchWithDebounce(url, {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
@@ -1534,11 +1536,17 @@
                     }
                 }, 50); // 50ms debounce
                 
+                console.log('📊 Response status:', response.status);
+                console.log('📊 Response ok:', response.ok);
+                
                 if (!response.ok) {
                     throw new Error(`Supabase HTTP ${response.status}: ${response.statusText}`);
                 }
                 
-                const tags = Array.isArray(response) ? response : response.data || [];
+                const data = await response.json();
+                console.log('📦 Raw data:', data);
+                
+                const tags = Array.isArray(data) ? data : (data.data || []);
                 
                 console.log(`✓ Loaded ${tags.length} tags in ${Date.now() - startTime}ms`);
                 
@@ -2391,6 +2399,8 @@
                     navigator.serviceWorker.register('/sw.js')
                         .then((registration) => {
                             console.log('✅ Service Worker registered:', registration.scope);
+                            // 🔥 ОТКЛЮЧАЕМ SERVICE WORKER ДЛЯ ОТЛАДКИ
+                            // navigator.serviceWorker.ready.then(reg => reg.unregister());
                         })
                         .catch((error) => {
                             console.error('❌ Service Worker registration failed:', error);
