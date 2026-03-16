@@ -1119,6 +1119,13 @@
                     timestamp: Date.now()
                 });
                 
+                // 🔥 ОЧИСТКА СТАРОГО КЭША (> 100 записей)
+                if (tracksCache.size > 100) {
+                    const oldestKey = Array.from(tracksCache.keys())[0];
+                    tracksCache.delete(oldestKey);
+                    console.log(`🗑️ Cleaned old cache entry`);
+                }
+                
                 console.log(`📥 Fetched and cached: ${id}`);
                 return data;
                 
@@ -1299,6 +1306,9 @@
                 
                 console.log(`🔥 Showing ${sorted.length} popular tags`);
             }
+            
+            // 🔥 STATS
+            console.log(`💾 Cache size: ${tracksCache.size} tracks | Recent tags: ${getRecentTags().length}`);
         }
         
         // State
@@ -1379,6 +1389,10 @@
             const container = document.getElementById('tagsList');
             const loadingEl = document.getElementById('loading');
             
+            // 🔥 ИНИЦИАЛИЗАЦИЯ ПОИСКА
+            initTagSearch();
+            collectAllTags(groupedTags);
+            
             let html = '';
             
             Object.entries(groupedTags).forEach(([key, category]) => {
@@ -1403,10 +1417,6 @@
             
             container.innerHTML = html;
             loadingEl.style.display = 'none';
-            
-            // 🔥 ИНИЦИАЛИЗАЦИЯ ПОИСКА
-            initTagSearch();
-            collectAllTags(groupedTags);
             
             // Attach click handlers
             setTimeout(() => {
@@ -1571,7 +1581,7 @@
                 const coverUrl = track.image_url || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzMzMyIvPjwvc3ZnPg==';
                 
                 item.innerHTML = `
-                    <img src="${coverUrl}" class="track-cover" alt="Cover">
+                    <img src="${coverUrl}" class="track-cover" alt="Cover" loading="lazy">
                     <div class="track-info">
                         <div class="track-title">${track.title || 'Untitled'}</div>
                         <div class="track-artist">${track.author_name || 'Unknown'}</div>
