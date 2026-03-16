@@ -1094,6 +1094,34 @@
             }
         };
         
+        // 🔥 API REQUEST DEBOUNCING
+        const pendingRequests = new Map();
+        
+        function fetchWithDebounce(url, options = {}, delay = 100) {
+            // Если уже есть ожидающий запрос для этого URL
+            if (pendingRequests.has(url)) {
+                console.log('⏳ Debouncing request:', url);
+                return pendingRequests.get(url);
+            }
+            
+            const requestPromise = (async () => {
+                // Ждём немного перед отправкой
+                await new Promise(resolve => setTimeout(resolve, delay));
+                
+                try {
+                    const response = await fetch(url, options);
+                    const data = await response.json();
+                    return data;
+                } finally {
+                    // Удаляем из pending после завершения
+                    pendingRequests.delete(url);
+                }
+            })();
+            
+            pendingRequests.set(url, requestPromise);
+            return requestPromise;
+        }
+        
         // Fetch track with caching
         async function fetchTrackWithCache(id) {
             const cached = tracksCache.get(id);
@@ -1335,18 +1363,19 @@
                 
                 const url = `${SUPABASE_URL}/rest/v1/tags_with_track_counts?select=id,name,category_id,track_count,tag_categories(name,label,color)&order=category_id.asc,name.asc`;
                 
-                const response = await fetch(url, {
+                const response = await fetchWithDebounce(url, {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
                         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
                     }
-                });
+                }, 50); // 50ms debounce
                 
                 if (!response.ok) {
                     throw new Error(`Supabase HTTP ${response.status}: ${response.statusText}`);
                 }
                 
-                const tags = await response.json();
+                const tags = Array.isArray(response) ? response : response.data || [];
+                
                 console.log(`✓ Loaded ${tags.length} tags in ${Date.now() - startTime}ms`);
                 
                 return tags;
@@ -1483,16 +1512,14 @@
             // Get track IDs
             try {
                 const url = `${SUPABASE_URL}/rest/v1/track_tags?tag_id=eq.${tagId}&select=track_id`;
-                const response = await fetch(url, {
+                const response = await fetchWithDebounce(url, {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
                         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
                     }
-                });
+                }, 50); // 50ms debounce
                 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
-                const trackTags = await response.json();
+                const trackTags = Array.isArray(response) ? response : response.data || [];
                 const trackIds = trackTags.map(tt => tt.track_id);
                 
                 console.log(`✓ Found ${trackIds.length} tracks for tag "${tagName}"`);
