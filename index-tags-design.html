@@ -1587,8 +1587,22 @@
         
         // Render tags
         function renderTags(groupedTags) {
+            console.log('🎨 Rendering tags...', groupedTags);
+            
             const container = document.getElementById('tagsList');
             const loadingEl = document.getElementById('loading');
+            
+            console.log('📦 Container:', container);
+            console.log('📦 Loading el:', loadingEl);
+            
+            if (!container) {
+                console.error('❌ Container #tagsList not found!');
+                return;
+            }
+            
+            if (!loadingEl) {
+                console.error('❌ Loading element #loading not found!');
+            }
             
             // 🔥 ИНИЦИАЛИЗАЦИЯ ПОИСКА
             initTagSearch();
@@ -1616,8 +1630,13 @@
                 `;
             });
             
+            console.log('💻 Inserting HTML length:', html.length);
             container.innerHTML = html;
-            loadingEl.style.display = 'none';
+            
+            if (loadingEl) {
+                loadingEl.style.display = 'none';
+                console.log('✅ Loading hidden');
+            }
             
             // Attach click handlers
             setTimeout(() => {
@@ -1628,7 +1647,10 @@
                         selectTagDebounced(tagId, tagName); // 🔥 DEBOUNCE
                     });
                 });
+                console.log('✅ Click handlers attached');
             }, 100);
+            
+            console.log('✅ Tags rendered successfully');
         }
         
         // Select tag
