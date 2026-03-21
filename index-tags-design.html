@@ -2380,6 +2380,8 @@
             console.log('   - readyState:', audio.readyState);
             console.log('   - networkState:', audio.networkState);
             console.log('   - paused:', audio.paused);
+            console.log('   - volume:', audio.volume);
+            console.log('   - muted:', audio.muted);
             
             // 🔥 ПРОВЕРКА ПОДДЕРЖКИ ФОРМАТА
             const audioUrl = track.audio_url;
@@ -2437,6 +2439,11 @@
             // 🔥 ПОКАЗЫВАЕМ ИНДИКАТОР ЗАГРУЗКИ
             showLoadingIndicator();
             
+            // 🔥 ПРИНУДИТЕЛЬНО ВКЛЮЧАЕМ ЗВУК
+            audio.volume = 0.7; // 70% громкость
+            audio.muted = false;
+            console.log('🔊 Volume set to:', audio.volume, '| Muted:', audio.muted);
+            
             // Try to play
             const playPromise = audio.play();
             
@@ -2451,8 +2458,10 @@
                     isPlaying = true;
                     updatePlayPauseButton();
                     
-                    // 🔥 ЗАПУСКАЕМ VISUALIZER
-                    initAudioVisualizer();
+                    // 🔥 ЗАПУСКАЕМ VISUALIZER (без await чтобы не блокировать)
+                    initAudioVisualizer().catch(err => {
+                        console.warn('⚠️ Visualizer init failed:', err);
+                    });
                     
                     // 🔥 ОБНОВЛЯЕМ PLAYLIST
                     if (isPlaylistOpen) {
@@ -2526,13 +2535,22 @@
         }
         
         // 🔥 AUDIO VISUALIZER FUNCTIONS
-        function initAudioVisualizer() {
+        async function initAudioVisualizer() {
             if (!audio) return;
             
             try {
-                // Создаем AudioContext
+                // Создаем AudioContext ТОЛЬКО ПОСЛЕ ЗАПУСКА ВОСПРОИЗВЕДЕНИЯ
                 if (!audioContext) {
+                    console.log('🎨 Creating AudioContext...');
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    console.log('✅ AudioContext created, state:', audioContext.state);
+                }
+                
+                // Resume если suspended (требование браузеров)
+                if (audioContext.state === 'suspended') {
+                    console.log('⏸️ AudioContext suspended - resuming...');
+                    await audioContext.resume();
+                    console.log('▶️ AudioContext resumed');
                 }
                 
                 // Создаем analyser
@@ -2540,13 +2558,16 @@
                     analyser = audioContext.createAnalyser();
                     analyser.fftSize = 256;
                     analyser.smoothingTimeConstant = 0.8;
+                    console.log('✅ Analyser created');
                 }
                 
                 // Подключаем source если ещё не подключен
                 if (!source) {
+                    console.log('🔌 Connecting source...');
                     source = audioContext.createMediaElementSource(audio);
                     source.connect(analyser);
                     analyser.connect(audioContext.destination);
+                    console.log('✅ Source connected');
                 }
                 
                 // Начинаем анимацию
@@ -2555,6 +2576,8 @@
                 console.log('🎨 Audio visualizer initialized');
             } catch (error) {
                 console.warn('⚠️ Visualizer error:', error);
+                // 🔥 НЕ БЛОКИРУЕМ ВОСПРОИЗВЕДЕНИЕ при ошибке визуализатора
+                console.log('ℹ️ Audio continues without visualizer');
             }
         }
         
