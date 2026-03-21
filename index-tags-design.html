@@ -1935,7 +1935,7 @@
                             </button>
                         </div>
                     </div>
-                    <audio id="audioPlayer" preload="metadata" crossorigin="anonymous"></audio>
+                    <audio id="audioPlayer"></audio>
                 </div>
             `;
             
@@ -2405,8 +2405,6 @@
             
             // Set new source
             audio.src = audioUrl;
-            audio.preload = 'auto';
-            audio.crossOrigin = 'anonymous';
             
             console.log('🔊 Loading track...');
             console.log('🔗 Audio URL:', audioUrl);
