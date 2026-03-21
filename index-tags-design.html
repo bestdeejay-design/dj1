@@ -2381,14 +2381,35 @@
             console.log('   - networkState:', audio.networkState);
             console.log('   - paused:', audio.paused);
             
+            // 🔥 ПРОВЕРКА ПОДДЕРЖКИ ФОРМАТА
+            const audioUrl = track.audio_url;
+            const format = audioUrl.split('.').pop()?.split('?')[0] || 'unknown';
+            console.log('📁 Detected format:', format);
+            
+            // Проверяем поддержку формата
+            if (format === 'm4a') {
+                // Проверяем поддерживает ли браузер AAC
+                const canPlayAAC = audio.canPlayType('audio/mp4; codecs="aac"') || 
+                                  audio.canPlayType('audio/x-m4a');
+                
+                if (!canPlayAAC) {
+                    console.warn('⚠️ Browser does NOT support M4A/AAC format!');
+                    showError('⚠️ Ваш браузер не поддерживает формат .m4a. Попробуйте Safari или конвертируйте в MP3');
+                    document.getElementById('playerTitle').textContent = `❌ Формат не поддерживается`;
+                    document.getElementById('playerTitle').style.color = '#ef4444';
+                    return;
+                }
+                
+                console.log('✅ Browser supports M4A/AAC');
+            }
+            
             // Set new source
-            audio.src = track.audio_url;
-            audio.preload = 'auto'; // 🔥 ИЗМЕНИЛИ НА 'auto' для лучшей загрузки
-            audio.crossOrigin = 'anonymous'; // 🔥 ДОБАВИЛИ CORS
+            audio.src = audioUrl;
+            audio.preload = 'auto';
+            audio.crossOrigin = 'anonymous';
             
             console.log('🔊 Loading track...');
-            console.log('🔗 Audio URL:', track.audio_url);
-            console.log('📁 Audio format detected:', track.audio_url.split('.').pop()?.split('?')[0]);
+            console.log('🔗 Audio URL:', audioUrl);
             
             // 🔥 ДОБАВЛЯЕМ ОБРАБОТЧИК ОШИБОК ПЕРЕД load()
             audio.addEventListener('error', (e) => {
