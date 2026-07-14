@@ -1182,8 +1182,6 @@
         navigator.mediaSession.setActionHandler('pause', () => pauseCurrent());
         navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
         navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
-        navigator.mediaSession.setActionHandler('seekforward', () => nextTrack());
-        navigator.mediaSession.setActionHandler('seekbackward', () => prevTrack());
     }
 
     audioPlayer.addEventListener('loadstart', () => {
