@@ -878,6 +878,7 @@
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: track.name,
                 artist: album.title,
+                album: album.title,
                 artwork: [
                     {
                          src: coverSrc || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'512\' height=\'512\' viewBox=\'0 0 512 512\'%3E%3Crect width=\'512\' height=\'512\' fill=\'%23333\'/%3E%3C/svg%3E',
@@ -1204,11 +1205,13 @@
     audioPlayer.addEventListener('play', () => {
         playIcon.style.display = 'none';
         pauseIcon.style.display = 'block';
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
     });
 
     audioPlayer.addEventListener('pause', () => {
         playIcon.style.display = 'block';
         pauseIcon.style.display = 'none';
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
     });
 
     audioPlayer.addEventListener('timeupdate', () => {
@@ -1220,11 +1223,13 @@
             currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
         }
         if ('mediaSession' in navigator && audioPlayer.duration) {
-            navigator.mediaSession.setPositionState({
-                duration: audioPlayer.duration,
-                playbackRate: 1,
-                position: audioPlayer.currentTime
-            });
+            try {
+                navigator.mediaSession.setPositionState({
+                    duration: audioPlayer.duration,
+                    playbackRate: 1,
+                    position: audioPlayer.currentTime
+                });
+            } catch (_) {}
         }
     });
 

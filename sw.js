@@ -1,7 +1,7 @@
-const CACHE_NAME = 'dj1-v2';
-const STATIC_CACHE = 'static-v2';
-const API_CACHE = 'api-v2';
-const TRACKS_CACHE = 'tracks-v2';
+const CACHE_NAME = 'dj1-v3';
+const STATIC_CACHE = 'static-v3';
+const API_CACHE = 'api-v3';
+const TRACKS_CACHE = 'tracks-v3';
 
 const STATIC_ASSETS = [
     '/',
