@@ -30,6 +30,10 @@ venv/
 # Local dev config
 .nginx/
 
+# Screenshots
+screenshots/
+.screenshots/
+
 # Backups and old data
 backups/
 tests/

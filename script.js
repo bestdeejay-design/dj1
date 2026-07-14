@@ -1156,14 +1156,15 @@
     function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
-    if (theme === 'dark') {
-        sunIcon.style.display = 'block';
-        moonIcon.style.display = 'none';
-    } else {
-        sunIcon.style.display = 'none';
-        moonIcon.style.display = 'block';
+    if (sunIcon && moonIcon) {
+        if (theme === 'dark') {
+            sunIcon.style.display = 'block';
+            moonIcon.style.display = 'none';
+        } else {
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'block';
+        }
     }
-    // Сообщаем rays.js, что тема изменилась
     window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme } }));
 }
 
@@ -1179,10 +1180,13 @@
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setTheme(savedTheme);
 
-    // ==================== УСТАНОВКА РЕЖИМА ПОВТОРА ПО УМОЛЧАНИЮ ====================
-    updateRepeatButton();
+    if (repeatBtn) updateRepeatButton();
 
     // ==================== СОБЫТИЯ ПЛЕЕРА ====================
+    if (!audioPlayer) {
+        console.error('Audio player element not found');
+        return;
+    }
     audioPlayer.addEventListener('error', () => {
         currentTrackName.style.color = '#f87171';
         setTimeout(() => {
