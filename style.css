@@ -761,11 +761,35 @@ body {
     
     .track-details-content {
         max-height: 100vh;
+        height: 100vh;
         border-radius: 0;
     }
     
+    .track-details-header {
+        padding: max(20px, env(safe-area-inset-top, 20px)) 16px 12px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: rgba(18, 18, 18, 0.98);
+    }
+    
+    .close-modal {
+        width: 48px;
+        height: 48px;
+        font-size: 32px;
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .back-to-player-btn {
+        width: 48px;
+        height: 48px;
+    }
+
     .track-details-body {
         padding: 16px;
+        overflow-y: auto;
+        flex: 1;
+        -webkit-overflow-scrolling: touch;
     }
 }
 

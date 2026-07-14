@@ -1533,7 +1533,12 @@
         currentTrackIndex = topTracks.findIndex(t => t.id === track.id);
         
         audioPlayer.src = track.file;
-        audioPlayer.currentTime = currentTime;
+        if (currentTime > 0) {
+            audioPlayer.addEventListener('loadedmetadata', function seek() {
+                audioPlayer.removeEventListener('loadedmetadata', seek);
+                audioPlayer.currentTime = currentTime;
+            });
+        }
         
         // Обновляем UI без воспроизведения
         currentTrackName.textContent = track.name;
@@ -1742,14 +1747,19 @@
             
             const track = album.tracks[state.trackIndex];
             audioPlayer.src = track.file;
-            audioPlayer.currentTime = state.currentTime || 0;
             
-            // Обновляем UI
+            const seekTime = state.currentTime || 0;
+            if (seekTime > 0) {
+                audioPlayer.addEventListener('loadedmetadata', function seek() {
+                    audioPlayer.removeEventListener('loadedmetadata', seek);
+                    audioPlayer.currentTime = seekTime;
+                });
+            }
+            
             currentTrackName.textContent = track.name;
             currentAlbumName.textContent = album.title;
             currentTrackCover.src = track.cover || album.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3C/svg%3E';
             
-            // Обновляем title (без воспроизведения — показываем что на паузе)
             document.title = `⏸ ${track.name} — ${album.title}`;
             
             playerBar.classList.add('active');
@@ -1757,7 +1767,6 @@
             renderPlaylist();
             highlightPlaylistItem(state.trackIndex);
             
-            // Добавляем индикатор playing
             const albumCard = document.querySelector(`.album-card[data-album-id="${album.id}"]`);
             if (albumCard) {
                 albumCard.classList.add('playing');
