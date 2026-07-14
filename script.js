@@ -867,27 +867,12 @@
         currentAlbumName.textContent = album.title;
         // textContent автоматически экранирует HTML
         
-        // Обновляем title страницы для отображения на экране блокировки
         document.title = `${track.name} — ${album.title}`;
         
         let coverSrc = track.cover || album.cover;
         currentTrackCover.src = coverSrc || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3C/svg%3E';
         
-        // 🔥 NEW: Media Session API - показываем обложку на экране блокировки
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: track.name,
-                artist: album.title,
-                album: album.title,
-                artwork: [
-                    {
-                         src: coverSrc || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'512\' height=\'512\' viewBox=\'0 0 512 512\'%3E%3Crect width=\'512\' height=\'512\' fill=\'%23333\'/%3E%3C/svg%3E',
-                        sizes: '512x512'
-                    }
-                ]
-            });
-        }
-        
+        updateMediaSession(album, track, coverSrc);
         highlightPlaylistItem(trackIndex);
         
         if (shuffleOn && shuffleIndices.length === 0) {
@@ -916,6 +901,32 @@
         } else {
             pauseCurrent();
         }
+    }
+
+    function seekRelative(seconds) {
+        if (!audioPlayer.duration) return;
+        audioPlayer.currentTime = Math.max(0, Math.min(audioPlayer.duration, audioPlayer.currentTime + seconds));
+    }
+
+    function updateMediaSession(album, track, coverSrc) {
+        if (!('mediaSession' in navigator)) return;
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: track.name,
+            artist: album.title,
+            album: album.title,
+            artwork: [
+                {
+                    src: coverSrc || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'512\' height=\'512\' viewBox=\'0 0 512 512\'%3E%3Crect width=\'512\' height=\'512\' fill=\'%23333\'/%3E%3C/svg%3E',
+                    sizes: '512x512'
+                }
+            ]
+        });
+        navigator.mediaSession.setActionHandler('play', () => audioPlayer.play().catch(() => {}));
+        navigator.mediaSession.setActionHandler('pause', () => audioPlayer.pause());
+        navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
+        navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
+        navigator.mediaSession.setActionHandler('seekforward', () => seekRelative(10));
+        navigator.mediaSession.setActionHandler('seekbackward', () => seekRelative(-10));
     }
 
     function nextTrack() {
@@ -967,7 +978,10 @@
 
     function prevTrack() {
         if (!currentAlbum || currentTrackIndex === -1) return;
-        
+        if (audioPlayer.currentTime > 3) {
+            audioPlayer.currentTime = 0;
+            return;
+        }
         if (shuffleOn) {
             if (shuffleIndices.length === 0) generateShuffleIndices();
             let prevShuffleIndex = shuffleCurrentIndex - 1;
@@ -1176,14 +1190,6 @@
             nextTrack();
         }, 2000);
     });
-
-    // 🔥 NEW: Media Session Action Handlers - кнопки на экране блокировки
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.setActionHandler('play', () => playCurrent());
-        navigator.mediaSession.setActionHandler('pause', () => pauseCurrent());
-        navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
-        navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
-    }
 
     audioPlayer.addEventListener('loadstart', () => {
         currentTrackName.style.opacity = '0.7';
@@ -1548,21 +1554,7 @@
         // Обновляем title (без воспроизведения — показываем что на паузе)
         document.title = `⏸ ${track.name} — 🔥 Top Tracks`;
         
-        // 🔥 FIX: Media Session API - обновляем метаданные при восстановлении
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: track.name,
-                artist: '🔥 Top Tracks',
-                artwork: [
-                    {
-                        src: track.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'512\' height=\'512\' viewBox=\'0 0 512 512\'%3E%3Crect width=\'512\' height=\'512\' fill=\'%23333\'/%3E%3C/svg%3E',
-                        sizes: '512x512',
-                        type: 'image/jpeg'
-                    }
-                ]
-            });
-        }
-        
+        updateMediaSession(currentAlbum, track, track.cover || '');
         playlistAlbumTitle.textContent = '🔥 Top Tracks';
         renderPlaylist();
         highlightPlaylistItemById(track.id);
