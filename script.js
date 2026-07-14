@@ -925,8 +925,6 @@
         navigator.mediaSession.setActionHandler('pause', () => audioPlayer.pause());
         navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
         navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
-        navigator.mediaSession.setActionHandler('seekforward', () => seekRelative(10));
-        navigator.mediaSession.setActionHandler('seekbackward', () => seekRelative(-10));
     }
 
     function nextTrack() {
@@ -1284,12 +1282,35 @@
     if (overlay) overlay.addEventListener('click', togglePlaylistPanel);
 
     document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
         if (e.key === 'Escape' && playlistVisible) {
             togglePlaylistPanel();
+            return;
         }
-        if (e.key === ' ' && e.target === document.body) {
+        if (e.key === ' ') {
             e.preventDefault();
             togglePlayPause();
+            return;
+        }
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            if (e.ctrlKey) { nextTrack(); return; }
+            seekRelative(10);
+            return;
+        }
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            if (e.ctrlKey) { prevTrack(); return; }
+            seekRelative(-10);
+            return;
+        }
+        if (e.key === 'ArrowUp' && e.ctrlKey) {
+            e.preventDefault();
+            audioPlayer.volume = Math.min(audioPlayer.volume + 0.1, 1);
+        }
+        if (e.key === 'ArrowDown' && e.ctrlKey) {
+            e.preventDefault();
+            audioPlayer.volume = Math.max(audioPlayer.volume - 0.1, 0);
         }
     });
 
@@ -1874,35 +1895,6 @@
         }
     });
     
-    // 🔥 NEW: Media keys support - клавиши управления на клавиатуре
-    document.addEventListener('keydown', (e) => {
-        // Пробел - play/pause
-        if (e.code === 'Space' && e.target === document.body) {
-            e.preventDefault();
-            togglePlayPause();
-        }
-        // Стрелка вправо - следующий трек
-        if (e.code === 'ArrowRight' && e.ctrlKey) {
-            e.preventDefault();
-            nextTrack();
-        }
-        // Стрелка влево - предыдущий трек
-        if (e.code === 'ArrowLeft' && e.ctrlKey) {
-            e.preventDefault();
-            prevTrack();
-        }
-        // Стрелка вверх - громче
-        if (e.code === 'ArrowUp' && e.ctrlKey) {
-            e.preventDefault();
-            audioPlayer.volume = Math.min(audioPlayer.volume + 0.1, 1);
-        }
-        // Стрелка вниз - тише
-        if (e.code === 'ArrowDown' && e.ctrlKey) {
-            e.preventDefault();
-            audioPlayer.volume = Math.max(audioPlayer.volume - 0.1, 0);
-        }
-    });
-
     // ==================== СТАРТ ====================
     initViewTabs();
     setupTopTracksInfiniteScroll();
