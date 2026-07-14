@@ -1,7 +1,4 @@
-// rays.js — эффекты, переключаемые темой
-
 const RAYS_CONFIG = {
-    // Для лучей (тёмная тема)
     beams: {
         count: 12,
         speedMin: 6,
@@ -12,7 +9,6 @@ const RAYS_CONFIG = {
         varyIntensity: true,
         colorHue: 200,
     },
-    // Для красных шаров (светлая тема)
     sphere: {
         minCount: 2,
         maxCount: 5,
@@ -24,28 +20,24 @@ const RAYS_CONFIG = {
         maxPulseSpeed: 10,
         colorHue: 0,
     },
-    // Для пузырьков (частиц) — общие для обеих тем
     particles: {
-        count: 40,                 // количество пузырьков
-        minSize: 5,                // минимальный размер (px)
-        maxSize: 23,                // максимальный размер (px)
-        minSpeed: 8,               // минимальная длительность анимации (сек)
-        maxSpeed: 20,              // максимальная длительность
-        minDelay: 0,               // минимальная задержка старта (сек)
-        maxDelay: 10,              // максимальная задержка
-        baseOpacity: 0.2,          // базовая прозрачность (0-1)
-        varyOpacity: true,         // варьировать прозрачность
-        color: 'rgba(255, 255, 255', // цветовая основа (без прозрачности)
+        count: 40,
+        minSize: 5,
+        maxSize: 23,
+        minSpeed: 8,
+        maxSpeed: 20,
+        minDelay: 0,
+        maxDelay: 10,
+        baseOpacity: 0.2,
+        varyOpacity: true,
+        color: '255, 255, 255',
     }
 };
 
-// Создание лучей (тёмная тема)
 function createBeams(config) {
-    // Debug: console.log('💡 Создание лучей (тонкие)');
     const container = document.querySelector('.background-effects');
     if (!container) return;
 
-    // Удаляем только лучи и шары (частицы не трогаем)
     container.querySelectorAll('.ray-beam, .sphere').forEach(el => el.remove());
 
     const count = config.count || 12;
@@ -112,16 +104,12 @@ function createBeams(config) {
 
         container.appendChild(ray);
     }
-    // Debug: console.log(`✨ Создано лучей: ${container.querySelectorAll('.ray-beam').length}`);
 }
 
-// Создание красных шаров (светлая тема)
 function createSphere(config) {
-    // Debug: console.log('🔴 Создание красных шаров');
     const container = document.querySelector('.background-effects');
     if (!container) return;
 
-    // Удаляем только лучи и шары (частицы не трогаем)
     container.querySelectorAll('.ray-beam, .sphere').forEach(el => el.remove());
 
     const minCount = config.minCount || 2;
@@ -170,89 +158,71 @@ function createSphere(config) {
 
         container.appendChild(sphere);
     }
-    // Debug: console.log(`✨ Создано шаров: ${container.querySelectorAll('.sphere').length}`);
 }
 
-// Создание пузырьков (частиц) с настройками
 function createParticles(config) {
     const container = document.querySelector('.background-effects');
     if (!container) return;
 
-    // Удаляем старые частицы, если нужно пересоздать
     container.querySelectorAll('.particle').forEach(p => p.remove());
 
     const count = config.count || 40;
-    const minSize = config.minSize || 1;
-    const maxSize = config.maxSize || 4;
+    const minSize = config.minSize || 5;
+    const maxSize = config.maxSize || 23;
     const minSpeed = config.minSpeed || 8;
     const maxSpeed = config.maxSpeed || 20;
     const minDelay = config.minDelay || 0;
     const maxDelay = config.maxDelay || 10;
     const baseOpacity = config.baseOpacity || 0.2;
     const varyOpacity = config.varyOpacity !== false;
-    const colorBase = config.color || 'rgba(255, 255, 255';
+    const colorRgb = config.color || '255, 255, 255';
 
     for (let i = 0; i < count; i++) {
         const particle = document.createElement('div');
         particle.className = 'particle';
 
-        // Случайный размер
         const size = minSize + Math.random() * (maxSize - minSize);
-        // Случайная длительность анимации
         const speed = minSpeed + Math.random() * (maxSpeed - minSpeed);
-        // Случайная задержка
         const delay = minDelay + Math.random() * (maxDelay - minDelay);
-        // Случайная прозрачность
         let opacity = baseOpacity;
         if (varyOpacity) {
             opacity = baseOpacity * (0.5 + Math.random());
         }
 
-        // Позиция по горизонтали случайная
         const left = Math.random() * 100;
 
         particle.style.cssText = `
             left: ${left}%;
-            bottom: -10px; /* старт чуть ниже экрана */
+            bottom: -10px;
             width: ${size}px;
             height: ${size}px;
-            background: ${colorBase}, ${opacity});
+            background: rgba(${colorRgb}, ${opacity});
             border-radius: 50%;
-            box-shadow: 0 0 10px ${colorBase}, ${opacity * 2});
-            animation: float ${speed}s linear infinite;
-            animation-delay: -${delay}s; /* отрицательная задержка для случайного старта */
+            box-shadow: 0 0 10px rgba(${colorRgb}, ${opacity * 2});
+            animation: particleFloat ${speed}s linear infinite;
+            animation-delay: -${delay}s;
             will-change: transform, opacity;
             z-index: 2;
         `;
         container.appendChild(particle);
     }
-    // Debug: console.log(`✨ Создано частиц: ${container.querySelectorAll('.particle').length}`);
 }
 
-// Функция применения эффектов в зависимости от темы
 function applyEffects(theme) {
     if (theme === 'dark') {
         createBeams(RAYS_CONFIG.beams);
     } else {
         createSphere(RAYS_CONFIG.sphere);
     }
-    // Частицы не пересоздаём при смене темы (они уже есть и общие)
-    // Если нужно принудительно обновить частицы с новыми настройками, можно вызвать createParticles(RAYS_CONFIG.particles);
 }
 
-// Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', () => {
-    // Debug: console.log('🚀 Запуск эффектов');
-    // Создаём частицы с настройками из конфига
     createParticles(RAYS_CONFIG.particles);
 
-    // Определяем текущую тему из localStorage или по умолчанию 'dark'
     const savedTheme = localStorage.getItem('theme') || 'dark';
     applyEffects(savedTheme);
 });
 
-// Слушаем изменения темы (событие из script.js)
 window.addEventListener('themeChanged', (e) => {
-    // Debug: console.log('🎨 Тема изменена, обновляем эффекты');
     applyEffects(e.detail.theme);
 });

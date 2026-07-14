@@ -1085,23 +1085,23 @@ audio {
     }
     
     .control-btn {
-        width: 32px;
-        height: 32px;
+        width: 44px;
+        height: 44px;
     }
     
     .control-btn svg {
-        width: 18px;
-        height: 18px;
+        width: 22px;
+        height: 22px;
     }
     
     .play-pause-btn {
-        width: 40px;
-        height: 40px;
+        width: 48px;
+        height: 48px;
     }
     
     .play-pause-btn svg {
-        width: 24px;
-        height: 24px;
+        width: 26px;
+        height: 26px;
     }
     
     .track-progress-container {
@@ -1121,8 +1121,8 @@ audio {
     
     /* Кнопка информации о треке */
     .track-info-btn {
-        width: 28px;
-        height: 28px;
+        width: 44px;
+        height: 44px;
         margin-left: 0.5rem;
     }
     
@@ -1394,23 +1394,23 @@ audio::-moz-media-controls-panel {
     }
 
     .control-btn {
-        width: 36px;
-        height: 36px;
+        width: 44px;
+        height: 44px;
     }
 
     .play-pause-btn {
-        width: 42px;
-        height: 42px;
+        width: 48px;
+        height: 48px;
     }
 
     .control-btn svg {
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
     }
 
     .play-pause-btn svg {
-        width: 26px;
-        height: 26px;
+        width: 28px;
+        height: 28px;
     }
 
     /* Прогресс бар на мобильном */

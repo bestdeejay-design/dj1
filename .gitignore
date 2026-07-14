@@ -27,6 +27,9 @@ venv/
 .vscode/
 .idea/
 
+# Local dev config
+.nginx/
+
 # Backups and old data
 backups/
 tests/
