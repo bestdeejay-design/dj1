@@ -199,7 +199,7 @@ function createParticles(config) {
             background: rgba(${colorRgb}, ${opacity});
             border-radius: 50%;
             box-shadow: 0 0 10px rgba(${colorRgb}, ${opacity * 2});
-            animation: particleFloat ${speed}s linear infinite;
+            animation: float ${speed}s linear infinite;
             animation-delay: -${delay}s;
             will-change: transform, opacity;
             z-index: 2;
