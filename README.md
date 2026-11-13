@@ -33,13 +33,21 @@ All tracks are created with [Riffusion](https://riffusion.com).
 ├── rays.js          # Ray animation engine
 ├── sw.js            # Service Worker
 ├── favicon.svg      # Favicon
-├── CNAME            # Custom domain (dj1.ru)
+├── data/            # tags-data.json (выгрузка api.dj1.ru), albums.js, all_tags.csv
+├── brain/           # Музыкальный мозг: знания, корпус, библиотеки, датасеты (см. brain/README.md)
 └── DATABASE_OPTIMIZATION.sql
 ```
 
 ## Domain
 
 The site is live at **[dj1.ru](https://dj1.ru)**.
+
+## Brain — музыкальный мозг и движок
+
+Папка **[brain/](./brain/)** — рабочее место для создания музыки на модели
+ACE-Step: правила промтов и лирики, корпус личного опыта (8202 трека
+с полными промтами и лирикой), курируемые библиотеки, LoRA-датасеты.
+Начало — **[brain/README.md](./brain/README.md)**.
 
 ## License
 

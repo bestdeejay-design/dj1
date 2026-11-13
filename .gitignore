@@ -63,3 +63,6 @@ docs/
 !utils/full_migration.sql
 !configs/setup_supabase.sql
 ```
+# Brain: музыкальный мозг (знания, корпус, библиотеки, датасеты, инструменты)
+!brain/
+!brain/**
