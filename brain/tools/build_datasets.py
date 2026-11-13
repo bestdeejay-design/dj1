@@ -15,8 +15,34 @@ import os
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 CORPUS = os.path.join(ROOT, "brain", "corpus", "tracks.jsonl")
 SRC_TAGS = os.path.join(ROOT, "data", "tags-data.json")
+FEEDBACK = os.path.join(ROOT, "brain", "corpus", "author-feedback.jsonl")
 DST_DIR = os.path.join(ROOT, "brain", "datasets")
 TOP_N = 500
+
+# ранги классов обратной связи (меньше — сильнее)
+FB_RANK = {"strong_yes": 0, "yes": 1, "no": 2, "iteration": 3, "discussion": 4}
+
+
+def load_feedback():
+    """Обратная связь автора -> {track_id: (класс, комментарий, жаккард)}.
+
+    Берём лучшие (по рангу) совпадения из corpus/author-feedback.jsonl
+    (его перекрёстные ссылки на треки уже посчитал build_feedback.py).
+    """
+    if not os.path.exists(FEEDBACK):
+        return {}
+    by_track = {}
+    with open(FEEDBACK, encoding="utf-8") as f:
+        for line in f:
+            r = json.loads(line)
+            cls = r["verdict_class"]
+            comm = (r["comments"] or [""])[0].replace("\n", " ").strip()
+            for m in r["production"]:
+                cur = by_track.get(m["id"])
+                if cur is None or FB_RANK[cls] < FB_RANK[cur[0]]:
+                    by_track[m["id"]] = (cls, comm, m["jaccard"])
+    return by_track
+
 
 # соответствие языковых кодов и вокальных описаний для caption
 VOCAL_CAPTION = {
@@ -74,9 +100,10 @@ def main():
         for line in f:
             records.append(json.loads(line))
     top = sorted(records, key=lambda r: -r["score"])[:TOP_N]
+    fb = load_feedback()
 
     os.makedirs(DST_DIR, exist_ok=True)
-    n = 0
+    n = n_fb = 0
     with open(os.path.join(DST_DIR, "lora-candidates.jsonl"), "w",
               encoding="utf-8") as out:
         for r in top:
@@ -96,6 +123,11 @@ def main():
                 "score": r["score"],
                 "parsed": r["parsed"],
             }
+            if r["id"] in fb:
+                cls, comm, j = fb[r["id"]]
+                rec["author_feedback"] = {
+                    "verdict": cls, "comment": comm, "jaccard": j}
+                n_fb += 1
             out.write(json.dumps(rec, ensure_ascii=False) + "\n")
             n += 1
 
@@ -114,13 +146,16 @@ LoRA-файнтюна ACE-Step на личном стиле. Каждая зап
 | `lyrics` | Полная лирика |
 | `audio_url` | Аудио на api.dj1.ru (приватный бэкенд) |
 | `duration`, `model`, `plays`, `favorites`, `score` | Мета |
+| `author_feedback` | Вердикт автора из чатов: `strong_yes` / `yes` / `no` / `iteration` + его реплика (не у всех; источник — `corpus/author-feedback.jsonl`) |
 | `parsed` | Разобранные поля корпуса |
 
 ## Как собрать обучающий датасет (чек-лист)
 
 1. **Скачать аудио** по `audio_url` (нужен доступ к api.dj1.ru) в
    `dataset/audio/`, имена файлов — по id.
-2. **Отфильтровать по качеству**: score — грубый сигнал; перед обучением
+2. **Отфильтровать по качеству**: score — грубый сигнал; поле
+   `author_feedback.verdict == "strong_yes"` — промты, которые автор
+   сам одобрил в чатах, таким кандидатам приоритет. Перед обучением
    выслушать кандидатов и убрать слабые. Рекомендуемый объём для
    LoRA — 20–50 сильных треков (для стилевого LoRA хватит и меньше;
    точные требования — в актуальном руководстве ACE-Step).
@@ -147,6 +182,8 @@ LoRA-файнтюна ACE-Step на личном стиле. Каждая зап
     with open(os.path.join(DST_DIR, "README.md"), "w", encoding="utf-8") as f:
         f.write(readme)
     print(f"OK: {n} кандидатов -> lora-candidates.jsonl + README.md")
+    if fb:
+        print(f"    с авторской обратной связью: {n_fb}")
 
 
 if __name__ == "__main__":
