@@ -22,7 +22,8 @@
 | `corpus/` | `tracks.jsonl` — 8202 трека с разобранными промтами; `author-feedback.jsonl` — вердикты автора по промтам с кросс-матчем на треки; `stats.md`, `author-feedback.md` — статистика | `build_corpus.py`, `build_feedback.py` + `stats.py` |
 | `libraries/` | Промты по жанрам/настроению, витрина лучшей лирики | `python3 brain/tools/build_libraries.py` |
 | `datasets/` | `lora-candidates.jsonl` (топ-500 с полем `author_feedback`) + чек-лист LoRA-датасета | `python3 brain/tools/build_datasets.py` |
-| `tools/` | Скрипты конвейера (5 шт., идемпотентны) | Правки при развитии |
+| `runs/` | Прогоны конвейера: запрос → тройка TITLE/LYRICS/PROMPT + результат валидации | Мозгом (LLM по knowledge/); проверка — `validate_run.py` |
+| `tools/` | Скрипты конвейера (6 шт., идемпотентны) | Правки при развитии |
 
 Полный прогон после обновления выгрузки `data/tags-data.json`:
 
@@ -83,4 +84,5 @@ api.dj1.ru (срез указан в поле `generatedAt`). Там же леж
 3. `corpus/stats.md` — что реально сработало (жанры, настроение, BPM, топ-треки)
 4. `corpus/author-feedback.md` — что автор сам одобрил в чатах и что из этого дошло до продакшна
 5. `libraries/prompts-by-genre.md` — эталонные промты по жанрам
-6. `datasets/README.md` — чек-лист сбора LoRA-датасета
+6. `runs/2026-11-14-run-01.md` — первый прогон: 8 готовых троек TITLE/LYRICS/PROMPT
+7. `datasets/README.md` — чек-лист сбора LoRA-датасета
