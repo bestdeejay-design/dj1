@@ -58,6 +58,10 @@ def main():
                       if r["parsed"]["bpm"])
     buckets = Counter((v // 20) * 20 for v in bpm_vals)
 
+    lang_rows = ["| Язык | Треков |", "|---|---|"]
+    for l, c in langs.most_common():
+        lang_rows.append(f"| {LANG_NAMES.get(l, l)} ({l}) | {c} |")
+
     sound_lens = sorted(len(r["sound"]) for r in records)
     med = sound_lens[n // 2]
     p90 = sound_lens[int(n * 0.9)]
@@ -128,7 +132,7 @@ def main():
 
 ## Язык лирики
 
-{top_table(Counter(LANG_NAMES.get(l, l) + f' ({l})' for l, c in langs.items()), 10, 'Язык')}
+{chr(10).join(lang_rows)}
 
 ## Эпоха (упоминания в промтах)
 
